@@ -23,16 +23,17 @@ for model in config.EMBED_MODELS:
     for size in (256, 512, 1024):
         chunks = chunk_docs(docs, "fixed", size, size // 8)
         vecs = embed_passages([c.text for c in chunks], model)
-        hits, rr = 0, []
+        hits, top1, rr = 0, 0, []
         for x, qv in zip(questions, qvecs):
             order = np.argsort(-(vecs @ qv))
             rank = next((r for r, i in enumerate(order, 1) if chunks[i].source == x["source"]), None)
             hits += rank is not None and rank <= K
+            top1 += rank == 1
             rr.append(1 / rank if rank else 0)
-        rows.append((model, size, len(chunks), hits / len(questions), float(np.mean(rr))))
+        rows.append((model, size, len(chunks), hits / len(questions), top1 / len(questions), float(np.mean(rr))))
         print(rows[-1], flush=True)
 
-lines = [f"# Eval sonuçları ({len(questions)} soru, hit@{K} ve MRR)\n",
-         f"| Model | Chunk boyutu | Parça sayısı | hit@{K} | MRR |", "|---|---|---|---|---|"]
-lines += [f"| {m} | {s} | {n} | {h:.2f} | {r:.3f} |" for m, s, n, h, r in rows]
+lines = [f"# Eval sonuçları ({len(questions)} soru, hit@1, hit@{K} ve MRR)\n",
+         f"| Model | Chunk boyutu | Parça sayısı | hit@1 | hit@{K} | MRR |", "|---|---|---|---|---|---|"]
+lines += [f"| {m} | {s} | {n} | {t:.2f} | {h:.2f} | {r:.3f} |" for m, s, n, h, t, r in rows]
 (HERE / "results.md").write_text("\n".join(lines) + "\n", encoding="utf-8")

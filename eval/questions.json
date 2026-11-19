@@ -1,14 +1,114 @@
 [
- {"q": "Mercimek çorbası kaç dakika kaynatılır?", "source": "tarif_mercimek_corbasi.md"},
- {"q": "İkili arama ağacında arama ortalama kaç sürede yapılır?", "source": "ders_veri_yapilari.md"},
- {"q": "Alışkanlık döngüsünün dört aşaması nedir?", "source": "kitap_atomic_habits.md"},
- {"q": "Docker konteynerinin portunu dışarı açmak için hangi bayrak kullanılır?", "source": "teknik_docker.md"},
- {"q": "Kapadokya balon turu saat kaçta ve ne kadar?", "source": "seyahat_kapadokya.md"},
- {"q": "Son commit mesajını nasıl değiştiririm?", "source": "teknik_git.md"},
- {"q": "Fotosentez hücrenin hangi organelinde gerçekleşir?", "source": "ders_biyoloji_fotosentez.md"},
- {"q": "Proje Atlas'ın teslim tarihi ne zaman?", "source": "toplanti_proje_atlas.md"},
- {"q": "Kürk Mantolu Madonna'da ana karakterin adı ne?", "source": "kitap_kurk_mantolu_madonna.md"},
- {"q": "Aylık tasarruf hedefim ne kadar?", "source": "kisisel_butce.md"},
- {"q": "Eyfel Kulesi kaç metre yüksekliğinde?", "source": null},
- {"q": "Bitcoin'in tarihteki en yüksek fiyatı neydi?", "source": null}
+ {
+  "q": "Patlıcanlı yemeklerden etsiz olup soğuk servis edileni hangisi ve kaç dakika pişiyor?",
+  "source": "tarif_imam_bayildi.md"
+ },
+ {
+  "q": "Kıymalı patlıcan yemeğini fırında kaç derecede pişiriyorum?",
+  "source": "tarif_karniyarik.md"
+ },
+ {
+  "q": "Tuz koymadan hazırlanan, domatessiz kahvaltılık yumurta tarifi hangisiydi?",
+  "source": "tarif_sucuklu_yumurta.md"
+ },
+ {
+  "q": "Soğansız yaptığım, domatesli ve biberli yumurta yemeğinde yumurtalar kaç dakika pişer?",
+  "source": "tarif_menemen.md"
+ },
+ {
+  "q": "Veri bilimci tarihçinin geleceği anlatan kitabında evrenin veri akışı olduğunu savunan akım ne?",
+  "source": "kitap_homo_deus.md"
+ },
+ {
+  "q": "Harari çocuklara hangi dört beceriyi öğretmeyi öneriyor?",
+  "source": "kitap_21_ders.md"
+ },
+ {
+  "q": "Yazarın günde iki saat uyguladığı meditasyon türü neydi?",
+  "source": "kitap_21_ders.md"
+ },
+ {
+  "q": "İnsanların ortak hayallere inanmaya başlaması ne zaman oldu?",
+  "source": "kitap_sapiens.md"
+ },
+ {
+  "q": "Boş kümeyi neden süslü parantezle yazamıyoruz?",
+  "source": "teknik_python_tuple_set.md"
+ },
+ {
+  "q": "Değiştirilemeyen, sözlük anahtarı olabilen veri tipi hangisi?",
+  "source": "teknik_python_tuple_set.md"
+ },
+ {
+  "q": "Fonksiyon adının sarmalayıcıda kaybolmaması için hangi yardımcı kullanılır?",
+  "source": "teknik_python_dekoratorler.md"
+ },
+ {
+  "q": "Bir üretecin ikinci kez dolaşılınca neden boş geldiğini yazmıştım, ne diyordu?",
+  "source": "teknik_python_dekoratorler.md"
+ },
+ {
+  "q": "Yetkisiz kullanıcının önbellekten cevap almasına neden olan hata neydi?",
+  "source": "teknik_python_dekoratorler.md"
+ },
+ {
+  "q": "Veritabanı hazır olmadan uygulamanın çökmesini nasıl engelliyorum?",
+  "source": "teknik_docker_compose.md"
+ },
+ {
+  "q": "Servisler arası bağlantıda localhost yerine ne yazmalıyım?",
+  "source": "teknik_docker_compose.md"
+ },
+ {
+  "q": "Kullanılmayan imajları temizleyen komut hangisi ve hangi bayrağı eklemiyorum?",
+  "source": "teknik_docker_compose.md"
+ },
+ {
+  "q": "Eskişehir'de çibörek kaç liraydı?",
+  "source": "seyahat_eskisehir.md"
+ },
+ {
+  "q": "Eskişehir'de otelde gecelik ne ödedik ve neden arabayla gitmedik?",
+  "source": "seyahat_eskisehir.md"
+ },
+ {
+  "q": "Hızlı trenle Pendik'ten ne kadarda varılıyor ve lületaşı nerede sergileniyor?",
+  "source": "seyahat_eskisehir.md"
+ },
+ {
+  "q": "Modelin eğitim verisini ezberleyip yeni veride başarısız olmasına karşı hangi çareler var?",
+  "source": "ders_makine_ogrenmesi.md"
+ },
+ {
+  "q": "Test kümesinden eğitime bilgi sızması neden tehlikeli?",
+  "source": "ders_makine_ogrenmesi.md"
+ },
+ {
+  "q": "Öğrenme oranı çok büyük seçilirse ne olur?",
+  "source": "ders_makine_ogrenmesi.md"
+ },
+ {
+  "q": "Yeni mobil uygulama projesinin bütçesi ve bitiş tarihi nedir?",
+  "source": "toplanti_proje_nova.md"
+ },
+ {
+  "q": "Veritabanı geçişinden kim sorumluydu?",
+  "source": "toplanti_proje_atlas.md"
+ },
+ {
+  "q": "Eyfel Kulesi kaç metre yüksekliğinde?",
+  "source": null
+ },
+ {
+  "q": "Bitcoin'in tarihteki en yüksek fiyatı neydi?",
+  "source": null
+ },
+ {
+  "q": "Galatasaray'ın en son şampiyon olduğu sezon hangisiydi?",
+  "source": null
+ },
+ {
+  "q": "Ankara'da en iyi kebapçı hangisi?",
+  "source": null
+ }
 ]
