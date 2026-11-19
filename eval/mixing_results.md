@@ -25,23 +25,20 @@ k=10; üretim: açık. Saflık = top-k parçanın izinli belgelerden payı; kirl
 
 ## Genel soru seti (dondurulmuş)
 
-Belirli belgeye işaret eden sorularda filtre isabeti: **80%** (N=25, notes). Genel sorularda yanlış filtre oranı: **34%** (11/32; hedef 0%). Ölçüm: master d513d4d (taban çizgi, düzeltmeden önce).
+Belirli belgeye işaret eden sorularda filtre isabeti: **80%** (N=25, notes). Genel sorularda yanlış filtre oranı: **25%** (8/32; hedef 0%). Ölçüm: f09fd80 (düzeltmelerden sonra).
 
 Set: `eval/general_frozen.json` (dondurulmuş, kurallar bu sete göre ayarlanmaz). Yalnız arama, LLM yok.
 
 Yanlış filtre alan genel sorular:
 
-- Verimli çalışmak için ne yapmalıyım? -> ders_veri_yapilari.md
 - Veri nedir? -> ders_veri_yapilari.md
 - Veri analizi nereden başlanır? -> ders_veri_yapilari.md
-- Toplantı nasıl verimli yönetilir? -> ders_veri_yapilari.md
 - Bütçe nasıl hazırlanır? -> kisisel_butce.md
 - Aylık bütçeyi aşmamak için ne yapmalı? -> kisisel_butce.md
 - Ders programı nasıl düzenlenir? -> spor_kosu_programi.md
 - İyi bir film nasıl seçilir? -> film_inception.md
 - Film izlerken ne yenir? -> film_inception.md
 - Spor yapmak için en iyi saat hangisi? -> spor_kosu_programi.md
-- Bütçeleme için hangi uygulamalar var? -> kisisel_butce.md
 
 Filtre isabetsiz belge soruları:
 
