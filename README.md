@@ -24,6 +24,7 @@ uv run python -m eval.run_eval                  # chunk boyutu ve model karşıl
 ```bash
 uv run python -m desktop.main            # yerel pencere (Streamlit'e alternatif)
 bash scripts/install_desktop_entry.sh    # uygulama menüsüne kısayol ekler (yol kurulum anında hesaplanır)
+bash scripts/uninstall_desktop_entry.sh  # kısayolu ve ikonu kaldırır
 ```
 Sohbet, kaynakları açılır liste olarak gösterme, not ekleme, yeniden indeksleme, top_k ve backend ayarı.
 Ağır işler (model yükleme, indeksleme, LLM) arka planda çalışır; arayüz donmaz. Ollama çalışmalıdır.
