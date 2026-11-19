@@ -50,6 +50,7 @@ def main():
     ap.add_argument("--no-generate", action="store_true")
     ap.add_argument("--corpus", choices=["notes", "docs"])
     ap.add_argument("--k", type=int, default=10)
+    ap.add_argument("--modes", default="off,auto", help="doc_filter modları: off (filtre yok, baz çizgi), auto (belge filtresi)")
     ap.add_argument("--out", default=str(HERE / "mixing_results.md"))
     a = ap.parse_args()
     items = json.loads((HERE / "mixing_questions.json").read_text("utf-8"))
@@ -72,18 +73,28 @@ def main():
         settings.set_override(folder)
         print(f"[{corpus}] indeks kuruluyor: {build_index().summary()}", flush=True)
         for it in (i for i in items if i["corpus"] == corpus):
+          for mode in a.modes.split(","):
             allowed = allowed_stems(it)
-            res = retrieve(it["question"], a.k, backend=config.INDEX_BACKEND)
+            kw = {}
+            try:
+                import inspect
+                if "doc_filter" in inspect.signature(retrieve).parameters:
+                    kw["doc_filter"] = None if mode == "off" else "auto"
+                elif mode != "off":
+                    continue   # eski retrieve: filtre modu yok, sadece 'off' ölçülür
+            except (TypeError, ValueError):
+                pass
+            res = retrieve(it["question"], a.k, backend=config.INDEX_BACKEND, **kw)
             srcs = [c.source for c, _ in res]
-            r = {"it": it, "purity": purity(srcs, allowed), "top": srcs}
+            r = {"mode": mode, "it": it, "purity": purity(srcs, allowed), "top": srcs}
             if gen:
-                ans = gen(it["question"], res)
-                cs = cited_sources(ans, res)
-                r.update(ans=ans, cited=cs, contam=(1 - purity(cs, allowed)) if cs else 0.0,
-                         foreign=any(stem(s) not in allowed for s in cs),
-                         recall=None if it["comparison"] else keyfact_recall(ans, it["key_facts"]))
+              ans = gen(it["question"], res)
+              cs = cited_sources(ans, res)
+              r.update(ans=ans, cited=cs, contam=(1 - purity(cs, allowed)) if cs else 0.0,
+                       foreign=any(stem(s) not in allowed for s in cs),
+                       recall=None if it["comparison"] else keyfact_recall(ans, it["key_facts"]))
             rows.append(r)
-            print(f"  purity={r['purity']:.2f} {'foreign ' if r.get('foreign') else ''}{it['question']}", flush=True)
+            print(f"  [{mode}] purity={r['purity']:.2f} {'foreign ' if r.get('foreign') else ''}{it['question']}", flush=True)
     write_report(rows, a)
 
 
@@ -97,21 +108,23 @@ def write_report(rows, a):
          f"k={a.k}; üretim: {'kapalı' if a.no_generate else 'açık'}. "
          "Saflık = top-k parçanın izinli belgelerden payı; kirlenme = atıf yapılan kaynaklardan izinli olmayanların payı; "
          "yabancı atıflı = en az 1 izinsiz belgeye atıf yapan cevap oranı; anahtar bilgi = beklenen anahtar kelimelerin kapsaması "
-         "(sadece tek belgelik sorular).", "",
-         "| Korpus | Tür | N | Arama saflığı | Kirlenme | Yabancı atıflı cevap | Anahtar bilgi |", "|---|---|---|---|---|---|---|"]
-    for corpus in ("notes", "docs"):
+         "(sadece tek belgelik sorular). Mod off = doc_filter=None (belge filtresi kapalı, baz çizgi); mod auto = doc_filter=\"auto\". "
+         "Üretim her iki modda da MEVCUT generator (gruplu prompt) ile yapılır; eski generator ayrı ölçülemez, yani off kolonu 'filtresiz arama + yeni prompt' demektir. Arama saflığı kolonu sadece arama değişikliğini ölçer.", "",
+         "| Mod | Korpus | Tür | N | Arama saflığı | Kirlenme | Yabancı atıflı cevap | Anahtar bilgi |", "|---|---|---|---|---|---|---|---|"]
+    for mode in dict.fromkeys(r["mode"] for r in rows):
+     for corpus in ("notes", "docs"):
         for kind, flag in (("tek belge", False), ("karşılaştırma", True), ("tümü", None)):
-            rs = [r for r in rows if r["it"]["corpus"] == corpus and (flag is None or r["it"]["comparison"] == flag)]
+            rs = [r for r in rows if r["mode"] == mode and r["it"]["corpus"] == corpus and (flag is None or r["it"]["comparison"] == flag)]
             if not rs:
                 continue
             g = "ans" in rs[0]
             f = lambda v: "-" if v != v else f"{100 * v:.0f}%"
-            L.append(f"| {corpus} | {kind} | {len(rs)} | {f(mean(r['purity'] for r in rs))} | "
+            L.append(f"| {mode} | {corpus} | {kind} | {len(rs)} | {f(mean(r['purity'] for r in rs))} | "
                      f"{f(mean(r['contam'] for r in rs)) if g else '-'} | "
                      f"{f(mean(float(r['foreign']) for r in rs)) if g else '-'} | "
                      f"{f(mean(r['recall'] for r in rs)) if g else '-'} |")
     if rows and "ans" in rows[0]:
-        bad = sorted((r for r in rows if r["foreign"]), key=lambda r: -r["contam"])[:5]
+        bad = sorted((r for r in rows if r["foreign"] and r["mode"] == rows[-1]["mode"]), key=lambda r: -r["contam"])[:5]
         L += ["", "## En kötü 5 örnek (yabancı atıflı)", ""]
         for r in bad:
             L += [f"- **{r['it']['question']}** ({r['it']['corpus']}; izinli: {', '.join(r['it']['allowed_docs'])}; "
