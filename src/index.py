@@ -46,7 +46,10 @@ class NumpyIndex:
 class ChromaIndex:
     def __init__(self, name: str):
         import chromadb
-        self.client = chromadb.PersistentClient(path=str(config.INDEX_DIR / "chroma"))
+        from chromadb.config import Settings
+        # Telemetri kapalı: her şey yerelde kalsın
+        self.client = chromadb.PersistentClient(path=str(config.INDEX_DIR / "chroma"),
+                                                settings=Settings(anonymized_telemetry=False))
         self.name = name
 
     def build(self, chunks: list[Chunk], vecs: np.ndarray):

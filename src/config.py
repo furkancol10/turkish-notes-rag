@@ -23,7 +23,7 @@ CHUNK_SIZE = 512           # karakter
 CHUNK_OVERLAP = 64         # karakter
 
 # --- Arama ---
-INDEX_BACKEND = "numpy"    # "numpy" veya "chroma"
+INDEX_BACKEND = "chroma"   # "chroma" (varsayılan, vektör DB) veya "numpy" (elle kosinüs, öğrenme amaçlı)
 TOP_K = 3
 
 # --- LLM (Ollama, GPU) ---

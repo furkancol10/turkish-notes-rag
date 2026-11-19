@@ -15,7 +15,7 @@ Embedding modelleri ilk çalıştırmada `~/.cache/huggingface` altına iner.
 ```bash
 uv run python -m src.cli index                  # notları oku, parçala, embed et, indeksle
 uv run python -m src.cli ask "Soru?"            # cevap + kaynak parçalar
-uv run python -m src.cli ask "Soru?" --backend chroma
+uv run python -m src.cli ask "Soru?" --backend numpy  # varsayılan chroma; numpy elle kosinüs
 uv run streamlit run app.py                     # sohbet arayüzü (not yükleme, yeniden indeksleme, top_k/backend ayarı)
 uv run python -m eval.run_eval                  # chunk boyutu ve model karşılaştırması -> eval/results.md
 ```
@@ -47,7 +47,7 @@ RAG'de her soru aramaya gitmek zorunda değil. `src/router.py` önce soruya baka
 | `src/loader.py` | Yükleme | Veri + metadata (dosya adı) birlikte tutulur |
 | `src/chunker.py` | Parçalama | Sabit boyut+örtüşme ile başlık bazlı parçalama farkı |
 | `src/embedder.py` | Embedding | Metin -> vektör; sorgu/pasaj önekleri (bu 3 model için gerekmiyor) |
-| `src/index.py` | İndeksleme | Numpy kosinüs (şeffaf) ve ChromaDB (kalıcı vektör DB) |
+| `src/index.py` | İndeksleme | ChromaDB (varsayılan, kalıcı vektör DB, telemetri kapalı) ve numpy kosinüs (şeffaf, öğrenme amaçlı) |
 | `src/retriever.py` | Geri getirme | Soruyu embed et, top-k en benzer parça |
 | `src/generator.py` | Üretim | Sadece bağlama dayalı prompt, "bilmiyorum" davranışı, kaynak atfı |
 | `eval/` | Değerlendirme | hit@k ve MRR ile ayar yapmayı ölçerek öğrenme |
