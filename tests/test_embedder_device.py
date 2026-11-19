@@ -28,12 +28,13 @@ def test_auto_falls_back_to_cpu(monkeypatch):
 
 
 def test_query_and_index_both_use_cuda(monkeypatch):
+    monkeypatch.setattr(config, "EMBED_DEVICE_QUERY", "auto")  # GPU sorgu modu (varsayılan cpu)
     _cuda(monkeypatch, True)
     seen = []
     monkeypatch.setattr(embedder, "_encode", lambda t, p, m, d: seen.append(d) or np.zeros((len(t), 2), np.float32))
     embedder.embed_query("soru")
     embedder.embed_passages(["a", "b"])
-    assert config.EMBED_DEVICE_QUERY == "auto" and seen == ["cuda", "cuda"]
+    assert seen == ["cuda", "cuda"]
 
 
 def test_query_cpu_when_no_cuda(monkeypatch):
@@ -52,6 +53,7 @@ def _fake_st(monkeypatch, created, fail_cuda=False):
 
 
 def test_single_shared_model_not_freed_after_indexing(monkeypatch):
+    monkeypatch.setattr(config, "EMBED_DEVICE_QUERY", "auto")  # GPU sorgu modu (varsayılan cpu)
     _cuda(monkeypatch, True)
     created = []
     _fake_st(monkeypatch, created)
@@ -72,6 +74,7 @@ def test_index_model_freed_when_query_on_cpu(monkeypatch):
 
 
 def test_warmup_falls_back_on_load_oom(monkeypatch):
+    monkeypatch.setattr(config, "EMBED_DEVICE_QUERY", "auto")  # GPU sorgu modu (varsayılan cpu)
     _cuda(monkeypatch, True)
     monkeypatch.setattr(embedder, "_cuda_available", lambda: not embedder._cuda_broken)
     created = []
