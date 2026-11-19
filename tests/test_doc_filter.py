@@ -106,3 +106,47 @@ def test_same_stem_duplicates_count_as_one_doc():
     cat = build_catalog(srcs)
     got = detect("DeepSeek ve Qwen raporlarında değerlendirme nasıl?", cat)
     assert got == ["deepseekRag.html", "deepseekRag.pdf", "qwenRag.html", "qwenRag.pdf"]
+
+
+@pytest.fixture
+def real_catalog():
+    import os
+    d = "data/notes"
+    names = sorted(os.listdir(d)) if os.path.isdir(d) else NOTES + ["ders_veri_yapilari.md", "spor_kosu_programi.md", "saglik_uyku.md"]
+    return build_catalog(names)
+
+
+@pytest.mark.parametrize("q", [
+    "Haftalık çalışma programım nasıl?",
+    "Verimli çalışma için ne önerirsin?",
+])
+def test_generic_questions_not_filtered(q, real_catalog):
+    assert detect(q, real_catalog) is None
+
+
+def test_sleep_question_not_study_note(real_catalog):
+    assert detect("Uykumu verimli hale getirmek için ne yapmalıyım?", real_catalog) in (None, ["saglik_uyku.md"])
+
+
+def test_suffix_still_matches():
+    assert detect("Nova'nın bütçesi ne?", NCAT) == ["toplanti_proje_nova.md"]
+    assert detect("novanın bütçesi ne", NCAT) == ["toplanti_proje_nova.md"]
+
+
+def test_builtin_alias_suffix_without_apostrophe():
+    assert detect("chatgptye ne sormuşum", NCAT) == ["gptRag.pdf"]
+
+
+def test_n_docs_counts_folder_and_stem():
+    from src.doc_filter import _n_docs
+    assert _n_docs(["a/notlar_x.md", "b/notlar_x.md"]) == 2
+    assert _n_docs(["a/notlar_x.md", "a/notlar_x.pdf"]) == 1
+
+
+def test_dedupe_word_order_matters():
+    base = "ali veli ye borç verdi ve sonra eve gitti çok yorgundu"
+    swapped = "veli ali ye borç verdi ve sonra eve gitti çok yorgundu"
+    r = [(Chunk("1", "a.md", "", base), 1), (Chunk("2", "b.md", "", swapped), 1)]
+    assert len(dedupe(r)) == 2
+    r = [(Chunk("1", "a.md", "", base), 1), (Chunk("2", "b.md", "", base), 1)]
+    assert len(dedupe(r)) == 1
