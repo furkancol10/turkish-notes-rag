@@ -76,6 +76,7 @@ class MainWindow(QMainWindow):
         iw.addWidget(self.input)
         iw.addWidget(self.btn_send)
         bl.addWidget(wrap)
+        self.chat.margins_changed.connect(lambda l, r: bl.setContentsMargins(l, 8, r, 18))
         chat.addWidget(self.chat, 1)
         chat.addWidget(bar)
         row.addLayout(chat, 1)

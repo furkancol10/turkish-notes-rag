@@ -54,9 +54,11 @@ QScrollBar::handle:vertical {{ background: {c['border']}; border-radius: 4px; mi
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; }}
 
 #bubbleUser {{ background: {c['accent']}; border-radius: 16px; border-bottom-right-radius: 4px; }}
+#bubbleUser QTextBrowser {{ color: {c['on_accent']}; background: transparent; border: none; }}
 #bubbleUser QLabel {{ color: {c['on_accent']}; background: transparent; }}
 #bubbleBot {{ background: {c['surface']}; border: 1px solid {c['border']};
               border-radius: 16px; border-top-left-radius: 4px; }}
+#bubbleBot QTextBrowser {{ background: transparent; color: {c['fg']}; border: none; }}
 #bubbleBot QLabel {{ background: transparent; color: {c['fg']}; }}
 QLabel#avatar {{ background: {c['accent']}; color: {c['on_accent']}; border-radius: 12px;
                  font-weight: 700; font-size: 9pt; }}

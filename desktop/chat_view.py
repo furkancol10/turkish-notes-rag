@@ -4,9 +4,9 @@ import time
 from types import SimpleNamespace
 
 from PySide6.QtCore import QSize, Qt, QTimer, Signal
-from PySide6.QtGui import QColor, QPainter
+from PySide6.QtGui import QColor, QPainter, QTextOption
 from PySide6.QtWidgets import (QFrame, QSizePolicy, QHBoxLayout, QLabel, QPlainTextEdit, QPushButton,
-                               QScrollArea, QToolButton, QVBoxLayout, QWidget)
+                               QScrollArea, QTextBrowser, QToolButton, QVBoxLayout, QWidget)
 
 from src.chunker import chunk_label
 
@@ -17,17 +17,51 @@ MIN_MARGIN = 12       # pencere daraldıkça yan boşluk bu değere kadar küç�
 NARROW = 560          # sütun bundan darsa balonlar tüm genişliği kullanabilir
 USER_FRAC, BOT_FRAC = 0.78, 0.88
 AVATAR_W = 34         # avatar (24) + aralık (10)
-_ZWSP = "\u200b"
+class MsgView(QTextBrowser):
+    """Salt okunur, seçilebilir mesaj metni; uzun sözcükler her yerden kırılır, yükseklik içeriğe eşit."""
+    def __init__(self, text, markdown):
+        super().__init__()
+        self.setFrameShape(QFrame.NoFrame)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setWordWrapMode(QTextOption.WrapAtWordBoundaryOrAnywhere)
+        self.setOpenExternalLinks(True)
+        self.setTextInteractionFlags(Qt.TextSelectableByMouse | Qt.LinksAccessibleByMouse)
+        self.setContextMenuPolicy(Qt.DefaultContextMenu)
+        self.document().setDocumentMargin(0)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
+        if markdown:
+            self.setMarkdown(text)
+        else:
+            self.setPlainText(text)
+        self.document().setDefaultStyleSheet("a { text-decoration: underline; }")
+
+    def text(self):
+        return self.toPlainText()
+
+    def hasHeightForWidth(self):
+        return True
+
+    def heightForWidth(self, w):
+        doc = self.document().clone()
+        doc.setTextWidth(max(1, w))
+        return int(math.ceil(doc.size().height())) + 2
+
+    def sizeHint(self):
+        return QSize(200, self.heightForWidth(200))
+
+    def minimumSizeHint(self):
+        return QSize(40, self.heightForWidth(self.width() or 200))
+
+    def resizeEvent(self, ev):
+        super().resizeEvent(ev)
+        h = self.heightForWidth(self.viewport().width())
+        if self.minimumHeight() != h:
+            self.setMinimumHeight(h)
+            self.setMaximumHeight(h)
+            self.updateGeometry()
 
 
-def _breakable(text, n=24):
-    """Çok uzun sözcük/URL'lere görünmez kırılma noktası ekler (yatay kaydırma olmasın)."""
-    out = []
-    for tok in text.split(" "):
-        if len(tok) > n and "\n" not in tok:
-            tok = _ZWSP.join(tok[i:i + n] for i in range(0, len(tok), n))
-        out.append(tok)
-    return " ".join(out)
 
 
 class SourceItem(QWidget):
@@ -107,12 +141,10 @@ class Bubble(QWidget):
         if typing:
             lay.addWidget(TypingDots())
         else:
-            msg = QLabel(_breakable(text))
-            self._msg = msg
             # Asistan cevabı Markdown (kalın, liste) olarak gösterilir; kullanıcı metni düz kalır
-            msg.setTextFormat(Qt.PlainText if user else Qt.MarkdownText)
-            msg.setWordWrap(True)
-            msg.setTextInteractionFlags(Qt.TextSelectableByMouse)
+            msg = MsgView(text, markdown=not user)
+            msg.setObjectName("msg")
+            self._msg = msg
             lay.addWidget(msg)
         if results:
             # Kaynaklar varsayılan olarak gizli; tek düğmeyle açılır/kapanır
@@ -181,7 +213,7 @@ class Bubble(QWidget):
         mx = self._max_w()
         if self._msg is not None:
             fm = self._msg.fontMetrics()
-            lines = self._msg.text().splitlines() or [" "]
+            lines = self._msg.toPlainText().splitlines() or [" "]
             natural = max(fm.horizontalAdvance(line) for line in lines) + 6
             if self._toggle_btn is not None:
                 natural = max(natural, self._toggle_btn.sizeHint().width())
@@ -269,6 +301,7 @@ class EmptyState(QWidget):
 
 class ChatView(QScrollArea):
     suggestion = Signal(str)
+    margins_changed = Signal(int, int)   # giriş çubuğunu sütunla hizalamak için (sol, sağ)
 
     def __init__(self):
         super().__init__()
@@ -309,6 +342,8 @@ class ChatView(QScrollArea):
     def resizeEvent(self, ev):
         super().resizeEvent(ev)
         self._relayout()
+        m = self._margin()
+        self.margins_changed.emit(m, m + self.width() - self.viewport().width())
 
     def _insert(self, w):
         self._empty.hide()
