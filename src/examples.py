@@ -99,7 +99,11 @@ sayfa adım proje aşama örnek not notlar notları kullanılır kullanılacak y
 sonuç kullanıcı amaç zorluk seviye süre ileri orta başlangıç temel çıktı hedef adımlar yapılacak
 bilgi cevap yanıt doğal dille bölüm liste örnekler önemli gerekir sağlar ayrı farklı yeni basit
 kendine örneğin çalışmalar amacı edin olduğunu önerileri oluşan ları leri ların lerin sorulardan
-kitabı çözüm eklemek eklenir verilir üretim getirme""".split())
+kitabı çözüm eklemek eklenir verilir üretim getirme birden fazla eden etme olması sohbet
+uygulamalı önerisi çalışma yapılması""".split())
+_INFLECTED = ("dan", "den", "tan", "ten", "nda", "nde", "ında", "inde", "ının", "inin", "ları", "leri",
+              "ların", "lerin", "yla", "yle", "ına", "ine", "unu", "ünü", "ını", "ini", "ndan", "nden",
+              "eden", "ılan", "ilen", "mış", "miş", "arak", "erek", "dır", "dir", "lar", "ler")
 _TOK = re.compile(r"[A-Za-zÇĞİÖŞÜçğıöşü][A-Za-zÇĞİÖŞÜçğıöşü0-9\-]{2,}")
 _PREFIX = re.compile(r"^\s*(?:(?:Adım|Aşama|Proje|Bölüm|Kısım)\s*\d+\s*[:\-–—.]*|\d{1,2}\s*[.)]|[IVX]+\.)\s*", re.I)
 _TEXT_CACHE: dict = {}
@@ -130,14 +134,15 @@ def _title_of(h: str) -> str | None:
     """Başlık gibi görünen metin (2-6 kelime, cümle değil, 'Adım N:' öneksiz) ya da None."""
     t = _clean(_PREFIX.sub("", re.sub(r"\s+", " ", h)))
     words = t.split()
-    if not (2 <= len(words) <= 6) or len(t) > 32 or t.endswith("…") or t[0].islower():
+    if not (2 <= len(words) <= 6) or len(t) > 28 or t.endswith("…") or not t[0].isalpha() \
+            or t[0].islower() or words[-1].lower() in ("için", "ile", "ve"):
         return None
     if re.search(r"[.?!;,]", t) or not _ok(t):
         return None
     return t
 
 
-def _concepts(texts: dict) -> list[tuple[float, str, Path]]:
+def _concepts(texts: dict, heads: dict | None = None) -> list[tuple[float, str, Path]]:
     """TF-IDF (tekli+ikili terimler): dosyada sık, diğer dosyalarda seyrek terimler."""
     import math
     from collections import Counter
@@ -169,9 +174,11 @@ def _concepts(texts: dict) -> list[tuple[float, str, Path]]:
                 continue
             idf = math.log((n + 1) / (df[term] + 0.5)) + 1 if n > 1 else 1.0
             form = surface[term].most_common(1)[0][0]
-            if len(form) > 26:
+            if len(form) > 24 or any(w.lower().endswith(_INFLECTED) and len(w) > 6 for w in form.split()):
                 continue
             bonus = 1.6 if any(ch.isupper() for ch in form[1:]) or "-" in form else 1.0
+            if heads and term in heads.get(p, ""):
+                bonus *= 1.5                                  # başlıkta da geçen terim = anahtar kavram
             out.append((math.log(1 + k) * idf * (1.4 if bigram else 1.0) * bonus, form, p))
     return out
 
@@ -190,17 +197,19 @@ def example_questions(folder: Path | None = None, n: int = 3, rng=random) -> lis
     files = list_note_files(folder)[:40]
     texts = {p: _file_text(p) for p in files}
     texts = {p: t for p, t in texts.items() if t.strip()}
-    concepts = _concepts(texts) if texts else []
-    titles = []
+    titles, heads = [], {}
     for p in texts:
         try:
             hs = _headings(p)
         except Exception:
             hs = []
+        heads[p] = _low(" ".join(hs))
         for k, h in enumerate(hs):
             t = _title_of(h)
             if t:
                 titles.append((1.0 + (0.5 if k < 3 else 0), t, p))
+
+    concepts = _concepts(texts, heads) if texts else []
 
     def norm(pool):
         m = max((x[0] for x in pool), default=1) or 1
@@ -218,14 +227,15 @@ def example_questions(folder: Path | None = None, n: int = 3, rng=random) -> lis
             used_f.add(p)
             used_t.add(t.lower())
             if kind == "c":
-                q = f"«{t}» nedir?" if t[0].isupper() and " " in t else \
-                    rng.choice([f"«{t}» nedir?", f"«{t}» nasıl çalışır?"])
+                d = t if any(c.isupper() for c in t) or "-" in t else t[0].upper() + t[1:]
+                q = f"{d} nedir?" if " " not in d and d.isupper() else \
+                    rng.choice([f"{d} nedir?", f"{d} nasıl çalışır?"])
             else:
-                q = f"«{t}» hakkında ne yazıyor?"
+                q = f"{t} neyi anlatıyor?"
             out.append(q)
     if not out:  # başlık/kavram yok: dosya adı
         for p in files[:n]:
             t = _clean(p.stem.replace("_", " ").replace("-", " "))
             if _ok(t):
-                out.append(f"«{t}» hakkında ne yazıyor?")
+                out.append(f"{t} neyi anlatıyor?")
     return out[:n]

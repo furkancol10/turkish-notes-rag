@@ -102,6 +102,6 @@ def test_example_questions(tmp_path):
     (tmp_path / "e.html").write_text("<h1>Web Sayfası</h1><p>x</p>", "utf-8")
     qs = example_questions(tmp_path, rng=random.Random(1))
     assert len(qs) == 3 and len(set(qs)) == 3
-    assert all(q.startswith("«") and "ÖRNEK" not in q for q in qs)
+    assert all("«" not in q and "ÖRNEK" not in q for q in qs)
     assert all(len(q) < 90 for q in qs)
     assert example_questions(tmp_path / "yok") == []

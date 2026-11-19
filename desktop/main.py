@@ -344,9 +344,13 @@ class MainWindow(QMainWindow):
         if QMessageBox.question(self, "Yeniden indeksle", msg) == QMessageBox.Yes:
             self.reindex()
 
-    def closeEvent(self, ev):
-        for w in list(self._workers):   # çalışan işler bitene kadar bekle
+    def shutdown(self):
+        """Tüm arka plan iş parçacıklarını (model yükleyici dahil) bitene kadar bekler."""
+        for w in list(self._workers):
             w.wait()
+
+    def closeEvent(self, ev):
+        self.shutdown()
         super().closeEvent(ev)
 
 
@@ -363,6 +367,7 @@ def main():
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon(str(Path(__file__).with_name("icon.svg"))))
     win = MainWindow()
+    app.aboutToQuit.connect(win.shutdown)
     win.show()
     sys.exit(app.exec())
 

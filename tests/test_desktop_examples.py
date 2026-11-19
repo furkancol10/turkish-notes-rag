@@ -23,3 +23,6 @@ def test_examples_refresh_on_folder_change(tmp_path, monkeypatch):
     settings.set_notes_dir(b)
     w.refresh_side()
     assert any("Beta" in t for t in texts()) and not any("Alfa" in t for t in texts())
+    w.close()   # işçi iş parçacıklarını bekler
+    app.processEvents()
+    assert not w._workers

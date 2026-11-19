@@ -37,7 +37,7 @@ def test_pdf_headings_skip_generic_and_pick_real(tmp_path):
              ["Raporu", "govde"], ["govde"]]
     _pdf(tmp_path / "a.pdf", pages, sizes={0: 18})
     qs = example_questions(tmp_path, rng=random.Random(1))
-    assert qs and all("«Raporu»" not in q for q in qs)
+    assert qs and all(q.startswith("Raporu") is False for q in qs)
     assert any("Gercek Bolum Basligi" in q for q in qs)
 
 
