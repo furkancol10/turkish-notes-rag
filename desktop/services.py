@@ -4,7 +4,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from src import config, entities, history as _hist, settings
-from src.embedder import get_model
+from src.embedder import warmup_query_model
 from src.conversation import fit_budget, window
 from src.generator import answer, answer_followup, answer_meta
 from src.rewriter import analyze
@@ -19,7 +19,7 @@ from src.retriever import retrieve
 
 def load_embed_model():
     """Modeli bir kez yükler (lru_cache), sonraki çağrılar anında döner."""
-    return get_model(config.EMBED_DEVICE_QUERY)
+    return warmup_query_model()
 
 
 def notes_dir() -> Path:

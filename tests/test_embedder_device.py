@@ -27,13 +27,57 @@ def test_auto_falls_back_to_cpu(monkeypatch):
     assert embedder.resolve_device("cpu") == "cpu"
 
 
-def test_query_stays_on_cpu_passages_on_gpu(monkeypatch):
+def test_query_and_index_both_use_cuda(monkeypatch):
     _cuda(monkeypatch, True)
     seen = []
     monkeypatch.setattr(embedder, "_encode", lambda t, p, m, d: seen.append(d) or np.zeros((len(t), 2), np.float32))
     embedder.embed_query("soru")
     embedder.embed_passages(["a", "b"])
-    assert seen == [config.EMBED_DEVICE_QUERY, "cuda"] and config.EMBED_DEVICE_QUERY == "cpu"
+    assert config.EMBED_DEVICE_QUERY == "auto" and seen == ["cuda", "cuda"]
+
+
+def test_query_cpu_when_no_cuda(monkeypatch):
+    _cuda(monkeypatch, False)
+    assert embedder.resolve_device(config.EMBED_DEVICE_QUERY) == "cpu"
+
+
+def _fake_st(monkeypatch, created, fail_cuda=False):
+    class Fake:
+        def __init__(self, name, device, **kw):
+            if fail_cuda and device == "cuda":
+                raise RuntimeError("CUDA out of memory")
+            created.append(device)
+    import sentence_transformers
+    monkeypatch.setattr(sentence_transformers, "SentenceTransformer", Fake)
+
+
+def test_single_shared_model_not_freed_after_indexing(monkeypatch):
+    _cuda(monkeypatch, True)
+    created = []
+    _fake_st(monkeypatch, created)
+    m1 = embedder.warmup_query_model()
+    embedder.release_index_model()  # indeksleme sonrası
+    assert embedder.get_model(embedder.resolve_index_device()) is m1
+    assert embedder.get_model(embedder.resolve_device(config.EMBED_DEVICE_QUERY)) is m1
+    assert created == ["cuda"]
+
+
+def test_index_model_freed_when_query_on_cpu(monkeypatch):
+    _cuda(monkeypatch, True)
+    monkeypatch.setattr(config, "EMBED_DEVICE_QUERY", "cpu")
+    _fake_st(monkeypatch, [])
+    embedder.get_model("cuda")
+    embedder.release_index_model()
+    assert not any(k[1].startswith("cuda") for k in embedder._models)
+
+
+def test_warmup_falls_back_on_load_oom(monkeypatch):
+    _cuda(monkeypatch, True)
+    monkeypatch.setattr(embedder, "_cuda_available", lambda: not embedder._cuda_broken)
+    created = []
+    _fake_st(monkeypatch, created, fail_cuda=True)
+    embedder.warmup_query_model()
+    assert created == ["cpu"] and embedder._cuda_broken
 
 
 def test_cuda_error_falls_back_to_cpu_once(monkeypatch):

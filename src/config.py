@@ -19,7 +19,7 @@ PASSAGE_PREFIX = {m: "" for m in EMBED_MODELS}
 
 # --- Embedding cihazı ---
 EMBED_DEVICE_INDEX = "auto"   # toplu embedding (indeksleme, eval): "auto" = CUDA varsa GPU, yoksa CPU; "cpu" / "cuda"
-EMBED_DEVICE_QUERY = "cpu"    # tek soru embedding'i: CPU (GPU'yu LLM'e bırakır)
+EMBED_DEVICE_QUERY = "auto"   # tek soru embedding'i: "auto" = CUDA varsa GPU (indeksle AYNI fp16 model, ~1.1 GB VRAM, ~2 GB RAM tasarrufu), yoksa/OOM'da CPU
 EMBED_INDEX_DTYPE = "float16" # GPU'da indeksleme hassasiyeti ("float16" / "float32"); CPU hep float32
 EMBED_BATCH_SIZE = 32
 

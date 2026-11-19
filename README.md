@@ -37,7 +37,7 @@ ollama pull qwen3.5:4b       # üretim (LLM) modeli
 
 GPU: `pyproject.toml` torch'u CUDA 13.2 (`cu132`) wheel'inden alır (~3 GB indirme; CUDA 13.2 destekleyen NVIDIA sürücüsü gerekir). NVIDIA GPU'nuz yoksa indirme boyutunu küçültmek için `[[tool.uv.index]]` adresini `https://download.pytorch.org/whl/cpu` yapıp `uv lock` çalıştırın; uygulama CUDA yoksa kendiliğinden CPU'ya düşer.
 
-- **Embedding:** `BAAI/bge-m3`, toplu işlerde (indeksleme, eval) **GPU'da fp16** (CUDA yoksa CPU), tek soru embedding'i CPU'da çalışır; indeksleme öncesi Ollama LLM'i boşaltılır, sonrasında GPU modeli bırakılır (tepe VRAM ~1-1.5 GB). İlk kullanımda Hugging Face'ten otomatik iner (`~/.cache/huggingface`). Elle bir şey yapman gerekmez.
+- **Embedding:** `BAAI/bge-m3`, **GPU'da fp16** (CUDA yoksa veya VRAM yetmezse CPU fp32'ye düşer); indeksleme ve soru embedding'i aynı tek modeli paylaşır, model sohbet boyunca GPU'da kalır (~1.1 GB VRAM; LLM ile toplam ~4.8 GB, 6 GB kartta sığar; CPU kopyası yok, ~2 GB RAM tasarrufu). İndeksleme öncesi Ollama LLM'i boşaltılır (sonraki soruda yeniden yüklenir). CPU'da çalıştırmak için `EMBED_DEVICE_QUERY = "cpu"`. İlk kullanımda Hugging Face'ten otomatik iner (`~/.cache/huggingface`). Elle bir şey yapman gerekmez.
 - **LLM:** `qwen3.5:4b`, Ollama üzerinden (GPU varsa kullanır).
 
 Ollama servisi için önerilen ortam değişkenleri (VRAM'i verimli kullanır; `systemctl edit ollama` ile veya servisi başlatırken):
@@ -138,7 +138,7 @@ Soru:  doğru mu?                   -> followup (yeni arama yok, önceki kaynakl
 |---|---|---|
 | `EMBED_MODEL` | `BAAI/bge-m3` | embedding modeli |
 | `EMBED_DEVICE_INDEX` | `auto` | indeksleme/eval cihazı (`auto` = CUDA varsa GPU, yoksa CPU) |
-| `EMBED_DEVICE_QUERY` | `cpu` | soru embedding cihazı |
+| `EMBED_DEVICE_QUERY` | `auto` | soru embedding cihazı; `auto` = CUDA varsa indeksleme ile aynı fp16 GPU modeli (tek örnek), yoksa/OOM'da CPU |
 | `EMBED_INDEX_DTYPE` | `float16` | GPU'da indeksleme hassasiyeti |
 | `EMBED_BATCH_SIZE` | `32` | GPU batch boyutu |
 | `CHUNK_STRATEGY` | `fixed` | `fixed` veya `heading` |

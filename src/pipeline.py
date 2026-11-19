@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from . import config, settings
 from .chunker import chunk_docs
-from .embedder import embed_passages, release_gpu, unload_llm, resolve_index_device
+from .embedder import embed_passages, release_index_model, unload_llm, resolve_index_device
 from .formats import NO_NOTES_MSG
 from .index import get_index, index_name
 from .loader import load_report
@@ -31,7 +31,7 @@ def build_index() -> IndexResult:
     try:
         vecs = embed_passages([c.text for c in chunks])
     finally:
-        release_gpu()
+        release_index_model()  # model soru modeliyse GPU'da kalır
     name = index_name(config.EMBED_MODEL, config.CHUNK_STRATEGY, config.CHUNK_SIZE)
     for backend in ("numpy", "chroma"):
         get_index(backend, name).build(chunks, vecs)

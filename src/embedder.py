@@ -1,6 +1,6 @@
 """ADIM 3 - EMBED: Metni sayı vektörüne çevir. Anlamca yakın metinler yakın vektör olur.
 
-Toplu işler (indeksleme, eval) GPU'da (fp16), tek soru CPU'da çalışır; GPU yoksa/hata verirse CPU'ya düşer.
+İndeksleme ve tek soru aynı GPU modelini (fp16, tek önbellekli örnek) paylaşır; GPU yoksa/OOM olursa CPU'ya düşer (bir kez loglanır).
 """
 import logging
 
@@ -54,6 +54,23 @@ def get_model(device: str = "cpu", name: str | None = None):
         m = SentenceTransformer(key[0], device=device, **kw)
         _models[key] = m
     return _models[key]
+
+
+def warmup_query_model():
+    """Soru modelini önceden yükler (GPU, olmazsa CPU'ya düşer)."""
+    device = resolve_device(config.EMBED_DEVICE_QUERY)
+    if device.startswith("cuda"):
+        try:
+            return get_model(device)
+        except Exception as e:  # yükleme sırasında OOM vb.
+            _disable_cuda(e)
+    return get_model("cpu")
+
+
+def release_index_model() -> None:
+    """İndeksleme sonrası GPU modelini, soru modeli olarak kullanılmıyorsa bırakır."""
+    if not resolve_device(config.EMBED_DEVICE_QUERY).startswith("cuda"):
+        release_gpu()
 
 
 def release_gpu() -> None:
