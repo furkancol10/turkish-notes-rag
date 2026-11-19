@@ -111,6 +111,7 @@ class Bubble(QWidget):
             who.setObjectName("who")
             col.addWidget(who)
             col.addWidget(frame, 0, Qt.AlignLeft)
+            col.addStretch(1)
             left = QVBoxLayout()
             left.addWidget(av)
             left.addStretch()
