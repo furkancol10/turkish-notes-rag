@@ -52,7 +52,7 @@ Servis çalışmıyorsa: `ollama serve`.
 
 ```bash
 uv run python -m desktop.main                       # masaüstü uygulaması
-uv run streamlit run app.py                         # Streamlit arayüzü
+uv run streamlit run app.py                         # Streamlit arayüzü (repo kökünden çalıştır: .streamlit/config.toml yalnız localhost dinler)
 
 uv run python -m src.cli index                      # notları oku, parçala, embed et, indeksle
 uv run python -m src.cli ask "Proje Nova bütçesi nedir?"   # tek soru, hafızasız

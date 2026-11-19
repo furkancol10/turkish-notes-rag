@@ -40,15 +40,18 @@ _META = [
     r"(yeni )?(not|notlarimi|notlari|dosya) (nasil|nereden|nereye) (eklerim|eklenir|ekleyebilirim|yuklerim|yuklenir|yukleyebilirim)",
     r"(notlarimi |notlari )?(nasil )?(yeniden )?indekslerim|indeksleme nasil yapilir|ne zaman indekslemeliyim",
     # model / gizlilik
-    r"(sen )?(hangi|ne) (llm|dil modeli|dil modelini|modeli|modelini|model|yapay zeka modelini|yapay zeka)( modelini)?( kullaniyorsun| kullaniyor| tabanlisin)?",
+    # model: "sen" ya da kullanım eki zorunlu; çıplak "hangi model" notlara gider
+    r"sen (hangi|ne) (llm|dil modeli|dil modelini|modeli|modelini|model|yapay zeka modelini|yapay zeka)( modelini)?( kullaniyorsun| kullaniyor| tabanlisin)?",
+    r"(hangi|ne) (llm|dil modeli|dil modelini|modeli|modelini|model|yapay zeka modelini|yapay zeka)( modelini)? (kullaniyorsun|tabanlisin)",
     r"(hangi|ne) (embedding|gomme) (modelini|modeli) (kullaniyorsun|kullaniyor)",
     r"(arkanda|arkada) (hangi|ne) (model|llm) (var|calisiyor)",
     r"(sen )?(chatgpt|gpt|claude|gemini)( mi| misin)+( sen)?",
     r"(internete|internet) (bagli misin|kullaniyor musun|kullaniyor mu)",
     r"(verilerim|notlarim|veriler) (disari gidiyor mu|internete gidiyor mu|guvende mi)",
 ]
-# "hangi dil modeli" tek başına meta sayılmasın diye kullanım eki zorunlu yapılmadı;
-# ancak "hangi dil modeli daha iyi" gibi devamlı cümleler fullmatch'e takılıp notes'a gider.
+# Model sorusu yalnız "sen ..." ya da kullanım ekiyle ("kullaniyorsun", "tabanlisin") meta sayılır;
+# çıplak "hangi model" / "hangi dil modeli" notlarda aranır. Üçüncü tekil "kullaniyor" yalnız
+# "sen"li desende: "hangi modeli kullanıyor" belirsizdir, belirsiz durum notlara gider.
 _META_RE = [re.compile(p) for p in _META]
 
 

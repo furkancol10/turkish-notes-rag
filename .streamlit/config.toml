@@ -1,0 +1,7 @@
+# Streamlit yalnız bu bilgisayardan erişilebilsin (notlar kişisel) ve kullanım istatistiği göndermesin.
+# Not: bu dosya `streamlit run` komutunun çalıştırıldığı dizinden okunur; komutu repo kökünden çalıştır.
+[server]
+address = "localhost"
+
+[browser]
+gatherUsageStats = false
