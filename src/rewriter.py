@@ -1,10 +1,11 @@
 """Takip sorusunu (\"peki gemini ne önermiş?\") geçmişe bakarak bağımsız arama sorgusuna çevirir."""
+import json
 import re
 
 import ollama
 
 from . import config
-from .router import normalize
+from .router import is_sources, normalize, route
 
 SYSTEM = (
     "Sohbet geçmişine bakarak son kullanıcı mesajını, geçmişe ihtiyaç duymadan anlaşılan "
@@ -84,3 +85,83 @@ def condense(question: str, history: list[dict]) -> str:
     except Exception:
         return question
     return out if _valid(out, question) else question
+
+
+# --- Tek çağrıda niyet + bağımsız sorgu ---
+_INTENTS = {"followup", "sources", "notes", "meta"}
+INTENT_SYSTEM = (
+    "Sohbet geçmişine bakarak kullanıcının SON mesajının niyetini sınıflandır ve bağımsız bir "
+    "Türkçe arama sorusu yaz. Sadece JSON çıkar: {\"intent\": \"...\", \"query\": \"...\"}\n"
+    "intent değerleri:\n"
+    "- followup: önceki asistan cevabının kendisi hakkında (doğru mu, kısalt, ilkini açıkla, neden, tabloya dök).\n"
+    "- sources: önceki cevabın HANGİ dosya/sayfa/kaynaktan geldiğini soruyor.\n"
+    "- notes: notlarda yeni arama gerektiriyor; eksiltili devam soruları dahil (peki teslim tarihi?). "
+    "Konu başka bir dosyada/raporda aranıyorsa da notes.\n"
+    "- meta: asistanın kendisi hakkında (kimsin, hangi modelsin, teşekkür).\n"
+    "query: geçmişe ihtiyaç duymayan tek soru; zamirleri aç ve kullanıcının NİYETİNİ KORU "
+    "(\"hangi dosyada\" soruyorsa soruda kalsın). Cevaplama. followup/meta için query = son mesaj.\n"
+    "Örnekler (geçmiş: Re-ranking anlatıldı):\n"
+    "\"hangi dosyada bundan bahsetmiş\" -> {\"intent\":\"sources\",\"query\":\"Re-ranking hangi dosyada geçiyor?\"}\n"
+    "\"başka hangi raporda geçiyor?\" -> {\"intent\":\"notes\",\"query\":\"Re-ranking hangi raporlarda geçiyor?\"}\n"
+    "\"peki gemini?\" -> {\"intent\":\"notes\",\"query\":\"Gemini raporu Re-ranking için ne önermiş?\"}\n"
+    "\"doğru mu?\" -> {\"intent\":\"followup\",\"query\":\"doğru mu?\"}\n"
+    "\"kimsin sen\" -> {\"intent\":\"meta\",\"query\":\"kimsin sen\"}"
+)
+
+
+def _parse(text: str) -> dict | None:
+    m = re.search(r"\{.*\}", text or "", re.S)
+    if not m:
+        return None
+    try:
+        d = json.loads(m.group(0))
+    except Exception:
+        return None
+    if not isinstance(d, dict):
+        return None
+    intent = str(d.get("intent", "")).strip().lower()
+    query = d.get("query")
+    if intent not in _INTENTS or not isinstance(query, str):
+        return None
+    query = _clean(query)
+    if not query:
+        return None
+    return {"intent": intent, "query": query}
+
+
+def _fallback(question: str, history: list[dict]) -> dict:
+    return {"intent": route(question, True), "query": condense(question, history)}
+
+
+def analyze(question: str, history: list[dict]) -> dict:
+    """{"intent": followup|sources|notes|meta, "query": str}. Asla exception fırlatmaz.
+    Geçmiş yoksa kural yolu (LLM yok); varsa kural ön-kontrolleri, sonra TEK LLM çağrısı."""
+    try:
+        if not history:
+            return {"intent": route(question), "query": question}
+        if route(question) == "meta":
+            return {"intent": "meta", "query": question}
+        if is_sources(question):
+            return {"intent": "sources", "query": question}
+        convo = "\n".join(
+            f"{'Kullanıcı' if m['role'] == 'user' else 'Asistan'}: {m['content']}" for m in history)
+        resp = ollama.chat(
+            model=config.LLM_MODEL,
+            messages=[{"role": "system", "content": INTENT_SYSTEM},
+                      {"role": "user", "content": f"Geçmiş:\n{convo}\n\nSon mesaj: {question}\n\nJSON:"}],
+            options={**config.LLM_OPTIONS, "temperature": 0, "num_predict": 96},
+            keep_alive=config.LLM_KEEP_ALIVE, think=False, format="json",
+        )
+        out = _parse(resp["message"]["content"])
+        if out is None:
+            return _fallback(question, history)
+        if out["intent"] in ("followup", "meta"):
+            out["query"] = question
+        elif not _valid(out["query"], question):
+            out["query"] = question
+        return out
+    except Exception:
+        try:
+            return _fallback(question, history)
+        except Exception:
+            return {"intent": "notes", "query": question}
