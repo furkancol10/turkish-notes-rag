@@ -8,6 +8,7 @@ from src.embedder import _model, embed_passages
 from src.generator import answer
 from src.index import get_index, index_name
 from src.loader import load_notes
+from src.notes_io import save_note
 from src.retriever import retrieve
 
 
@@ -39,14 +40,8 @@ def reindex():
 
 
 def import_note(src_path: str):
-    """Dosyayı NOTES_DIR'e temizlenmiş adla kopyalar (path traversal yok).
-    Kaydedilen adı döner, geçersizse None."""
-    safe = Path(src_path.replace("\\", "/")).name.strip()
-    if not safe or safe.startswith(".") or Path(safe).suffix.lower() not in (".md", ".txt"):
-        return None
-    config.NOTES_DIR.mkdir(parents=True, exist_ok=True)
-    (config.NOTES_DIR / safe).write_bytes(Path(src_path).read_bytes())
-    return safe
+    """Dosyayı NOTES_DIR'e temizlenmiş adla kopyalar; kaydedilen adı döner, geçersizse None."""
+    return save_note(src_path, Path(src_path).read_bytes())
 
 
 def is_index_missing(e: Exception) -> bool:

@@ -32,12 +32,11 @@ class Bubble(QFrame):
         super().__init__()
         user = role == "user"
         self.setStyleSheet(
-            f"Bubble{{background:{'#dbeafe' if user else '#f3f4f6'};border-radius:10px;}}"
-            "QLabel,QToolButton{color:#111827;}"
-            "QPlainTextEdit{color:#111827;background:#ffffff;}")
+            f"Bubble{{background:palette({'button' if user else 'alternate-base'});"
+            "border:1px solid palette(mid);border-radius:10px;}")
         lay = QVBoxLayout(self)
         who = QLabel("Sen" if user else "Asistan")
-        who.setStyleSheet("font-weight:bold;color:#374151;")
+        who.setStyleSheet("font-weight:bold;")
         msg = QLabel(text)
         msg.setWordWrap(True)
         msg.setTextInteractionFlags(Qt.TextSelectableByMouse)

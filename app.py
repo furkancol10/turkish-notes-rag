@@ -10,6 +10,7 @@ from src.embedder import _model, embed_passages
 from src.generator import answer
 from src.index import get_index, index_name
 from src.loader import load_notes
+from src.notes_io import save_note
 from src.retriever import retrieve
 
 st.set_page_config(page_title="Kişisel Not Arama", page_icon="📝")
@@ -38,14 +39,7 @@ def reindex():
     return len(docs), len(chunks)
 
 
-def save_upload(name: str, data: bytes):
-    """Yüklenen notu NOTES_DIR'e kaydet; dosya adını temizler (path traversal yok).
-    Kaydedilen adı döner, geçersizse None."""
-    safe = Path(name.replace("\\", "/")).name.strip()
-    if not safe or safe.startswith(".") or Path(safe).suffix.lower() not in (".md", ".txt"):
-        return None
-    (config.NOTES_DIR / safe).write_bytes(data)
-    return safe
+save_upload = save_note
 
 
 def is_index_missing(e: Exception) -> bool:
