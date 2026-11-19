@@ -89,7 +89,10 @@ def get_top_k() -> int:
     v = get("top_k")
     if isinstance(v, bool) or not isinstance(v, (int, float)):
         v = _cfg().TOP_K
-    return max(1, min(15, int(v)))
+    try:
+        return max(1, min(15, int(v)))
+    except (ValueError, OverflowError):
+        return max(1, min(15, int(_cfg().TOP_K)))
 
 
 def set_top_k(n) -> int:

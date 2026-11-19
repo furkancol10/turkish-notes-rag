@@ -285,7 +285,14 @@ class ChatView(QScrollArea):
         """Kayıtlı mesajları (history biçimi) yeniden çizer; kaynaklar açılır/kapanır kalır."""
         self.clear()
         for m in messages:
-            res = [(SimpleNamespace(source=s.get("source", ""), heading=s.get("heading", ""),
-                                    page=s.get("page"), text=s.get("text", "")),
-                    float(s.get("score", 0.0))) for s in m.get("sources") or []]
-            self.add(m.get("role", "assistant"), m.get("text", ""), res)
+            res = []
+            for s in m.get("sources") or []:
+                if not isinstance(s, dict):
+                    continue
+                try:
+                    score = float(s.get("score", 0.0))
+                except (TypeError, ValueError):
+                    score = 0.0
+                res.append((SimpleNamespace(source=s.get("source", ""), heading=s.get("heading", ""),
+                                            page=s.get("page"), text=s.get("text", "")), score))
+            self.add(m.get("role", "assistant"), str(m.get("text", "")), res)

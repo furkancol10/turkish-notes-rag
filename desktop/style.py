@@ -46,28 +46,6 @@ QLabel#appTitle {{ font-size: 13pt; font-weight: 700; }}
                         padding: 7px 10px; text-align: left; color: {c['fg']}; }}
 #sidebar QPushButton:hover {{ background: {c['surface2']}; }}
 #sidebar QPushButton:disabled {{ color: {c['muted']}; }}
-QListWidget {{ color: {c['fg']}; background: {c['surface']}; border: 1px solid {c['border']};
-               border-radius: 8px; padding: 4px; outline: 0; }}
-QListWidget::item {{ padding: 4px 6px; border-radius: 6px; }}
-QListWidget::item:selected {{ background: {c['surface2']}; color: {c['fg']}; }}
-QSpinBox {{ color: {c['fg']}; background: {c['surface']}; border: 1px solid {c['border']};
-            border-radius: 8px; padding: 4px 8px; min-height: 20px;
-            selection-background-color: {c['accent']}; }}
-QSpinBox::up-button, QSpinBox::down-button {{ width: 0; border: none; }}
-QSpinBox QLineEdit {{ color: {c['fg']}; background: transparent; }}
-QRadioButton {{ spacing: 8px; color: {c['fg']}; }}
-QRadioButton::indicator {{ width: 14px; height: 14px; border-radius: 8px;
-                           border: 2px solid {c['muted']}; background: transparent; }}
-QRadioButton::indicator:hover {{ border-color: {c['accent']}; }}
-QRadioButton::indicator:checked {{ border: 2px solid {c['accent']}; background: qradialgradient(
-    cx:0.5, cy:0.5, radius:0.5, fx:0.5, fy:0.5, stop:0 {c['accent']}, stop:0.5 {c['accent']},
-    stop:0.56 transparent, stop:1 transparent); }}
-#sidebar QPushButton#step {{ background: {c['surface']}; border: 1px solid {c['border']};
-    border-radius: 8px; padding: 0; text-align: center; min-width: 28px; max-width: 28px;
-    min-height: 28px; max-height: 28px; font-size: 12pt; font-weight: 600; }}
-#sidebar QPushButton#step:hover {{ border-color: {c['accent']}; background: {c['surface2']}; }}
-QProgressBar {{ background: {c['surface2']}; border: none; border-radius: 3px; max-height: 6px; }}
-QProgressBar::chunk {{ background: {c['accent']}; border-radius: 3px; }}
 QStatusBar {{ background: {c['bg']}; color: {c['muted']}; }}
 
 QScrollArea#chat, #chatInner {{ background: {c['bg']}; border: none; }}
@@ -126,6 +104,8 @@ def build_sidebar_stylesheet(pal: QPalette) -> str:
 #sidebar QFrame#folderBody QLabel {{ background: transparent; }}
 #sidebar QPushButton#action {{ padding: 5px 8px; }}
 #sidebar QPushButton#notesToggle {{ color: {c['muted']}; padding: 5px 8px; }}
+#sidebar QScrollArea#notesScroll {{ background: transparent; border: none; }}
+#sidebar QScrollArea#notesScroll > QWidget > QWidget {{ background: transparent; }}
 #sidebar QLabel#notesList {{ color: {c['muted']}; font-size: 9pt; }}
 #sidebar QScrollArea#chatList, #sidebar QWidget#chatListInner {{
     background: transparent; border: none; }}

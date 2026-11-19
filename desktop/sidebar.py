@@ -186,8 +186,9 @@ class Sidebar(QWidget):
         head = QHBoxLayout()
         ic = QLabel()
         ic.setPixmap(QIcon(str(ICON)).pixmap(QSize(26, 26)))
-        title = QLabel("Not Arama")
+        title = QLabel("Kişisel Not Arama")
         title.setObjectName("appTitle")
+        title.setToolTip("Kişisel Not Arama")
         head.addWidget(ic)
         head.addWidget(title, 1)
         root.addLayout(head)
@@ -272,7 +273,14 @@ class Sidebar(QWidget):
         self.notes_lbl.setObjectName("notesList")
         self.notes_lbl.setWordWrap(True)
         self.notes_lbl.setContentsMargins(10, 0, 0, 0)
-        bl.addWidget(self.notes_lbl)
+        self.notes_scroll = QScrollArea()
+        self.notes_scroll.setObjectName("notesScroll")
+        self.notes_scroll.setWidgetResizable(True)
+        self.notes_scroll.setFrameShape(QFrame.NoFrame)
+        self.notes_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.notes_scroll.setMaximumHeight(160)
+        self.notes_scroll.setWidget(self.notes_lbl)
+        bl.addWidget(self.notes_scroll)
         root.addWidget(self.folder_body)
 
         # --- Sohbetler
@@ -367,7 +375,7 @@ class Sidebar(QWidget):
 
     def set_notes_list_open(self, open: bool, emit: bool = False):
         self._notes_open = open
-        self.notes_lbl.setVisible(open)
+        self.notes_scroll.setVisible(open)
         self._refresh_notes_toggle()
         if emit:
             self.notes_list_toggled.emit(open)

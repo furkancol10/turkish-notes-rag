@@ -69,7 +69,11 @@ def load_chat(chat_id: str) -> dict | None:
         return None
     if not isinstance(data, dict) or not isinstance(data.get("messages"), list):
         return None
-    data.setdefault("id", chat_id)
+    data["messages"] = [m for m in data["messages"] if isinstance(m, dict)]
+    for k in ("title", "updated"):
+        if not isinstance(data.get(k), str):
+            data[k] = ""
+    data["id"] = chat_id
     return data
 
 

@@ -112,3 +112,61 @@ def test_settings_persist(env, monkeypatch):
     assert (w2.top_k, w2.backend) == (9, "chroma")
     w.side.set_folder_section_open(True, emit=True)
     assert settings.get_folder_section_open() is True
+
+
+def test_corrupt_files_do_not_crash_startup(env):
+    make, wait, _ = env
+    from src import history, settings
+    d = history.chats_dir()
+    d.mkdir(parents=True)
+    (d / "bad.json").write_text("{not json")
+    (d / "bin.json").write_bytes(b"\xff\xfe\x00")
+    (d / "odd.json").write_text('{"id":"odd","updated":5,"title":3,"messages":["x",{"role":"user","text":"s","sources":["z",{"score":"q"}]}]}')
+    settings.settings_path().parent.mkdir(parents=True)
+    settings.settings_path().write_text('{"top_k": NaN, "last_chat_id": "odd", "backend": 5}')
+    w = make()
+    wait(w)
+    assert 1 <= w.top_k <= 15
+    w.open_chat("odd")
+    w.open_chat("bad")
+
+
+def test_inflight_block_and_reenable_after_error(env, monkeypatch):
+    make, wait, _ = env
+    from src import history
+    from desktop import services
+
+    def boom(q, k, b):
+        raise RuntimeError("x")
+    w = make()
+    wait(w)
+    ask(w, wait, "bir")
+    a = w.cur["id"]
+    monkeypatch.setattr(services, "ask", boom)
+    from PySide6.QtWidgets import QMessageBox
+    monkeypatch.setattr(QMessageBox, "critical", lambda *a, **k: None)
+    w.input.setText("iki")
+    w.send()
+    assert w._asking
+    w.new_chat()
+    w.delete_chat(a)
+    w.delete_all_chats()
+    assert w.cur["id"] == a and history.load_chat(a)
+    wait(w)
+    assert not w._asking
+    w.new_chat()
+    assert w.cur["id"] != a
+
+
+def test_chat_from_other_folder_opens(env):
+    make, wait, _ = env
+    from src import history
+    c = history.new_chat("/nonexistent/other")
+    c["messages"] = [{"role": "user", "text": "s", "sources": []},
+                     {"role": "assistant", "text": "**c**", "sources": [
+                         {"source": "gone.pdf", "heading": "", "page": 2, "score": 0.5, "text": "t"}]}]
+    history.save_chat(c)
+    w = make()
+    wait(w)
+    w.open_chat(c["id"])
+    assert w.cur["id"] == c["id"]
