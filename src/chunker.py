@@ -43,15 +43,21 @@ def chunk_fixed(doc: Doc, size: int, overlap: int) -> list[Chunk]:
     return chunks
 
 
-def chunk_by_heading(doc: Doc) -> list[Chunk]:
-    """Başlık bazlı: her '#' başlığı yeni parça başlatır (notun doğal yapısını korur)."""
+def chunk_by_heading(doc: Doc, size: int = config.CHUNK_SIZE,
+                     overlap: int = config.CHUNK_OVERLAP) -> list[Chunk]:
+    """Başlık bazlı: her '#' başlığı yeni parça başlatır (notun doğal yapısını korur).
+    `size`'dan uzun bölümler sabit boyut + örtüşme ile bölünür."""
     parts = re.split(r"(?m)^(?=#{1,6}\s)", doc.text)
     chunks = []
     for part in parts:
-        if part.strip():
-            m = HEADING.match(part)
-            chunks.append(Chunk(f"{doc.source}#{len(chunks)}", doc.source,
-                                m.group(1).strip() if m else "", part.strip()))
+        if not part.strip():
+            continue
+        m = HEADING.match(part)
+        heading = m.group(1).strip() if m else ""
+        pieces = ([part.strip()] if len(part.strip()) <= size else
+                  [c.text for c in chunk_fixed(Doc(doc.source, part), size, overlap)])
+        for text in pieces:
+            chunks.append(Chunk(f"{doc.source}#{len(chunks)}", doc.source, heading, text))
     return chunks
 
 
@@ -77,5 +83,5 @@ def chunk_docs(docs: list[Doc], strategy: str = config.CHUNK_STRATEGY,
         if d.pages:
             out += chunk_pages(d, size, overlap)
         else:
-            out += chunk_by_heading(d) if strategy == "heading" else chunk_fixed(d, size, overlap)
+            out += chunk_by_heading(d, size, overlap) if strategy == "heading" else chunk_fixed(d, size, overlap)
     return out

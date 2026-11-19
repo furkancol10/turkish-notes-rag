@@ -4,6 +4,7 @@
 import hashlib
 import json
 import re
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -29,10 +30,25 @@ class NumpyIndex:
         self.dir = config.INDEX_DIR / "numpy" / name
 
     def build(self, chunks: list[Chunk], vecs: np.ndarray):
-        self.dir.mkdir(parents=True, exist_ok=True)
-        np.save(self.dir / "vecs.npy", vecs)
-        (self.dir / "chunks.json").write_text(
-            json.dumps([c.__dict__ for c in chunks], ensure_ascii=False), encoding="utf-8")
+        # Geçici dizine yaz, başarılıysa değiştir: hata eski indeksi bozmaz
+        tmp = self.dir.with_name(self.dir.name + ".tmp")
+        old = self.dir.with_name(self.dir.name + ".old")
+        for d in (tmp, old):
+            shutil.rmtree(d, ignore_errors=True)
+        tmp.mkdir(parents=True)
+        try:
+            np.save(tmp / "vecs.npy", vecs)
+            (tmp / "chunks.json").write_text(
+                json.dumps([c.__dict__ for c in chunks], ensure_ascii=False), encoding="utf-8")
+            if self.dir.exists():
+                self.dir.rename(old)
+            tmp.rename(self.dir)
+        except BaseException:
+            if old.exists() and not self.dir.exists():
+                old.rename(self.dir)
+            shutil.rmtree(tmp, ignore_errors=True)
+            raise
+        shutil.rmtree(old, ignore_errors=True)
 
     def _chunks(self) -> list[Chunk]:
         return [Chunk(**c) for c in json.loads((self.dir / "chunks.json").read_text("utf-8"))]
@@ -67,14 +83,29 @@ class ChromaIndex:
         self.name = name
 
     def build(self, chunks: list[Chunk], vecs: np.ndarray):
+        tmp_name = self.name + "_tmp"
+        try:
+            self.client.delete_collection(tmp_name)
+        except Exception:
+            pass
+        col = self.client.create_collection(tmp_name, metadata={"hnsw:space": "cosine"})
+        try:
+            col.add(ids=[c.id for c in chunks], embeddings=vecs.tolist(),
+                    documents=[c.text for c in chunks],
+                    metadatas=[{"source": c.source, "heading": c.heading, "page": c.page}
+                               for c in chunks])
+        except BaseException:
+            try:
+                self.client.delete_collection(tmp_name)
+            except Exception:
+                pass
+            raise
+        # Başarılı: eskisini sil, geçici koleksiyonu asıl adına çevir
         try:
             self.client.delete_collection(self.name)
         except Exception:
             pass
-        col = self.client.create_collection(self.name, metadata={"hnsw:space": "cosine"})
-        col.add(ids=[c.id for c in chunks], embeddings=vecs.tolist(),
-                documents=[c.text for c in chunks],
-                metadatas=[{"source": c.source, "heading": c.heading, "page": c.page} for c in chunks])
+        col.modify(name=self.name)
 
     def doc_titles(self) -> dict[str, str]:
         col = self.client.get_collection(self.name)

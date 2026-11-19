@@ -25,6 +25,8 @@ def build_index() -> IndexResult:
     if not rep.docs:
         raise ValueError(f"{NO_NOTES_MSG} Klasör: {settings.notes_dir()}")
     chunks = chunk_docs(rep.docs)
+    if not chunks:  # yalnız boş notlar: eski indekse dokunmadan dön
+        raise ValueError(f"{NO_NOTES_MSG} Klasör: {settings.notes_dir()}")
     on_gpu = resolve_index_device() != "cpu"
     if on_gpu:
         unload_llm()  # VRAM'i indeksleme için boşalt
@@ -33,6 +35,6 @@ def build_index() -> IndexResult:
     finally:
         release_index_model()  # model soru modeliyse GPU'da kalır
     name = index_name(config.EMBED_MODEL, config.CHUNK_STRATEGY, config.CHUNK_SIZE)
-    for backend in ("numpy", "chroma"):
+    for backend in ("chroma", "numpy"):  # chroma önce: hata olursa numpy eski kalır
         get_index(backend, name).build(chunks, vecs)
     return IndexResult(len(rep.docs), len(chunks), rep.n_skipped)
