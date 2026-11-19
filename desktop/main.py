@@ -79,7 +79,7 @@ class MainWindow(QMainWindow):
         self.index_label = QLabel()
         self.index_label.setObjectName("muted")
         self.index_label.setWordWrap(True)
-        self.top_k = QSpinBox(minimum=1, maximum=10, value=config.TOP_K)
+        self.top_k = QSpinBox(minimum=1, maximum=15, value=config.TOP_K)
         self.rb_numpy, self.rb_chroma = QRadioButton("numpy"), QRadioButton("chroma")
         (self.rb_chroma if config.INDEX_BACKEND == "chroma" else self.rb_numpy).setChecked(True)
         self.btn_clear = flat("Sohbeti temizle", QStyle.SP_TrashIcon)

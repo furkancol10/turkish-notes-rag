@@ -24,7 +24,7 @@ CHUNK_OVERLAP = 64         # karakter
 
 # --- Arama ---
 INDEX_BACKEND = "chroma"   # "chroma" (varsayılan, vektör DB) veya "numpy" (elle kosinüs, öğrenme amaçlı)
-TOP_K = 3
+TOP_K = 10                # 10 parça ≈ 2000 token; num_ctx 4096 içinde rahat sığar
 
 # --- LLM (Ollama, GPU) ---
 LLM_MODEL = "qwen3.5:4b"

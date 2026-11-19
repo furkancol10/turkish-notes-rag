@@ -97,7 +97,7 @@ with st.sidebar:
                "Henüz indeks yok. 'Yeniden indeksle'ye bas.")
 
     st.header("Ayarlar")
-    top_k = st.slider("Kaç parça getirilsin (top_k)", 1, 10, config.TOP_K)
+    top_k = st.slider("Kaç parça getirilsin (top_k)", 1, 15, config.TOP_K)
     backend = st.radio("İndeks yöntemi", ["numpy", "chroma"],
                        index=["numpy", "chroma"].index(config.INDEX_BACKEND), horizontal=True)
     if st.button("Sohbeti temizle"):
