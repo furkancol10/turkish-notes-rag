@@ -207,8 +207,11 @@ class MainWindow(QMainWindow):
                 self.cur["title"] = c.get("title", "")
         self._refresh_chats()
 
-    def _record(self, role, text, sources=None):
-        self.cur["messages"].append({"role": role, "text": text, "sources": sources or []})
+    def _record(self, role, text, sources=None, query=None):
+        msg = {"role": role, "text": text, "sources": sources or []}
+        if query:
+            msg["query"] = query
+        self.cur["messages"].append(msg)
         try:
             history.save_chat(self.cur)
             settings.set_last_chat_id(self.cur["id"])
@@ -260,19 +263,23 @@ class MainWindow(QMainWindow):
         if not q or self._busy:
             return
         self.input.clear()
+        prior = list(self.cur["messages"])   # bu sorudan önceki mesajlar (hafıza)
         self.chat.add("user", q)
         self._record("user", q)
         self.chat.show_typing()
         self._asking = True
         self.run(services.ask, self._on_answer, self._on_ask_failed,
-                 "Notlarda aranıyor ve cevap üretiliyor...", q, self.top_k, self.backend)
+                 "Notlarda aranıyor ve cevap üretiliyor...", q, self.top_k, self.backend, prior)
 
     def _on_answer(self, res):
-        ans, results = res
+        ans, results, info = res
+        q = info.get("query")
+        asked = self.cur["messages"][-1].get("text") if self.cur["messages"] else None
+        q = q if q and q != asked else None
         self._asking = False
         self.chat.hide_typing()
-        self.chat.add("assistant", ans, results)
-        self._record("assistant", ans, history.sources_from_results(results))
+        self.chat.add("assistant", ans, results, q)
+        self._record("assistant", ans, history.sources_from_results(results), q)
         self.statusBar().showMessage("Cevap hazır", 5000)
 
     def _on_ask_failed(self, e):

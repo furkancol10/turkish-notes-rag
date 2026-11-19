@@ -1,10 +1,13 @@
 """İş mantığı (arayüzden bağımsız): app.py'deki yardımcıların masaüstü karşılığı."""
 from datetime import datetime
 from pathlib import Path
+from types import SimpleNamespace
 
 from src import config, settings
 from src.embedder import _model
-from src.generator import answer, answer_meta
+from src.conversation import fit_budget, window
+from src.generator import answer, answer_followup, answer_meta
+from src.rewriter import condense
 from src.index import index_name
 from src.loader import list_note_files, newest_mtime, rel_source
 from src.pipeline import build_index
@@ -83,26 +86,61 @@ class AskError(Exception):
         self.kind = kind
 
 
-def ask(question: str, top_k: int, backend: str):
-    """Arama + LLM cevabı. (cevap, sonuçlar) döner; hata olursa AskError fırlatır."""
-    if route(question) == "meta":      # asistanla ilgili soru: arama yok, kaynak yok
+def _fail_llm(e):
+    return AskError("ollama" if is_connection_error(e) else "other", f"Cevap üretilemedi: {e}")
+
+
+def last_sources(messages) -> list[dict]:
+    """Son asistan mesajının kayıtlı kaynakları (takip sorusu bunlarla cevaplanır)."""
+    for m in reversed(messages or []):
+        if m.get("role") == "assistant":
+            return [s for s in (m.get("sources") or []) if isinstance(s, dict)]
+    return []
+
+
+def _as_results(sources):
+    """Kayıtlı kaynak sözlüklerini (parça, skor) çiftlerine çevirir (arayüz bu biçimi bekler)."""
+    return [(SimpleNamespace(source=s.get("source", ""), heading=s.get("heading", ""),
+                             page=s.get("page"), text=s.get("text", "")),
+             float(s.get("score", 0.0) or 0.0)) for s in sources]
+
+
+def ask(question: str, top_k: int, backend: str, prior_messages=None):
+    """Tüm hat: pencere -> yönlendir -> (yeniden yaz -> getir -> bütçele) -> üret.
+    (cevap, sonuçlar, info) döner; info = {"route", "query"}. Hata olursa AskError fırlatır."""
+    history = window(prior_messages or [])
+    r = route(question, bool(history))
+    info = {"route": r, "query": None}
+    if r == "meta":                    # asistanla ilgili soru: arama yok, kaynak yok
         try:
-            return answer_meta(question), []
+            return answer_meta(question), [], info
         except Exception as e:
-            raise AskError("ollama" if is_connection_error(e) else "other",
-                           f"Cevap üretilemedi: {e}")
+            raise _fail_llm(e)
+    if r == "followup":                # önceki cevabın kaynaklarıyla cevapla, yeni arama yok
+        src = last_sources(prior_messages)
+        try:
+            return answer_followup(question, history, src), _as_results(src), info
+        except Exception as e:
+            raise _fail_llm(e)
     if backend == "numpy" and index_status() is None:
         raise AskError("index", "İndeks bulunamadı.")
+    query = question
+    if history:
+        try:
+            query = condense(question, history) or question
+        except Exception as e:
+            raise _fail_llm(e)
+    info["query"] = query
     try:
         load_embed_model()
-        results = retrieve(question, k=top_k, backend=backend)
+        results = retrieve(query, k=top_k, backend=backend)
     except Exception as e:
         raise AskError("index" if is_index_missing(e) else "other", f"Arama başarısız: {e}")
+    history, results = fit_budget(history, results, question)
     try:
-        return answer(question, results), results
+        return answer(question, results, history), results, info
     except Exception as e:
-        raise AskError("ollama" if is_connection_error(e) else "other",
-                       f"Cevap üretilemedi: {e}")
+        raise _fail_llm(e)
 
 
 def example_questions():

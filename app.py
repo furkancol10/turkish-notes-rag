@@ -4,17 +4,14 @@ from pathlib import Path
 
 import streamlit as st
 
-from src import config, settings
-from src.chunker import chunk_label
+from src import config, history, settings
+from desktop import services
 from src.embedder import _model
 from src.formats import LABEL_TEXT, NO_NOTES_MSG, UPLOAD_TYPES
-from src.generator import answer, answer_meta
 from src.index import index_name
 from src.loader import list_note_files, newest_mtime, rel_source
 from src.pipeline import build_index
 from src.notes_io import save_note
-from src.retriever import retrieve
-from src.router import route
 
 st.set_page_config(page_title="Kişisel Not Arama", page_icon="📝")
 
@@ -109,58 +106,49 @@ st.title("Kişisel Not Arama")
 st.caption("Notlarına soru sor; cevap sadece notlarındaki bilgiye dayanır.")
 
 
-def show_sources(results):
+def show_sources(sources):
     with st.expander("Kaynaklar"):
-        for i, (c, s) in enumerate(results, 1):
-            with st.expander(f"[{i}] {chunk_label(c)}  (skor {s:.2f})"):
-                st.text(c.text)
+        for i, src in enumerate(sources, 1):
+            page = f", s.{src['page']}" if src.get("page") else ""
+            head = f" > {src['heading']}" if src.get("heading") else ""
+            with st.expander(f"[{i}] {src['source']}{head}{page}  (skor {src['score']:.2f})"):
+                st.text(src["text"])
 
 
-st.session_state.setdefault("msgs", [])  # (rol, metin, kaynaklar)
-for role, text, results in st.session_state.msgs:
-    with st.chat_message(role):
-        st.write(text)
-        if results:
-            show_sources(results)
+def show_msg(m):
+    st.write(m["text"])
+    if m.get("query"):
+        st.caption(f"Aranan: {m['query']}")
+    if m.get("sources"):
+        show_sources(m["sources"])
+
+
+st.session_state.setdefault("msgs", [])  # history.py biçimi: {role, text, sources, query?}
+for m in st.session_state.msgs:
+    with st.chat_message(m["role"]):
+        show_msg(m)
 
 if q := st.chat_input("Notlarına bir soru sor"):
-    st.session_state.msgs.append(("user", q, None))
+    prior = list(st.session_state.msgs)       # bu sorudan önceki mesajlar (hafıza)
+    st.session_state.msgs.append({"role": "user", "text": q, "sources": []})
     with st.chat_message("user"):
         st.write(q)
     with st.chat_message("assistant"):
-        if route(q) == "meta":          # asistanla ilgili soru: arama yok, kaynak yok
-            try:
-                with st.spinner("Cevap üretiliyor..."):
-                    ans = answer_meta(q)
-            except Exception as e:
-                st.error("Ollama'ya bağlanılamadı." if is_connection_error(e) else f"Cevap üretilemedi: {e}")
-                st.stop()
-            st.write(ans)
-            st.session_state.msgs.append(("assistant", ans, []))
-            st.stop()
-        if index_status() is None and backend == "numpy":
-            st.error("İndeks bulunamadı. Soldan 'Yeniden indeksle'ye bas.")
-            st.stop()
         try:
-            with st.spinner("Notlarda aranıyor..."):
-                load_embed_model()
-                results = retrieve(q, k=top_k, backend=backend)
-        except Exception as e:
-            if is_index_missing(e):
+            with st.spinner("Notlarda aranıyor ve cevap üretiliyor..."):
+                ans, results, info = services.ask(q, top_k, backend, prior)
+        except services.AskError as e:
+            if e.kind == "index":
                 st.error("İndeks bulunamadı. Soldan 'Yeniden indeksle'ye bas.")
-            else:
-                st.error(f"Arama başarısız: {e}")
-            st.stop()
-        try:
-            with st.spinner("Cevap üretiliyor..."):
-                ans = answer(q, results)
-        except Exception as e:
-            if is_connection_error(e):
+            elif e.kind == "ollama":
                 st.error("Ollama'ya bağlanılamadı. ollama servisini başlat "
                          "(`ollama serve`) ve tekrar dene.")
             else:
-                st.error(f"Cevap üretilemedi: {e}")
+                st.error(str(e))
             st.stop()
-        st.write(ans)
-        show_sources(results)
-    st.session_state.msgs.append(("assistant", ans, results))
+        query = info.get("query")
+        msg = {"role": "assistant", "text": ans, "sources": history.sources_from_results(results)}
+        if query and query != q:
+            msg["query"] = query
+        show_msg(msg)
+    st.session_state.msgs.append(msg)

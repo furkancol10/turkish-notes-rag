@@ -15,7 +15,7 @@ def env(tmp_path, monkeypatch):
     app = QApplication.instance() or QApplication([])
     from desktop import main as m, services
     chunk = SimpleNamespace(source="a.pdf", heading="", page=3, text="parça metni")
-    monkeypatch.setattr(services, "ask", lambda q, k, b: (f"cevap:{q}:{k}:{b}", [(chunk, 0.9)]))
+    monkeypatch.setattr(services, "ask", lambda q, k, b, prior=None: (f"cevap:{q}:{k}:{b}", [(chunk, 0.9)], {"route": "notes", "query": None}))
     monkeypatch.setattr(services, "load_embed_model", lambda: None)
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.Yes)
     wins = []
@@ -144,7 +144,7 @@ def test_inflight_block_and_reenable_after_error(env, monkeypatch):
     from src import history
     from desktop import services
 
-    def boom(q, k, b):
+    def boom(q, k, b, prior=None):
         raise RuntimeError("x")
     w = make()
     wait(w)
@@ -178,3 +178,17 @@ def test_chat_from_other_folder_opens(env):
     wait(w)
     w.open_chat(c["id"])
     assert w.cur["id"] == c["id"]
+
+
+def test_query_saved_and_restored(env, monkeypatch):
+    make, wait, _ = env
+    from desktop import services
+    monkeypatch.setattr(services, "ask", lambda q, k, b, prior=None: (
+        "c", [], {"route": "notes", "query": "yeniden yazılmış"}))
+    w = make()
+    wait(w)
+    ask(w, wait, "peki?")
+    assert w.cur["messages"][-1]["query"] == "yeniden yazılmış"
+    w.chat.load_messages(w.cur["messages"])
+    from PySide6.QtWidgets import QLabel
+    assert any(l.text() == "Aranan: yeniden yazılmış" for l in w.chat.findChildren(QLabel))

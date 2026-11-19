@@ -3,8 +3,7 @@
 | Yöntem | hit@3 | MRR |
 |---|---|---|
 | Ham soru (baseline) | 0.81 | 0.753 |
-| Yoğunlaştırılmış (rewrite) | pending | pending |
+| Yoğunlaştırılmış (rewrite) | 0.96 | 0.920 |
 
-- Route doğruluğu: pending (route has_history yok)
-- Ort. condense gecikmesi: pending
-- rewrite: pending (src.rewriter henüz yok)
+- Route doğruluğu: 9/30 = 0.30
+- Ort. condense gecikmesi: 0.50 sn
