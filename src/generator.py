@@ -35,7 +35,7 @@ def meta_system() -> str:
         f"{n} not) soruları cevaplarsın. Notlar {config.EMBED_MODEL} embedding modeliyle "
         f"aranır, cevabı {config.LLM_MODEL} dil modeli yazar. Her şey yerel çalışır, "
         "veri dışarı gitmez. Selamlaşmalara ve sana dair sorulara Türkçe, çok kısa cevap ver. "
-        "Yukarıdakiler dışında yetenek uydurma; bilmediğini söyleme, notlarla ilgili soru sormasını öner."
+        "Yukarıdakiler dışında yetenek uydurma (not ekleme/silme, internet araması, genel bilgi sorusu cevaplama yok); bilmediğin bir şeyi uydurma, kullanıcıya notlarıyla ilgili soru sormasını öner."
     )
 
 
