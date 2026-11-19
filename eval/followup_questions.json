@@ -4,21 +4,21 @@
   "turns": [
    {
     "question": "Proje Nova toplantısında ne kararlaştırıldı?",
-    "expected_route": "notes",
     "expected_source": "toplanti_proje_nova.md",
-    "reference_answer": "Teslim tarihi 30 Haziran, bütçe 400 bin lira; ana risk tasarım ekibinin iki kişi eksik olması."
+    "reference_answer": "Teslim tarihi 30 Haziran, bütçe 400 bin lira; ana risk tasarım ekibinin iki kişi eksik olması.",
+    "expected_intent": "notes"
    },
    {
     "question": "Peki onun bütçesi ne?",
-    "expected_route": "notes",
     "expected_source": "toplanti_proje_nova.md",
-    "reference_answer": "Proje Nova'nın bütçesi 400 bin lira."
+    "reference_answer": "Proje Nova'nın bütçesi 400 bin lira.",
+    "expected_intent": "notes"
    },
    {
     "question": "Kimler katıldı?",
-    "expected_route": "notes",
     "expected_source": "toplanti_proje_nova.md",
-    "reference_answer": "Elif, Burak ve not sahibi katıldı."
+    "reference_answer": "Elif, Burak ve not sahibi katıldı.",
+    "expected_intent": "notes"
    }
   ]
  },
@@ -27,21 +27,21 @@
   "turns": [
    {
     "question": "Proje Nova'da aksiyonlar neler?",
-    "expected_route": "notes",
     "expected_source": "toplanti_proje_nova.md",
-    "reference_answer": "Elif kullanıcı araştırmasını 5 Nisan'a kadar bitirecek, Burak API taslağını hazırlayacak, not sahibi cuma günleri durum raporu gönderecek."
+    "reference_answer": "Elif kullanıcı araştırmasını 5 Nisan'a kadar bitirecek, Burak API taslağını hazırlayacak, not sahibi cuma günleri durum raporu gönderecek.",
+    "expected_intent": "notes"
    },
    {
     "question": "Burak'ın görevi ne zamana kadar?",
-    "expected_route": "notes",
     "expected_source": "toplanti_proje_nova.md",
-    "reference_answer": "Notta Burak için tarih verilmemiş; API taslağını hazırlayacak."
+    "reference_answer": "Notta Burak için tarih verilmemiş; API taslağını hazırlayacak.",
+    "expected_intent": "notes"
    },
    {
     "question": "Madde madde yazar mısın?",
-    "expected_route": "followup",
     "expected_source": null,
-    "reference_answer": "- Elif: kullanıcı araştırması (5 Nisan)\n- Burak: API taslağı\n- Ben: cuma durum raporu"
+    "reference_answer": "- Elif: kullanıcı araştırması (5 Nisan)\n- Burak: API taslağı\n- Ben: cuma durum raporu",
+    "expected_intent": "followup"
    }
   ]
  },
@@ -50,21 +50,21 @@
   "turns": [
    {
     "question": "Proje Atlas'ın teslim tarihi ne?",
-    "expected_route": "notes",
     "expected_source": "toplanti_proje_atlas.md",
-    "reference_answer": "Proje Atlas'ın teslim tarihi 14 Mart."
+    "reference_answer": "Proje Atlas'ın teslim tarihi 14 Mart.",
+    "expected_intent": "notes"
    },
    {
     "question": "Ya Proje Nova'nınki?",
-    "expected_route": "notes",
     "expected_source": "toplanti_proje_nova.md",
-    "reference_answer": "Proje Nova'nın teslim tarihi 30 Haziran."
+    "reference_answer": "Proje Nova'nın teslim tarihi 30 Haziran.",
+    "expected_intent": "notes"
    },
    {
     "question": "Hangisinin bütçesi daha yüksek?",
-    "expected_route": "notes",
     "expected_source": "toplanti_proje_nova.md",
-    "reference_answer": "Proje Nova (400 bin lira), Atlas 80 bin TL."
+    "reference_answer": "Proje Nova (400 bin lira), Atlas 80 bin TL.",
+    "expected_intent": "notes"
    }
   ]
  },
@@ -73,21 +73,21 @@
   "turns": [
    {
     "question": "Karnıyarık kaç derecede pişiyor?",
-    "expected_route": "notes",
     "expected_source": "tarif_karniyarik.md",
-    "reference_answer": "180 derece fırında 25 dakika."
+    "reference_answer": "180 derece fırında 25 dakika.",
+    "expected_intent": "notes"
    },
    {
     "question": "Ya imam bayıldı?",
-    "expected_route": "notes",
     "expected_source": "tarif_imam_bayildi.md",
-    "reference_answer": "İmam bayıldı fırında değil, az suyla kısık ateşte 40 dakika pişer."
+    "reference_answer": "İmam bayıldı fırında değil, az suyla kısık ateşte 40 dakika pişer.",
+    "expected_intent": "notes"
    },
    {
     "question": "Hangisi soğuk yeniyor?",
-    "expected_route": "notes",
     "expected_source": "tarif_imam_bayildi.md",
-    "reference_answer": "İmam bayıldı soğuk yenir."
+    "reference_answer": "İmam bayıldı soğuk yenir.",
+    "expected_intent": "notes"
    }
   ]
  },
@@ -96,21 +96,21 @@
   "turns": [
    {
     "question": "İmam bayıldı için hangi malzemeler lazım?",
-    "expected_route": "notes",
     "expected_source": "tarif_imam_bayildi.md",
-    "reference_answer": "4 patlıcan, 3 soğan, 4 diş sarımsak, 3 domates, yarım demet maydanoz, zeytinyağı."
+    "reference_answer": "4 patlıcan, 3 soğan, 4 diş sarımsak, 3 domates, yarım demet maydanoz, zeytinyağı.",
+    "expected_intent": "notes"
    },
    {
     "question": "Koşu programım nasıldı?",
-    "expected_route": "notes",
     "expected_source": "spor_kosu_programi.md",
-    "reference_answer": "8 haftada 5 km'yi kesintisiz koşmak; haftada 3 gün, 1 dakika koş 2 dakika yürü ile başlanır."
+    "reference_answer": "8 haftada 5 km'yi kesintisiz koşmak; haftada 3 gün, 1 dakika koş 2 dakika yürü ile başlanır.",
+    "expected_intent": "notes"
    },
    {
     "question": "Bunun ısınması nasıl?",
-    "expected_route": "notes",
     "expected_source": "spor_kosu_programi.md",
-    "reference_answer": "5 dakika tempolu yürüyüş."
+    "reference_answer": "5 dakika tempolu yürüyüş.",
+    "expected_intent": "notes"
    }
   ]
  },
@@ -119,21 +119,21 @@
   "turns": [
    {
     "question": "Docker Compose notlarımda sık yaptığım hatalar neler?",
-    "expected_route": "notes",
     "expected_source": "teknik_docker_compose.md",
-    "reference_answer": "Veritabanına localhost yerine servis adıyla (db:5432) bağlanmak gerekir; YAML'da girinti boşlukla yapılır, port eşlemesi tırnak içinde yazılır."
+    "reference_answer": "Veritabanına localhost yerine servis adıyla (db:5432) bağlanmak gerekir; YAML'da girinti boşlukla yapılır, port eşlemesi tırnak içinde yazılır.",
+    "expected_intent": "notes"
    },
    {
     "question": "İlkini biraz açar mısın?",
-    "expected_route": "followup",
     "expected_source": "teknik_docker_compose.md",
-    "reference_answer": "Compose her proje için ağ oluşturur, servisler birbirini servis adıyla bulur; web uygulaması veritabanına db:5432 ile bağlanır, localhost ile değil."
+    "reference_answer": "Compose her proje için ağ oluşturur, servisler birbirini servis adıyla bulur; web uygulaması veritabanına db:5432 ile bağlanır, localhost ile değil.",
+    "expected_intent": "followup"
    },
    {
     "question": "Docker'da portu nasıl açıyordum?",
-    "expected_route": "notes",
     "expected_source": "teknik_docker.md",
-    "reference_answer": "-p bayrağıyla: docker run -p 8080:80 nginx."
+    "reference_answer": "-p bayrağıyla: docker run -p 8080:80 nginx.",
+    "expected_intent": "notes"
    }
   ]
  },
@@ -142,21 +142,21 @@
   "turns": [
    {
     "question": "Kapadokya'da nereleri gezebilirim?",
-    "expected_route": "notes",
     "expected_source": "seyahat_kapadokya.md",
-    "reference_answer": "Göreme Açık Hava Müzesi, Uçhisar Kalesi, Derinkuyu yeraltı şehri ve Güllüdere vadisinde gün batımı yürüyüşü."
+    "reference_answer": "Göreme Açık Hava Müzesi, Uçhisar Kalesi, Derinkuyu yeraltı şehri ve Güllüdere vadisinde gün batımı yürüyüşü.",
+    "expected_intent": "notes"
    },
    {
     "question": "Üçüncüsünü anlat.",
-    "expected_route": "followup",
     "expected_source": "seyahat_kapadokya.md",
-    "reference_answer": "Derinkuyu yeraltı şehri; notta ayrıntı verilmemiş, gezilecek yerler arasında sayılıyor."
+    "reference_answer": "Derinkuyu yeraltı şehri; notta ayrıntı verilmemiş, gezilecek yerler arasında sayılıyor.",
+    "expected_intent": "followup"
    },
    {
     "question": "Balon turu kaça?",
-    "expected_route": "notes",
     "expected_source": "seyahat_kapadokya.md",
-    "reference_answer": "Kişi başı yaklaşık 150 euro, buluşma saati 05:30."
+    "reference_answer": "Kişi başı yaklaşık 150 euro, buluşma saati 05:30.",
+    "expected_intent": "notes"
    }
   ]
  },
@@ -165,21 +165,21 @@
   "turns": [
    {
     "question": "Sapiens'te tarım devrimi hakkında ne yazmışım?",
-    "expected_route": "notes",
     "expected_source": "kitap_sapiens.md",
-    "reference_answer": "Harari tarım devrimini 'tarihin en büyük aldatmacası' olarak niteler: buğday insanı evcilleştirdi, çalışma saatleri arttı, beslenme çeşitliliği azaldı."
+    "reference_answer": "Harari tarım devrimini 'tarihin en büyük aldatmacası' olarak niteler: buğday insanı evcilleştirdi, çalışma saatleri arttı, beslenme çeşitliliği azaldı.",
+    "expected_intent": "notes"
    },
    {
     "question": "Bu doğru mu?",
-    "expected_route": "followup",
     "expected_source": "kitap_sapiens.md",
-    "reference_answer": "Notta bunun tartışmalı bir iddia olduğu, kaynak kontrolü yapılmadan alıntılanmaması gerektiği belirtiliyor."
+    "reference_answer": "Notta bunun tartışmalı bir iddia olduğu, kaynak kontrolü yapılmadan alıntılanmaması gerektiği belirtiliyor.",
+    "expected_intent": "followup"
    },
    {
     "question": "Bilişsel devrim ne zaman olmuş?",
-    "expected_route": "notes",
     "expected_source": "kitap_sapiens.md",
-    "reference_answer": "Yaklaşık 70 bin yıl önce."
+    "reference_answer": "Yaklaşık 70 bin yıl önce.",
+    "expected_intent": "notes"
    }
   ]
  },
@@ -188,21 +188,21 @@
   "turns": [
    {
     "question": "Atomic Habits'te alışkanlık döngüsü nedir?",
-    "expected_route": "notes",
     "expected_source": "kitap_atomic_habits.md",
-    "reference_answer": "İpucu, istek, tepki ve ödül olmak üzere dört aşama."
+    "reference_answer": "İpucu, istek, tepki ve ödül olmak üzere dört aşama.",
+    "expected_intent": "notes"
    },
    {
     "question": "Bunu kısa bir liste yap.",
-    "expected_route": "followup",
     "expected_source": null,
-    "reference_answer": "1. İpucu\n2. İstek\n3. Tepki\n4. Ödül"
+    "reference_answer": "1. İpucu\n2. İstek\n3. Tepki\n4. Ödül",
+    "expected_intent": "followup"
    },
    {
     "question": "Kişisel çıkarımım neydi?",
-    "expected_route": "notes",
     "expected_source": "kitap_atomic_habits.md",
-    "reference_answer": "Kimlik temelli düşünmek: 'okuyan biriyim' demek; iki dakika kuralıyla başlıyor."
+    "reference_answer": "Kimlik temelli düşünmek: 'okuyan biriyim' demek; iki dakika kuralıyla başlıyor.",
+    "expected_intent": "notes"
    }
   ]
  },
@@ -211,21 +211,21 @@
   "turns": [
    {
     "question": "Aylık net gelirim ne kadar?",
-    "expected_route": "notes",
     "expected_source": "kisisel_butce.md",
-    "reference_answer": "Aylık net gelir 45.000 TL."
+    "reference_answer": "Aylık net gelir 45.000 TL.",
+    "expected_intent": "notes"
    },
    {
     "question": "Kirası ne kadar?",
-    "expected_route": "notes",
     "expected_source": "kisisel_butce.md",
-    "reference_answer": "Kira 12.500 TL."
+    "reference_answer": "Kira 12.500 TL.",
+    "expected_intent": "notes"
    },
    {
     "question": "Tasarruf hedefim ne?",
-    "expected_route": "notes",
     "expected_source": "kisisel_butce.md",
-    "reference_answer": "Gelirin yüzde 20'si, yani ayda 9.000 TL."
+    "reference_answer": "Gelirin yüzde 20'si, yani ayda 9.000 TL.",
+    "expected_intent": "notes"
    }
   ]
  },
@@ -234,21 +234,21 @@
   "turns": [
    {
     "question": "Haftalık toplantıda ne konuşulmuştu?",
-    "expected_route": "notes",
     "expected_source": "toplanti_haftalik.md",
-    "reference_answer": "Gündem: sunucu maliyetleri, yeni stajyer alımı, müşteri geri bildirimleri; staj ilanı gelecek hafta yayınlanacak."
+    "reference_answer": "Gündem: sunucu maliyetleri, yeni stajyer alımı, müşteri geri bildirimleri; staj ilanı gelecek hafta yayınlanacak.",
+    "expected_intent": "notes"
    },
    {
     "question": "Sen kimsin?",
-    "expected_route": "meta",
     "expected_source": null,
-    "reference_answer": "Ben notlarında arama yapıp soruları yanıtlayan bir asistanım."
+    "reference_answer": "Ben notlarında arama yapıp soruları yanıtlayan bir asistanım.",
+    "expected_intent": "meta"
    },
    {
     "question": "Proje Atlas'ın sorumluları kim?",
-    "expected_route": "notes",
     "expected_source": "toplanti_proje_atlas.md",
-    "reference_answer": "Ayşe arayüz tasarımından, Mehmet veritabanı geçişinden sorumlu."
+    "reference_answer": "Ayşe arayüz tasarımından, Mehmet veritabanı geçişinden sorumlu.",
+    "expected_intent": "notes"
    }
   ]
  },
@@ -257,21 +257,21 @@
   "turns": [
    {
     "question": "Proje Atlas'ın riskleri neler?",
-    "expected_route": "notes",
     "expected_source": "toplanti_proje_atlas.md",
-    "reference_answer": "Veritabanı geçişi gecikirse test süresi kısalır."
+    "reference_answer": "Veritabanı geçişi gecikirse test süresi kısalır.",
+    "expected_intent": "notes"
    },
    {
     "question": "Bu geçişi kim yapıyor?",
-    "expected_route": "notes",
     "expected_source": "toplanti_proje_atlas.md",
-    "reference_answer": "Mehmet veritabanı geçişinden sorumlu."
+    "reference_answer": "Mehmet veritabanı geçişinden sorumlu.",
+    "expected_intent": "notes"
    },
    {
     "question": "Testler ne zaman başlıyor?",
-    "expected_route": "notes",
     "expected_source": "toplanti_proje_atlas.md",
-    "reference_answer": "Test aşaması şubat sonunda başlayacak."
+    "reference_answer": "Test aşaması şubat sonunda başlayacak.",
+    "expected_intent": "notes"
    }
   ]
  },
@@ -280,21 +280,21 @@
   "turns": [
    {
     "question": "Karnıyarıkta kıyma ne kadar?",
-    "expected_route": "notes",
     "expected_source": "tarif_karniyarik.md",
-    "reference_answer": "200 g kıyma."
+    "reference_answer": "200 g kıyma.",
+    "expected_intent": "notes"
    },
    {
     "question": "Yanına ne yakışır?",
-    "expected_route": "notes",
     "expected_source": "tarif_karniyarik.md",
-    "reference_answer": "Pirinç pilavı."
+    "reference_answer": "Pirinç pilavı.",
+    "expected_intent": "notes"
    },
    {
     "question": "Menemen kaç dakika pişer?",
-    "expected_route": "notes",
     "expected_source": "tarif_menemen.md",
-    "reference_answer": "Biberler 3 dakika kavrulur, yumurtalar karıştırmadan 2 dakika pişer."
+    "reference_answer": "Biberler 3 dakika kavrulur, yumurtalar karıştırmadan 2 dakika pişer.",
+    "expected_intent": "notes"
    }
   ]
  },
@@ -303,21 +303,21 @@
   "turns": [
    {
     "question": "Compose'da depends_on yeterli mi?",
-    "expected_route": "notes",
     "expected_source": "teknik_docker_compose.md",
-    "reference_answer": "Hayır, başlatma sırasını belirler ama hazır olmayı beklemez; healthcheck ve condition: service_healthy gerekir."
+    "reference_answer": "Hayır, başlatma sırasını belirler ama hazır olmayı beklemez; healthcheck ve condition: service_healthy gerekir.",
+    "expected_intent": "notes"
    },
    {
     "question": "Peki veri kalıcılığı için ne yapıyordum?",
-    "expected_route": "notes",
     "expected_source": "teknik_docker_compose.md",
-    "reference_answer": "Adlandırılmış volume: pgdata:/var/lib/postgresql/data."
+    "reference_answer": "Adlandırılmış volume: pgdata:/var/lib/postgresql/data.",
+    "expected_intent": "notes"
    },
    {
     "question": "Git'te commit nasıl geri alınır?",
-    "expected_route": "notes",
     "expected_source": "teknik_git.md",
-    "reference_answer": "git revert <hash> yeni bir ters commit üretir, geçmişi bozmaz."
+    "reference_answer": "git revert <hash> yeni bir ters commit üretir, geçmişi bozmaz.",
+    "expected_intent": "notes"
    }
   ]
  },
@@ -326,21 +326,282 @@
   "turns": [
    {
     "question": "Koşu programında hedef ne?",
-    "expected_route": "notes",
     "expected_source": "spor_kosu_programi.md",
-    "reference_answer": "8 haftada 5 km'yi kesintisiz koşmak."
+    "reference_answer": "8 haftada 5 km'yi kesintisiz koşmak.",
+    "expected_intent": "notes"
    },
    {
     "question": "Diz ağrısı olursa ne yapayım?",
-    "expected_route": "notes",
     "expected_source": "spor_kosu_programi.md",
-    "reference_answer": "Bir gün ara ver."
+    "reference_answer": "Bir gün ara ver.",
+    "expected_intent": "notes"
    },
    {
     "question": "Haftada kaç gün koşuyorum?",
-    "expected_route": "notes",
     "expected_source": "spor_kosu_programi.md",
-    "reference_answer": "Haftada 3 gün."
+    "reference_answer": "Haftada 3 gün.",
+    "expected_intent": "notes"
+   }
+  ]
+ },
+ {
+  "id": "docker_sources",
+  "turns": [
+   {
+    "question": "Docker'da port nasıl yönlendirilir?",
+    "expected_intent": "notes",
+    "expected_source": "teknik_docker.md",
+    "reference_answer": "-p bayrağı kullanılır: docker run -p 8080:80 nginx ile ana makinenin 8080 portu konteynerin 80 portuna bağlanır."
+   },
+   {
+    "question": "bu bilgi nereden",
+    "expected_intent": "sources",
+    "expected_source": "teknik_docker.md",
+    "reference_answer": "Bu bilgi teknik_docker.md notunun 'Port yönlendirme' bölümünden geldi."
+   },
+   {
+    "question": "peki volume nasıl bağlanır",
+    "expected_intent": "notes",
+    "expected_source": "teknik_docker.md",
+    "reference_answer": "-v bayrağıyla: -v veri:/var/lib/data.",
+    "query_keyword": "volume"
+   }
+  ]
+ },
+ {
+  "id": "sapiens_sources",
+  "turns": [
+   {
+    "question": "Sapiens'e göre tarım devrimi nedir?",
+    "expected_intent": "notes",
+    "expected_source": "kitap_sapiens.md",
+    "reference_answer": "Harari tarım devrimini tarihin en büyük aldatmacası olarak niteler."
+   },
+   {
+    "question": "hangi dosyada bundan bahsetmiş",
+    "expected_intent": "sources",
+    "expected_source": "kitap_sapiens.md",
+    "reference_answer": "kitap_sapiens.md dosyasında."
+   },
+   {
+    "question": "başka hangi notta Harari geçiyor",
+    "expected_intent": "notes",
+    "expected_source": "kitap_homo_deus.md",
+    "reference_answer": "Homo Deus ve 21 Ders notlarında da Harari geçiyor.",
+    "query_keyword": "başka hangi notta"
+   }
+  ]
+ },
+ {
+  "id": "uyku_sayfa",
+  "turns": [
+   {
+    "question": "Kafein kaçtan sonra kesilmeli?",
+    "expected_intent": "notes",
+    "expected_source": "saglik_uyku.md",
+    "reference_answer": "Öğleden sonra 14:00'ten sonra kesilmeli."
+   },
+   {
+    "question": "sayfa kaçta",
+    "expected_intent": "sources",
+    "expected_source": "saglik_uyku.md",
+    "reference_answer": "Notlar sayfa numarası içermiyor; bilgi saglik_uyku.md dosyasından geldi."
+   },
+   {
+    "question": "emin misin bundan",
+    "expected_intent": "followup",
+    "expected_source": null,
+    "reference_answer": "Evet, notta kafeinin 14:00'ten sonra kesilmesi gerektiği yazıyor."
+   }
+  ]
+ },
+ {
+  "id": "menemen_unusual",
+  "turns": [
+   {
+    "question": "Menemen nasıl yapılır?",
+    "expected_intent": "notes",
+    "expected_source": "tarif_menemen.md",
+    "reference_answer": "Biberleri 3 dakika kavur, rendelenmiş domatesi ekle, yumurtaları kırıp 2 dakika pişir."
+   },
+   {
+    "question": "özetini çıkar",
+    "expected_intent": "followup",
+    "expected_source": null,
+    "reference_answer": "Biber kavur, domates ekle, yumurta kır."
+   },
+   {
+    "question": "biraz daha aç",
+    "expected_intent": "followup",
+    "expected_source": null,
+    "reference_answer": "Önce 2 sivri biberi 1 yemek kaşığı zeytinyağında 3 dakika kavurup rendelenmiş domatesi suyunu çekene kadar pişir; sonra 3 yumurtayı kırıp karıştırmadan 2 dakika pişir."
+   }
+  ]
+ },
+ {
+  "id": "sql_dosya",
+  "turns": [
+   {
+    "question": "SQL'de LEFT JOIN ne yapar?",
+    "expected_intent": "notes",
+    "expected_source": "teknik_sql_join.md",
+    "reference_answer": "Soldaki tablonun tüm satırlarını getirir, eşleşme yoksa sağ tarafı NULL döndürür."
+   },
+   {
+    "question": "peki bunun dosyası hangisi",
+    "expected_intent": "sources",
+    "expected_source": "teknik_sql_join.md",
+    "reference_answer": "teknik_sql_join.md."
+   },
+   {
+    "question": "indeks ile ilgili başka ne yazmışım",
+    "expected_intent": "notes",
+    "expected_source": "teknik_sql_join.md",
+    "reference_answer": "JOIN'de kullanılan kolonlara indeks koymak gerekir; EXPLAIN ile plan kontrol edilir.",
+    "query_keyword": "indeks"
+   }
+  ]
+ },
+ {
+  "id": "habits_switch",
+  "turns": [
+   {
+    "question": "Atomic Habits'te alışkanlık döngüsü nedir?",
+    "expected_intent": "notes",
+    "expected_source": "kitap_atomic_habits.md",
+    "reference_answer": "İpucu, istek, tepki ve ödül."
+   },
+   {
+    "question": "ilkini açıkla",
+    "expected_intent": "followup",
+    "expected_source": null,
+    "reference_answer": "İpucu, alışkanlığı başlatan tetikleyicidir; yeni alışkanlık için belirgin yapılmalıdır."
+   },
+   {
+    "question": "Kapadokya'da balon turu kaçta?",
+    "expected_intent": "notes",
+    "expected_source": "seyahat_kapadokya.md",
+    "reference_answer": "Buluşma saati 05:30.",
+    "query_keyword": "balon"
+   }
+  ]
+ },
+ {
+  "id": "kosu_meta",
+  "turns": [
+   {
+    "question": "Koşu programım nasıl?",
+    "expected_intent": "notes",
+    "expected_source": "spor_kosu_programi.md",
+    "reference_answer": "8 haftada 5 km hedefi, haftada 3 gün, 1 dk koş 2 dk yürü."
+   },
+   {
+    "question": "sen hangi modelle çalışıyorsun",
+    "expected_intent": "meta",
+    "expected_source": null,
+    "reference_answer": "Yerel bir dil modeliyle çalışan not arama asistanıyım."
+   },
+   {
+    "question": "tamam, diz ağrısı olursa ne yapmalıyım",
+    "expected_intent": "notes",
+    "expected_source": "spor_kosu_programi.md",
+    "reference_answer": "Bir gün ara ver.",
+    "query_keyword": "diz ağrısı"
+   }
+  ]
+ },
+ {
+  "id": "kapadokya_why",
+  "turns": [
+   {
+    "question": "Kapadokya'da neler gezilir?",
+    "expected_intent": "notes",
+    "expected_source": "seyahat_kapadokya.md",
+    "reference_answer": "Göreme Açık Hava Müzesi, Uçhisar Kalesi, Derinkuyu, Güllüdere vadisi."
+   },
+   {
+    "question": "bunu neden böyle sıraladın",
+    "expected_intent": "followup",
+    "expected_source": null,
+    "reference_answer": "Sıralamayı notundaki gezilecek yerler listesinden aldım."
+   },
+   {
+    "question": "bu bilgi hangi dosyadan geldi",
+    "expected_intent": "sources",
+    "expected_source": "seyahat_kapadokya.md",
+    "reference_answer": "seyahat_kapadokya.md."
+   }
+  ]
+ },
+ {
+  "id": "homo_deus_check",
+  "turns": [
+   {
+    "question": "Homo Deus'un ana tezi ne?",
+    "expected_intent": "notes",
+    "expected_source": "kitap_homo_deus.md",
+    "reference_answer": "İnsanlık açlık, salgın ve savaşı evcilleştirdi; sıradaki hedef ölümsüzlük, mutluluk, ilahlık."
+   },
+   {
+    "question": "dataizm ne demek",
+    "expected_intent": "notes",
+    "expected_source": "kitap_homo_deus.md",
+    "reference_answer": "Evrenin veri akışından ibaret olduğunu savunan yeni din.",
+    "query_keyword": "dataizm"
+   },
+   {
+    "question": "yazdığın şey doğru mu",
+    "expected_intent": "followup",
+    "expected_source": null,
+    "reference_answer": "Evet, bu tanım Homo Deus notunda yazıyor."
+   }
+  ]
+ },
+ {
+  "id": "butce_sources",
+  "turns": [
+   {
+    "question": "Aylık tasarruf hedefim ne?",
+    "expected_intent": "notes",
+    "expected_source": "kisisel_butce.md",
+    "reference_answer": "Gelirin yüzde 20'si, ayda 9.000 TL."
+   },
+   {
+    "question": "peki kira?",
+    "expected_intent": "notes",
+    "expected_source": "kisisel_butce.md",
+    "reference_answer": "Kira 12.500 TL.",
+    "query_keyword": "kira"
+   },
+   {
+    "question": "bunları hangi notta tutmuşum",
+    "expected_intent": "sources",
+    "expected_source": "kisisel_butce.md",
+    "reference_answer": "kisisel_butce.md."
+   }
+  ]
+ },
+ {
+  "id": "eskisehir_other",
+  "turns": [
+   {
+    "question": "Eskişehir'e nasıl gidilir?",
+    "expected_intent": "notes",
+    "expected_source": "seyahat_eskisehir.md",
+    "reference_answer": "Pendik'ten hızlı trenle yaklaşık 3 saat."
+   },
+   {
+    "question": "başka hangi notta ulaşım geçiyor",
+    "expected_intent": "notes",
+    "expected_source": "seyahat_istanbul.md",
+    "reference_answer": "İstanbul notunda İstanbulkart ile ulaşım geçiyor.",
+    "query_keyword": "başka hangi notta"
+   },
+   {
+    "question": "bunu kısalt",
+    "expected_intent": "followup",
+    "expected_source": null,
+    "reference_answer": "İstanbul: İstanbulkart yeterli."
    }
   ]
  }

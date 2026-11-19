@@ -1,9 +1,24 @@
-# Takip sorusu eval (15 konuşma, 27 geri getirme turu)
+# Takip sorusu eval (26 konuşma, 52 geçmişli tur)
 
-| Yöntem | hit@3 | MRR |
+Mod: **route+condense (yedek; analyze: pending)**
+
+- Intent doğruluğu (genel): 40/52 = 0.77
+
+| Beklenen \ Tahmin | notes | followup | sources | meta | doğruluk |
+|---|---|---|---|---|---|
+| notes | 32 | 0 | 0 | 0 | 32/32 = 1.00 |
+| followup | 5 | 7 | 0 | 0 | 7/12 = 0.58 |
+| sources | 6 | 0 | 0 | 0 | 0/6 = 0.00 |
+| meta | 1 | 0 | 0 | 1 | 1/2 = 0.50 |
+
+- Sorgu niyet korunumu (anahtar kelime): 5/8 = 0.62
+
+Geri getirme (32 notes turu):
+
+| Sorgu | hit@3 | MRR |
 |---|---|---|
-| Ham soru (baseline) | 0.81 | 0.753 |
-| Yoğunlaştırılmış (rewrite) | 0.96 | 0.920 |
+| Ham soru | 0.88 | 0.835 |
+| Analiz sorgusu | 0.91 | 0.868 |
 
-- Route doğruluğu: 30/30 = 1.00
-- Ort. condense gecikmesi: 0.47 sn
+- Ort. gecikme (karar+yoğunlaştırma): 0.369 sn
+- analyze: pending (src.rewriter.analyze henüz yok; route(q, True) + condense ile ölçüldü, route 'sources' üretemez)
