@@ -61,9 +61,39 @@ def normalize(text: str) -> str:
     return " ".join(words)
 
 
-def route(question: str) -> str:
-    """"meta" (asistanla ilgili / sohbet) veya "notes" (notlarda ara) döner."""
+_ORD = r"(\d+|ilk|ikinci|ucuncu|dorduncu|besinci|son|birinci)"
+_FOLLOWUP = [
+    # doğruluk / güven
+    r"(bu |bunlar |bundan |cevabindan |cevabin )?(dogru mu|dogru musun|emin misin|emin misiniz|kesin mi|kesin misin|gercekten mi|dogru degil mi|yanlis degil mi|yanlis mi|hatali mi|yanlis olmasin)( bu| sen)?",
+    r"(bundan|bunun|cevabindan) (emin misin|dogru mu)",
+    # biçim değiştirme
+    r"(daha )?(kisa|kisaca|ozet|basit|sade|net|detayli|uzun)( (anlat|yaz|olur mu|olsun|ifade et|soyle|cevapla|anlatir misin|yazar misin))?",
+    r"(bunu |cevabi |onu )?(kisalt|ozetle|ozetler misin|ozetle bakalim|sadelestir|basitlestir|tekrar yaz|yeniden yaz|tekrar anlat|baska turlu anlat)( misin)?",
+    r"(bunu |onu |cevabi )?(madde madde|maddeler halinde|liste halinde|tablo halinde|tablo seklinde|liste yap|tablo yap|tabloya dok|listele)( (yaz|anlat|yap|goster|ver|yazar misin))?( misin)?",
+    r"(bunu |onu )?(basitce|sade bir dille|kisaca|ozetle) (anlat|acikla|yaz)( misin)?",
+    r"(bunu )?(turkceye|ingilizceye) (cevir|cevirir misin)",
+    # bir kısmı açma
+    rf"{_ORD} (madde|maddeyi|maddeyi|maddesini|maddenin|maddesi)( hakkinda)?( daha)? (acikla|acikla misin|acar misin|detaylandir|detaylandirir misin|anlat|anlatir misin|ayrintilandir)",
+    rf"{_ORD}(ni|yi|ini|sini|nu|u|si)? (daha )?(acikla|acikla misin|acar misin|detaylandir|detaylandirir misin|anlat|anlatir misin|ayrintilandir)",
+    r"(bunu|onu|bunlari|bu kismi|bu maddeyi) (daha )?(acikla|acar misin|detaylandir|detaylandirir misin|ayrintilandir|genislet|aciklar misin|acikla misin)",
+    r"(biraz |daha )?(detaylandir|detay ver|aciklar misin|acikla|genislet|devam et|devam)",
+    r"(neden|niye|nicin|neden boyle|neden oyle|neden peki|neden yani|peki neden|yani neden|nasil yani)",
+    # kaynak
+    r"(kaynagin|kaynak|kaynaklarin|kaynagini|kaynaklari) (ne|neydi|nedir|nerede|goster|ver|hangisi|hangileri)( misin)?",
+    r"(bunu |bu bilgiyi |bunu |onu )?(nereden|nerden) (buldun|aldin|cikardin|biliyorsun|ogrendin)",
+    r"(hangi|ne) (nottan|notlardan|dosyadan|kaynaktan) (aldin|buldun|cikardin|geliyor)( bunu)?",
+    r"(bunu |bu bilgiyi )?(hangi|ne) (nottan|notlardan|dosyadan|kaynaktan) (aldin|buldun|cikardin|geliyor|geldi)",
+    r"(bunu )?(kaynak goster|kaynagi goster|kaynak ver)",
+]
+_FOLLOWUP_RE = [re.compile(p) for p in _FOLLOWUP]
+
+
+def route(question: str, has_history: bool = False) -> str:
+    """"meta" (asistanla ilgili / sohbet), "followup" (önceki cevabın kendisi hakkında;
+    yalnızca geçmiş varken) veya "notes" (notlarda ara) döner."""
     q = normalize(question)
     if q and any(r.fullmatch(q) for r in _META_RE):
         return "meta"
+    if has_history and q and any(r.fullmatch(q) for r in _FOLLOWUP_RE):
+        return "followup"
     return "notes"
