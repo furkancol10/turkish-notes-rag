@@ -9,6 +9,9 @@ from .loader import list_note_files
 SYSTEM = (
     "Sen kişisel not asistanısın. Soruyu SADECE aşağıdaki bağlama dayanarak Türkçe, kısa cevapla. "
     "Cevap bağlamda yoksa sadece 'Bu bilgi notlarda yok' de, tahmin etme. "
+    "Sadece bağlam sorulan konu/varlıkla (kişi, proje, şey) AYNI şey hakkındaysa cevapla; bağlam ilişkili "
+    "ama farklı bir şey hakkındaysa (ör. başka projenin veya kişisel kira) onu cevap olarak verme, "
+    "'Bu bilgi notlarda yok' de ve istersen 'notlarda X için değil, Y için kira bilgisi var [n]' diye ekle. "
     "Cevabın sonunda kullandığın kaynakları [1], [2] gibi numaralarla belirt. "
     "Önceki konuşma sadece soruyu anlamak içindir; bilgiler yine bağlamdan gelmeli. "
     "Bağlamdaki her parçanın başlığında kaynak dosya adı (ve PDF ise sayfa) yazar: "

@@ -3,7 +3,7 @@ from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
 
-from src import config, settings
+from src import config, history as _hist, settings
 from src.embedder import _model
 from src.conversation import fit_budget, window
 from src.generator import answer, answer_followup, answer_meta
@@ -92,10 +92,8 @@ def _fail_llm(e):
 
 def last_sources(messages) -> list[dict]:
     """Son asistan mesajının kayıtlı kaynakları (takip sorusu bunlarla cevaplanır)."""
-    for m in reversed(messages or []):
-        if m.get("role") == "assistant":
-            return [s for s in (m.get("sources") or []) if isinstance(s, dict)]
-    return []
+    m = _hist.last_notes_message(messages)
+    return [s for s in (m.get("sources") or []) if isinstance(s, dict)] if m else []
 
 
 def _as_results(sources):
@@ -106,10 +104,8 @@ def _as_results(sources):
 
 
 def last_assistant_text(messages) -> str:
-    for m in reversed(messages or []):
-        if m.get("role") == "assistant":
-            return m.get("text", "") or ""
-    return ""
+    m = _hist.last_notes_message(messages)
+    return (m.get("text", "") or "") if m else ""
 
 
 def cited_sources(text: str, sources: list[dict]) -> list[dict]:

@@ -207,8 +207,10 @@ class MainWindow(QMainWindow):
                 self.cur["title"] = c.get("title", "")
         self._refresh_chats()
 
-    def _record(self, role, text, sources=None, query=None):
+    def _record(self, role, text, sources=None, query=None, intent=None):
         msg = {"role": role, "text": text, "sources": sources or []}
+        if intent:
+            msg["intent"] = intent
         if query:
             msg["query"] = query
         self.cur["messages"].append(msg)
@@ -279,7 +281,8 @@ class MainWindow(QMainWindow):
         self._asking = False
         self.chat.hide_typing()
         self.chat.add("assistant", ans, results, q)
-        self._record("assistant", ans, history.sources_from_results(results), q)
+        self._record("assistant", ans, history.sources_from_results(results), q,
+                     info.get("intent"))
         self.statusBar().showMessage("Cevap hazır", 5000)
 
     def _on_ask_failed(self, e):

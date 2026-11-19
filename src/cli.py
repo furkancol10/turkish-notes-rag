@@ -67,7 +67,7 @@ def cmd_chat(args):
         h = window(msgs)
         a = analyze(q, h)
         intent, query = a["intent"], a.get("query") or q
-        prev_msg = next((m for m in reversed(msgs) if m["role"] == "assistant"), {})
+        prev_msg = hist.last_notes_message(msgs) or {}
         prev = prev_msg.get("sources") or []
         if intent in ("followup", "sources") and not prev:   # dayanacak kaynak yok: normal arama
             intent = "notes"
@@ -81,13 +81,13 @@ def cmd_chat(args):
             kept = [prev[i - 1] for i in idxs] if idxs else prev
             print("Cevap:\n" + ans)
             msgs += [{"role": "user", "text": q, "sources": []},
-                     {"role": "assistant", "text": ans, "sources": kept}]
+                     {"role": "assistant", "text": ans, "sources": kept, "intent": "sources"}]
             continue
         elif intent == "followup":
             ans = answer_followup(q, h, prev)
             print("Cevap:\n" + ans)
             msgs += [{"role": "user", "text": q, "sources": []},
-                     {"role": "assistant", "text": ans, "sources": prev}]
+                     {"role": "assistant", "text": ans, "sources": prev, "intent": "followup"}]
             continue
         else:
             results = retrieve(query, backend=args.backend)
@@ -96,7 +96,8 @@ def cmd_chat(args):
             for c, s in results:
                 print(f"  - {c.id} ({chunk_label(c)}) skor={s:.3f}")
         print("Cevap:\n" + ans)
-        m = {"role": "assistant", "text": ans, "sources": hist.sources_from_results(results)}
+        m = {"role": "assistant", "text": ans, "sources": hist.sources_from_results(results),
+             "intent": intent}
         if query != q and intent == "notes":
             m["query"] = query
         msgs += [{"role": "user", "text": q, "sources": []}, m]

@@ -147,3 +147,53 @@ def test_sources_out_of_range_citation_lists_all(calls, monkeypatch):
     prior = [PRIOR[0], {"role": "assistant", "text": "450 bin [7].", "sources": SRC2}]
     _, res, _ = services.ask("hangi dosyada?", 5, "numpy", prior)
     assert len(res) == 2
+
+
+SRC_LIST = {"role": "assistant", "text": "nova.md dosyasında.", "intent": "sources", "sources": SRC[:1]}
+NOTES_MSG = {"role": "assistant", "text": "450 bin TL [1].", "intent": "notes", "sources": SRC}
+OTHER = [{"source": "baska.md", "heading": "", "page": None, "score": 0.5, "text": "x"}]
+
+
+def test_followup_after_sources_uses_earlier_notes_answer(calls, monkeypatch):
+    set_an(monkeypatch, "followup")
+    prior = [{"role": "user", "text": "q", "sources": []}, NOTES_MSG,
+             {"role": "user", "text": "hangi dosya?", "sources": []},
+             {**SRC_LIST, "sources": OTHER}]
+    ans, results, info = services.ask("kısaca anlat", 4, "numpy", prior)
+    assert calls["fu"][2] == SRC and info["intent"] == "followup"
+
+
+def test_sources_after_meta_uses_notes_answer(calls, monkeypatch):
+    set_an(monkeypatch, "sources")
+    prior = [NOTES_MSG, {"role": "assistant", "text": "Ben asistanım.", "intent": "meta", "sources": []}]
+    ans, results, info = services.ask("hangi dosyada?", 4, "numpy", prior)
+    assert info["intent"] == "sources" and results[0][0].source == "nova.md"
+
+
+def test_legacy_messages_without_intent(calls, monkeypatch):
+    set_an(monkeypatch, "followup")
+    legacy = {"role": "assistant", "text": "450", "sources": SRC}
+    services.ask("kısaca", 4, "numpy", [legacy])
+    assert calls["fu"][2] == SRC
+
+
+def test_last_notes_message_skips_sourceless():
+    from src import history
+    assert history.last_notes_message([{"role": "assistant", "text": "a", "intent": "notes", "sources": []}]) is None
+    assert history.last_notes_message([NOTES_MSG, SRC_LIST]) is NOTES_MSG
+
+
+def test_intent_saved_and_restored(tmp_path, monkeypatch):
+    from src import history
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path))
+    c = history.new_chat("n")
+    c["messages"] = [{"role": "user", "text": "q", "sources": []}, NOTES_MSG]
+    history.save_chat(c)
+    got = history.load_chat(c["id"])
+    assert got["messages"][1]["intent"] == "notes"
+    assert conversation.window(got["messages"])[1] == {"role": "assistant", "content": "450 bin TL."}
+
+
+def test_notes_prompt_has_entity_rule():
+    from src.generator import SYSTEM
+    assert "AYNI" in SYSTEM and "farklı" in SYSTEM and "notlarda yok" in SYSTEM

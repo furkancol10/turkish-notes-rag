@@ -147,7 +147,8 @@ if q := st.chat_input("Notlarına bir soru sor"):
                 st.error(str(e))
             st.stop()
         query = info.get("query")
-        msg = {"role": "assistant", "text": ans, "sources": history.sources_from_results(results)}
+        msg = {"role": "assistant", "text": ans, "sources": history.sources_from_results(results),
+               "intent": info.get("intent", "notes")}
         if query and query != q:
             msg["query"] = query
         show_msg(msg)

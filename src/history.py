@@ -130,3 +130,14 @@ def sources_from_results(results) -> list[dict]:
             "text": getattr(chunk, "text", ""),
         })
     return out
+
+
+def last_notes_message(messages) -> dict | None:
+    """Takip/kaynak sorusunun dayanacağı son asistan mesajı: niyeti notes/followup (niyetsiz = eski kayıt)
+    ve kaynağı olan. Kaynak listesi (sources) ve meta cevapları atlanır."""
+    for m in reversed(messages or []):
+        if m.get("role") != "assistant" or m.get("intent", "notes") not in ("notes", "followup"):
+            continue
+        if any(isinstance(s, dict) for s in (m.get("sources") or [])):
+            return m
+    return None
