@@ -27,3 +27,18 @@ def test_meta(q):
 @pytest.mark.parametrize("q", NOTES)
 def test_notes(q):
     assert route(q) == "notes"
+
+# Uygulama kullanımı soruları meta; konu soruları notes kalmalı
+APP_META = ["yeni not nasıl eklerim?", "not nereden eklenir", "notlarımı nasıl yüklerim",
+            "nasıl yeniden indekslerim", "indeksleme nasıl yapılır"]
+APP_NOTES = ["not almanın faydaları nedir", "dosya sıkıştırma nasıl çalışır", "indeks fonu nedir"]
+
+
+@pytest.mark.parametrize("q", APP_META)
+def test_app_usage_meta(q):
+    assert route(q) == "meta"
+
+
+@pytest.mark.parametrize("q", APP_NOTES)
+def test_app_usage_topic_stays_notes(q):
+    assert route(q) == "notes"

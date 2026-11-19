@@ -36,6 +36,9 @@ _META = [
     # nasıl çalışıyor
     r"(sen |bu |bu uygulama |bu sistem )?nasil calisiyorsun",
     r"(bu )?(uygulama|sistem|program) nasil calisiyor",
+    # uygulama kullanımı (not ekleme / indeksleme)
+    r"(yeni )?(not|notlarimi|notlari|dosya) (nasil|nereden|nereye) (eklerim|eklenir|ekleyebilirim|yuklerim|yuklenir|yukleyebilirim)",
+    r"(notlarimi |notlari )?(nasil )?(yeniden )?indekslerim|indeksleme nasil yapilir|ne zaman indekslemeliyim",
     # model / gizlilik
     r"(sen )?(hangi|ne) (llm|dil modeli|dil modelini|modeli|modelini|model|yapay zeka modelini|yapay zeka)( modelini)?( kullaniyorsun| kullaniyor| tabanlisin)?",
     r"(hangi|ne) (embedding|gomme) (modelini|modeli) (kullaniyorsun|kullaniyor)",
