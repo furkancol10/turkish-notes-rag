@@ -5,11 +5,12 @@ from pathlib import Path
 from src import config
 from src.chunker import chunk_docs
 from src.embedder import _model, embed_passages
-from src.generator import answer
+from src.generator import answer, answer_meta
 from src.index import get_index, index_name
 from src.loader import load_notes
 from src.notes_io import save_note
 from src.retriever import retrieve
+from src.router import route
 
 
 def load_embed_model():
@@ -61,6 +62,12 @@ class AskError(Exception):
 
 def ask(question: str, top_k: int, backend: str):
     """Arama + LLM cevabı. (cevap, sonuçlar) döner; hata olursa AskError fırlatır."""
+    if route(question) == "meta":      # asistanla ilgili soru: arama yok, kaynak yok
+        try:
+            return answer_meta(question), []
+        except Exception as e:
+            raise AskError("ollama" if is_connection_error(e) else "other",
+                           f"Cevap üretilemedi: {e}")
     if backend == "numpy" and index_status() is None:
         raise AskError("index", "İndeks bulunamadı.")
     try:

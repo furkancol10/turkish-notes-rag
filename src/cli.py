@@ -4,10 +4,11 @@ import argparse
 from . import config
 from .chunker import chunk_docs
 from .embedder import embed_passages
-from .generator import answer
+from .generator import answer, answer_meta
 from .index import get_index, index_name
 from .loader import load_notes
 from .retriever import retrieve
+from .router import route
 
 
 def cmd_index(args):
@@ -21,6 +22,9 @@ def cmd_index(args):
 
 
 def cmd_ask(args):
+    if route(args.question) == "meta":                     # 0. yönlendir: aramaya gerek yok
+        print("Cevap:\n" + answer_meta(args.question))
+        return
     results = retrieve(args.question, backend=args.backend)           # 5. geri getir
     print("Kaynak parçalar:")
     for c, s in results:

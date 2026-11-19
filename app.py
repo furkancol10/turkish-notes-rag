@@ -7,11 +7,12 @@ import streamlit as st
 from src import config
 from src.chunker import chunk_docs
 from src.embedder import _model, embed_passages
-from src.generator import answer
+from src.generator import answer, answer_meta
 from src.index import get_index, index_name
 from src.loader import load_notes
 from src.notes_io import save_note
 from src.retriever import retrieve
+from src.router import route
 
 st.set_page_config(page_title="Kişisel Not Arama", page_icon="📝")
 
@@ -110,6 +111,16 @@ if q := st.chat_input("Notlarına bir soru sor"):
     with st.chat_message("user"):
         st.write(q)
     with st.chat_message("assistant"):
+        if route(q) == "meta":          # asistanla ilgili soru: arama yok, kaynak yok
+            try:
+                with st.spinner("Cevap üretiliyor..."):
+                    ans = answer_meta(q)
+            except Exception as e:
+                st.error("Ollama'ya bağlanılamadı." if is_connection_error(e) else f"Cevap üretilemedi: {e}")
+                st.stop()
+            st.write(ans)
+            st.session_state.msgs.append(("assistant", ans, []))
+            st.stop()
         if index_status() is None and backend == "numpy":
             st.error("İndeks bulunamadı. Soldan 'Yeniden indeksle'ye bas.")
             st.stop()

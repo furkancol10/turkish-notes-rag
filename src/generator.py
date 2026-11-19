@@ -25,3 +25,25 @@ def answer(question: str, results) -> str:
         options=config.LLM_OPTIONS, keep_alive=config.LLM_KEEP_ALIVE, think=config.LLM_THINK,
     )
     return resp["message"]["content"].strip()
+
+
+def meta_system() -> str:
+    # Gerçekleri config'ten çek ki ayarlar değişince cevap da doğru kalsın
+    n = sum(1 for f in config.NOTES_DIR.glob("*") if f.suffix in (".md", ".txt"))
+    return (
+        "Sen 'Kişisel Not Arama asistanı'sın. Kullanıcının kendi notlarından (şu an "
+        f"{n} not) soruları cevaplarsın. Notlar {config.EMBED_MODEL} embedding modeliyle "
+        f"aranır, cevabı {config.LLM_MODEL} dil modeli yazar. Her şey yerel çalışır, "
+        "veri dışarı gitmez. Selamlaşmalara ve sana dair sorulara Türkçe, çok kısa cevap ver. "
+        "Yukarıdakiler dışında yetenek uydurma; bilmediğini söyleme, notlarla ilgili soru sormasını öner."
+    )
+
+
+def answer_meta(question: str) -> str:
+    resp = ollama.chat(
+        model=config.LLM_MODEL,
+        messages=[{"role": "system", "content": meta_system()},
+                  {"role": "user", "content": question}],
+        options=config.LLM_OPTIONS, keep_alive=config.LLM_KEEP_ALIVE, think=config.LLM_THINK,
+    )
+    return resp["message"]["content"].strip()

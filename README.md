@@ -32,6 +32,9 @@ Ağır işler (model yükleme, indeksleme, LLM) arka planda çalışır; arayüz
 `.md` veya `.txt` (UTF-8) dosyalarını `data/notes/` içine koy (örnekleri silebilirsin), sonra yeniden `index` çalıştır.
 Başlıklar (`# `, `## `) kaynak gösterirken kullanılır, bu yüzden notları başlıkla yapılandırmak yardımcı olur.
 
+## Sorgu yönlendirme (routing)
+RAG'de her soru aramaya gitmek zorunda değil. `src/router.py` önce soruya bakar: "merhaba", "sen kimsin", "hangi modeli kullanıyorsun" gibi sohbet/asistan soruları `meta` olur, arama yapılmadan `answer_meta` ile cevaplanır (kaynak yok). Diğer her şey `notes` olarak normal RAG akışına girer. Kurallar bilerek temkinlidir: "Python nedir" notlara gider. Test: `uv run pytest`.
+
 ## Her adım ne öğretiyor?
 | Dosya | RAG adımı | Öğrenilen |
 |---|---|---|
