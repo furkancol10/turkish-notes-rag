@@ -31,11 +31,11 @@ Alt klasörler dahil taranır; okunamayan dosyalar uyarıyla atlanır.
 Gereksinimler: Python 3.12, [uv](https://docs.astral.sh/uv/), [Ollama](https://ollama.com).
 
 ```bash
-uv sync                      # bağımlılıklar (CPU torch, sentence-transformers, chromadb, PySide6...)
+uv sync                      # bağımlılıklar (CUDA torch 2.15 / cu132 wheel ~3 GB, sentence-transformers, chromadb, PySide6...)
 ollama pull qwen3.5:4b       # üretim (LLM) modeli
 ```
 
-- **Embedding:** `BAAI/bge-m3`, **CPU'da** çalışır ve ilk kullanımda Hugging Face'ten otomatik iner (`~/.cache/huggingface`). Elle bir şey yapman gerekmez.
+- **Embedding:** `BAAI/bge-m3`, toplu işlerde (indeksleme, eval) **GPU'da fp16** (CUDA yoksa CPU), tek soru embedding'i CPU'da çalışır; indeksleme öncesi Ollama LLM'i boşaltılır, sonrasında GPU modeli bırakılır (tepe VRAM ~1-1.5 GB). İlk kullanımda Hugging Face'ten otomatik iner (`~/.cache/huggingface`). Elle bir şey yapman gerekmez.
 - **LLM:** `qwen3.5:4b`, Ollama üzerinden (GPU varsa kullanır).
 
 Ollama servisi için önerilen ortam değişkenleri (VRAM'i verimli kullanır; `systemctl edit ollama` ile veya servisi başlatırken):
@@ -134,7 +134,11 @@ Soru:  doğru mu?                   -> followup (yeni arama yok, önceki kaynakl
 
 | Ayar | Varsayılan | Açıklama |
 |---|---|---|
-| `EMBED_MODEL` | `BAAI/bge-m3` | embedding modeli (CPU) |
+| `EMBED_MODEL` | `BAAI/bge-m3` | embedding modeli |
+| `EMBED_DEVICE_INDEX` | `auto` | indeksleme/eval cihazı (`auto` = CUDA varsa GPU, yoksa CPU) |
+| `EMBED_DEVICE_QUERY` | `cpu` | soru embedding cihazı |
+| `EMBED_INDEX_DTYPE` | `float16` | GPU'da indeksleme hassasiyeti |
+| `EMBED_BATCH_SIZE` | `32` | GPU batch boyutu |
 | `CHUNK_STRATEGY` | `fixed` | `fixed` veya `heading` |
 | `CHUNK_SIZE` / `CHUNK_OVERLAP` | 512 / 64 | karakter |
 | `INDEX_BACKEND` | `chroma` | `chroma` veya `numpy` |

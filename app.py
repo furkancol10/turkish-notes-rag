@@ -6,7 +6,7 @@ import streamlit as st
 
 from src import config, history, settings
 from desktop import services
-from src.embedder import _model
+from src.embedder import get_model
 from src.formats import LABEL_TEXT, NO_NOTES_MSG, UPLOAD_TYPES
 from src.index import index_name
 from src.loader import list_note_files, newest_mtime, rel_source
@@ -19,7 +19,7 @@ st.set_page_config(page_title="Kişisel Not Arama", page_icon="📝")
 @st.cache_resource(show_spinner="Embedding modeli yükleniyor...")
 def load_embed_model():
     """Modeli bir kez yükle; sonraki sorularda yeniden yüklenmez."""
-    return _model(config.EMBED_MODEL)
+    return get_model(config.EMBED_DEVICE_QUERY)
 
 
 def index_status():

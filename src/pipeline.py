@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from . import config, settings
 from .chunker import chunk_docs
-from .embedder import embed_passages
+from .embedder import embed_passages, release_gpu, unload_llm, resolve_index_device
 from .formats import NO_NOTES_MSG
 from .index import get_index, index_name
 from .loader import load_report
@@ -25,7 +25,13 @@ def build_index() -> IndexResult:
     if not rep.docs:
         raise ValueError(f"{NO_NOTES_MSG} Klasör: {settings.notes_dir()}")
     chunks = chunk_docs(rep.docs)
-    vecs = embed_passages([c.text for c in chunks])
+    on_gpu = resolve_index_device() != "cpu"
+    if on_gpu:
+        unload_llm()  # VRAM'i indeksleme için boşalt
+    try:
+        vecs = embed_passages([c.text for c in chunks])
+    finally:
+        release_gpu()
     name = index_name(config.EMBED_MODEL, config.CHUNK_STRATEGY, config.CHUNK_SIZE)
     for backend in ("numpy", "chroma"):
         get_index(backend, name).build(chunks, vecs)
