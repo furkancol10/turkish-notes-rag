@@ -92,11 +92,24 @@ class Bubble(QWidget):
             msg.setTextInteractionFlags(Qt.TextSelectableByMouse)
             lay.addWidget(msg)
         if results:
-            lbl = QLabel("KAYNAKLAR")
-            lbl.setObjectName("who")
-            lay.addWidget(lbl)
+            # Kaynaklar varsayılan olarak gizli; tek düğmeyle açılır/kapanır
+            n = len(results)
+            toggle = QToolButton(text=f"▸ Kaynakları göster ({n})")
+            toggle.setObjectName("chip")
+            toggle.setCheckable(True)
+            toggle.setCursor(Qt.PointingHandCursor)
+            box = QWidget()
+            box_lay = QVBoxLayout(box)
+            box_lay.setContentsMargins(0, 0, 0, 0)
+            box_lay.setSpacing(6)
             for i, (c, s) in enumerate(results, 1):
-                lay.addWidget(SourceItem(i, c, s))
+                box_lay.addWidget(SourceItem(i, c, s))
+            box.setVisible(False)
+            toggle.toggled.connect(lambda on: (
+                box.setVisible(on),
+                toggle.setText(("▾ Kaynakları gizle" if on else "▸ Kaynakları göster") + f" ({n})")))
+            lay.addWidget(toggle, 0, Qt.AlignLeft)
+            lay.addWidget(box)
         if user:
             row.addStretch(1)
             row.addWidget(frame, 0)
