@@ -12,7 +12,22 @@ from src.chunker import chunk_label
 
 from . import style
 
-MAX_W = 620
+COLUMN_MAX = 820      # ortalanmış içerik sütununun en büyük genişliği
+MIN_MARGIN = 12       # pencere daraldıkça yan boşluk bu değere kadar küçülür
+NARROW = 560          # sütun bundan darsa balonlar tüm genişliği kullanabilir
+USER_FRAC, BOT_FRAC = 0.78, 0.88
+AVATAR_W = 34         # avatar (24) + aralık (10)
+_ZWSP = "\u200b"
+
+
+def _breakable(text, n=24):
+    """Çok uzun sözcük/URL'lere görünmez kırılma noktası ekler (yatay kaydırma olmasın)."""
+    out = []
+    for tok in text.split(" "):
+        if len(tok) > n and "\n" not in tok:
+            tok = _ZWSP.join(tok[i:i + n] for i in range(0, len(tok), n))
+        out.append(tok)
+    return " ".join(out)
 
 
 class SourceItem(QWidget):
@@ -75,20 +90,25 @@ class Bubble(QWidget):
     def __init__(self, role, text="", results=None, typing=False):
         super().__init__()
         self.typing = typing
-        user = role == "user"
+        self._user = user = role == "user"
+        self._text = text
+        self._colw = COLUMN_MAX
+        self._results = bool(results)
         row = QHBoxLayout(self)
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(10)
         frame = QFrame()
         frame.setObjectName("bubbleUser" if user else "bubbleBot")
-        frame.setMaximumWidth(MAX_W)
+        self._frame = frame
+        self._msg = self._toggle_btn = None
         lay = QVBoxLayout(frame)
         lay.setContentsMargins(16, 12, 16, 12)
         lay.setSpacing(8)
         if typing:
             lay.addWidget(TypingDots())
         else:
-            msg = QLabel(text)
+            msg = QLabel(_breakable(text))
+            self._msg = msg
             # Asistan cevabı Markdown (kalın, liste) olarak gösterilir; kullanıcı metni düz kalır
             msg.setTextFormat(Qt.PlainText if user else Qt.MarkdownText)
             msg.setWordWrap(True)
@@ -101,6 +121,7 @@ class Bubble(QWidget):
             toggle.setObjectName("chip")
             toggle.setCheckable(True)
             toggle.setCursor(Qt.PointingHandCursor)
+            self._toggle_btn = toggle
             box = QWidget()
             box_lay = QVBoxLayout(box)
             box_lay.setContentsMargins(0, 0, 0, 0)
@@ -112,7 +133,7 @@ class Bubble(QWidget):
             def _toggle_sources(on):
                 # Açınca balon tam genişliğe çıkar ve kapatınca da öyle kalır (metin yeniden kesilmez)
                 if on:
-                    frame.setMaximumWidth(MAX_W)
+                    self._frame.setMaximumWidth(self._max_w())
                 box.setVisible(on)
                 toggle.setText(("▾ Kaynakları gizle" if on else "▸ Kaynakları göster") + f" ({n})")
 
@@ -136,12 +157,7 @@ class Bubble(QWidget):
                 col.addWidget(frame, 0, Qt.AlignLeft)
             else:
                 # Hizalama verilmeden eklenince Qt satır kaydırmalı metnin yüksekliğini
-                # genişliğe göre doğru hesaplar; balon genişliğini metne göre sınırlıyoruz.
-                fm = msg.fontMetrics()
-                natural = max(fm.horizontalAdvance(line) for line in (text or " ").splitlines() or [" "])
-                if results:
-                    natural = max(natural, toggle.sizeHint().width())
-                frame.setMaximumWidth(min(MAX_W, natural + 40))
+                # genişliğe göre doğru hesaplar; genişliği set_column_width sınırlar.
                 col.addWidget(frame)
             col.addStretch(1)
             left = QVBoxLayout()
@@ -150,6 +166,33 @@ class Bubble(QWidget):
             row.addLayout(left)
             row.addLayout(col, 1)
             row.addStretch(0)
+        self.set_column_width(COLUMN_MAX)
+
+    def _max_w(self):
+        colw = self._colw
+        avail = colw if self._user else colw - AVATAR_W
+        if colw < NARROW:
+            return max(80, avail)
+        return max(80, int((USER_FRAC if self._user else BOT_FRAC) * colw))
+
+    def set_column_width(self, colw):
+        """Sütun genişliğine göre balonun üst sınırını yeniden hesaplar; içeriğe göre daralır."""
+        self._colw = colw
+        mx = self._max_w()
+        if self._msg is not None:
+            fm = self._msg.fontMetrics()
+            lines = self._msg.text().splitlines() or [" "]
+            natural = max(fm.horizontalAdvance(line) for line in lines) + 6
+            if self._toggle_btn is not None:
+                natural = max(natural, self._toggle_btn.sizeHint().width())
+            mx = min(mx, natural + 34)
+        if self._open_sources():
+            mx = self._max_w()
+        self._frame.setMaximumWidth(mx)
+        self._frame.updateGeometry()
+
+    def _open_sources(self):
+        return self._toggle_btn is not None and self._toggle_btn.isChecked()
 
 
 class ExampleButton(QPushButton):
@@ -236,7 +279,7 @@ class ChatView(QScrollArea):
         self._inner = QWidget()
         self._inner.setObjectName("chatInner")
         self._lay = QVBoxLayout(self._inner)
-        self._lay.setContentsMargins(28, 24, 28, 24)
+        self._lay.setContentsMargins(MIN_MARGIN, 24, MIN_MARGIN, 24)
         self._lay.setSpacing(18)
         self._lay.addStretch()
         self.setWidget(self._inner)
@@ -248,8 +291,29 @@ class ChatView(QScrollArea):
     def set_examples(self, qs):
         self._empty.set_examples(qs)
 
+    def column_width(self):
+        return max(1, self.viewport().width() - 2 * self._margin())
+
+    def _margin(self):
+        return max(MIN_MARGIN, (self.viewport().width() - COLUMN_MAX) // 2)
+
+    def _relayout(self):
+        m = self._margin()
+        self._lay.setContentsMargins(m, 24, m, 24)
+        colw = self.column_width()
+        for i in range(self._lay.count()):
+            w = self._lay.itemAt(i).widget()
+            if isinstance(w, Bubble):
+                w.set_column_width(colw)
+
+    def resizeEvent(self, ev):
+        super().resizeEvent(ev)
+        self._relayout()
+
     def _insert(self, w):
         self._empty.hide()
+        if isinstance(w, Bubble):
+            w.set_column_width(self.column_width())
         self._lay.insertWidget(self._lay.count() - 1, w)
         self.scroll_bottom()
 
