@@ -236,5 +236,6 @@ Ayrıntılı liste: [`TODO.md`](TODO.md)
 - **Kişisel talimatlar:** Ayarlarda tüm sohbetlerde geçerli serbest talimat kutusu ("kısa cevap ver, madde madde yaz" gibi). LLM konuşmadan öğrenmediği için kalıcı tercihler bu yolla verilecek.
 - **Metadata filtresi:** Soruda dosya/rapor adı geçerse arama o dosyayla sınırlanacak.
 - **Yinelenen kaynakları tekilleştirme:** Aynı içeriğin `.pdf` ve `.html` kopyaları.
+- **Değerlendirme:** retrieval skor eşiği ("notlarda yok" için), gerçekçi korpus, dondurulmuş test seti ve cevap metrikleri (doğruluk, kaynağa sadakat).
 - **Varlık kontrolü:** Sorulan kişi/proje bulunan parçada yoksa "notlarda yok" denmesi.
 - **Arayüz:** LLM ile üretilen örnek sorular, geliştirme modu (otomatik yeniden başlatma), ayarlarda ⓘ açıklamalar.
