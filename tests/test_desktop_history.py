@@ -15,7 +15,7 @@ def env(tmp_path, monkeypatch):
     app = QApplication.instance() or QApplication([])
     from desktop import main as m, services
     chunk = SimpleNamespace(source="a.pdf", heading="", page=3, text="parça metni")
-    monkeypatch.setattr(services, "ask", lambda q, k, b, prior=None: (f"cevap:{q}:{k}:{b}", [(chunk, 0.9)], {"route": "notes", "query": None}))
+    monkeypatch.setattr(services, "ask", lambda q, k, b, prior=None: (f"cevap:{q}:{k}:{b}", [(chunk, 0.9)], {"intent": "notes", "query": None}))
     monkeypatch.setattr(services, "load_embed_model", lambda: None)
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.Yes)
     wins = []
@@ -184,7 +184,7 @@ def test_query_saved_and_restored(env, monkeypatch):
     make, wait, _ = env
     from desktop import services
     monkeypatch.setattr(services, "ask", lambda q, k, b, prior=None: (
-        "c", [], {"route": "notes", "query": "yeniden yazılmış"}))
+        "c", [], {"intent": "notes", "query": "yeniden yazılmış"}))
     w = make()
     wait(w)
     ask(w, wait, "peki?")

@@ -7,13 +7,13 @@ from src import config, settings
 from src.embedder import _model
 from src.conversation import fit_budget, window
 from src.generator import answer, answer_followup, answer_meta
-from src.rewriter import condense
+from src.rewriter import analyze
+from src.sources import answer_sources, cited_indices
 from src.index import index_name
 from src.loader import list_note_files, newest_mtime, rel_source
 from src.pipeline import build_index
 from src.notes_io import save_note
 from src.retriever import retrieve
-from src.router import route
 
 
 def load_embed_model():
@@ -105,34 +105,44 @@ def _as_results(sources):
              float(s.get("score", 0.0) or 0.0)) for s in sources]
 
 
+def last_assistant_text(messages) -> str:
+    for m in reversed(messages or []):
+        if m.get("role") == "assistant":
+            return m.get("text", "") or ""
+    return ""
+
+
+def cited_sources(text: str, sources: list[dict]) -> list[dict]:
+    """Cevapta atıf yapılan kaynaklar; atıf yoksa hepsi."""
+    idxs = cited_indices(text, len(sources))
+    return [sources[i - 1] for i in idxs] if idxs else list(sources)
+
+
 def ask(question: str, top_k: int, backend: str, prior_messages=None):
-    """Tüm hat: pencere -> yönlendir -> (yeniden yaz -> getir -> bütçele) -> üret.
-    (cevap, sonuçlar, info) döner; info = {"route", "query"}. Hata olursa AskError fırlatır."""
+    """Tüm hat: pencere -> analiz (niyet + sorgu) -> meta | kaynaklar | takip | (getir -> bütçele -> üret).
+    (cevap, sonuçlar, info) döner; info = {"intent", "query"}. Hata olursa AskError fırlatır."""
     history = window(prior_messages or [])
-    r = route(question, bool(history))
-    info = {"route": r, "query": None}
-    if r == "meta":                    # asistanla ilgili soru: arama yok, kaynak yok
+    a = analyze(question, history)
+    intent, query = a["intent"], a.get("query") or question
+    src = last_sources(prior_messages) if intent in ("followup", "sources") else []
+    if intent in ("followup", "sources") and not src:   # dayanacak kaynak yok: normal aramaya düş
+        intent = "notes"
+    info = {"intent": intent, "query": query if query != question else None}
+    if intent == "meta":               # asistanla ilgili soru: arama yok, kaynak yok
         try:
             return answer_meta(question), [], info
         except Exception as e:
             raise _fail_llm(e)
-    src = last_sources(prior_messages) if r == "followup" else []
-    if r == "followup" and not src:    # dayanacak kaynak yok (ör. önceki cevap meta): normal aramaya düş
-        r = info["route"] = "notes"
-    if r == "followup":                # önceki cevabın kaynaklarıyla cevapla, yeni arama yok
+    if intent == "sources":            # LLM yok: önceki cevabın atıf yaptığı kaynaklar
+        text = last_assistant_text(prior_messages)
+        return answer_sources(text, src, question), _as_results(cited_sources(text, src)), info
+    if intent == "followup":           # önceki cevabın kaynaklarıyla cevapla, yeni arama yok
         try:
             return answer_followup(question, history, src), _as_results(src), info
         except Exception as e:
             raise _fail_llm(e)
     if backend == "numpy" and index_status() is None:
         raise AskError("index", "İndeks bulunamadı.")
-    query = question
-    if history:
-        try:
-            query = condense(question, history) or question
-        except Exception as e:
-            raise _fail_llm(e)
-    info["query"] = query
     try:
         load_embed_model()
         results = retrieve(query, k=top_k, backend=backend)

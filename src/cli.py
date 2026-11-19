@@ -52,7 +52,8 @@ def cmd_chat(args):
     from . import history as hist
     from .conversation import fit_budget, window
     from .generator import answer_followup
-    from .rewriter import condense
+    from .rewriter import analyze
+    from .sources import answer_sources, cited_indices
     _apply_dir(args)
     msgs: list[dict] = []
     print("Sohbet başladı. Çıkmak için boş satır veya 'q'.")
@@ -64,34 +65,41 @@ def cmd_chat(args):
         if not q or q.lower() in ("q", "quit", "exit"):
             break
         h = window(msgs)
-        r = route(q, bool(h))
-        prev = next((m["sources"] for m in reversed(msgs) if m["role"] == "assistant"), [])
-        if r == "followup" and not prev:   # dayanacak kaynak yok: normal arama
-            r = "notes"
-        query, results = None, []
-        if r == "meta":
+        a = analyze(q, h)
+        intent, query = a["intent"], a.get("query") or q
+        prev_msg = next((m for m in reversed(msgs) if m["role"] == "assistant"), {})
+        prev = prev_msg.get("sources") or []
+        if intent in ("followup", "sources") and not prev:   # dayanacak kaynak yok: normal arama
+            intent = "notes"
+        print(f"[niyet: {intent}]" + (f" [aranan: {query}]" if query != q else ""))
+        results = []
+        if intent == "meta":
             ans = answer_meta(q)
-        elif r == "followup":
+        elif intent == "sources":
+            ans = answer_sources(prev_msg.get("text", ""), prev, q)
+            idxs = cited_indices(prev_msg.get("text", ""), len(prev))
+            kept = [prev[i - 1] for i in idxs] if idxs else prev
+            print("Cevap:\n" + ans)
+            msgs += [{"role": "user", "text": q, "sources": []},
+                     {"role": "assistant", "text": ans, "sources": kept}]
+            continue
+        elif intent == "followup":
             ans = answer_followup(q, h, prev)
-            print(f"[takip: {len(prev)} önceki kaynak]")
+            print("Cevap:\n" + ans)
             msgs += [{"role": "user", "text": q, "sources": []},
                      {"role": "assistant", "text": ans, "sources": prev}]
-            print("Cevap:\n" + ans)
             continue
         else:
-            query = condense(q, h) if h else q
-            if query != q:
-                print(f"[aranan: {query}]")
             results = retrieve(query, backend=args.backend)
             h, results = fit_budget(h, results, q)
             ans = answer(q, results, h)
             for c, s in results:
                 print(f"  - {c.id} ({chunk_label(c)}) skor={s:.3f}")
         print("Cevap:\n" + ans)
-        a = {"role": "assistant", "text": ans, "sources": hist.sources_from_results(results)}
-        if query and query != q:
-            a["query"] = query
-        msgs += [{"role": "user", "text": q, "sources": []}, a]
+        m = {"role": "assistant", "text": ans, "sources": hist.sources_from_results(results)}
+        if query != q and intent == "notes":
+            m["query"] = query
+        msgs += [{"role": "user", "text": q, "sources": []}, m]
 
 
 def main():

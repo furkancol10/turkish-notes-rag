@@ -81,14 +81,25 @@ Her soru şu adımlardan geçer (`desktop/services.py` içindeki `ask`, aynı ha
 ```mermaid
 flowchart LR
     Q[Soru + önceki mesajlar] --> W[Pencere<br/>son 3 tur]
-    W --> R{Router}
-    R -- meta --> M[answer_meta<br/>arama yok]
-    R -- followup --> F[answer_followup<br/>önceki kaynaklarla]
-    R -- notes --> C[Yeniden yaz<br/>condense]
-    C --> T[Geri getir<br/>top-k]
+    W --> A{analyze<br/>niyet + sorgu}
+    A -- meta --> M[answer_meta<br/>arama yok]
+    A -- sources --> S[answer_sources<br/>LLM yok, atıflı kaynaklar]
+    A -- followup --> F[answer_followup<br/>önceki kaynaklarla]
+    A -- notes --> T[Geri getir<br/>top-k, bağımsız sorgu]
     T --> B[Bütçe<br/>fit_budget]
     B --> G[Üret<br/>answer]
 ```
+
+Geçmiş yoksa `analyze` yalnızca kural yolunu kullanır (LLM çağrısı yok); geçmiş varsa kural ön-kontrollerinden sonra tek bir LLM çağrısı hem niyeti hem bağımsız arama sorgusunu üretir. Hata olursa kural yoluna düşer.
+
+| Niyet | Ne zaman | Ne olur |
+|---|---|---|
+| `notes` | Notlarda yeni arama gerekir ("peki teslim tarihi?", "başka hangi raporda geçiyor?") | Bağımsız sorgu ile geri getir, cevabı üret |
+| `followup` | Önceki cevabın kendisi hakkında ("doğru mu?", "kısalt") | Önceki kaynaklarla cevapla, yeni arama yok |
+| `sources` | "Hangi dosyada/sayfada?" | Önceki cevabın atıf yaptığı kaynaklar, LLM'siz deterministik liste |
+| `meta` | Asistan hakkında ("kimsin", teşekkür) | Arama ve kaynak yok |
+
+`followup` ve `sources` için önceki asistan mesajında kaynak yoksa `notes` yoluna düşülür. `services.ask` `(cevap, sonuçlar, {"intent", "query"})` döner; `query` yalnızca sorudan farklıysa doludur.
 
 | Adım | Dosya | Ne öğretiyor |
 |---|---|---|
@@ -97,8 +108,8 @@ flowchart LR
 | Embedding | `src/embedder.py` | Metin -> vektör; sorgu/pasaj önekleri (bu modeller için gerekmiyor) |
 | İndeksleme | `src/index.py` | ChromaDB (kalıcı vektör DB) ve numpy kosinüs (şeffaf, öğrenme amaçlı) |
 | Pencere | `src/conversation.py` | Geçmişin tamamı değil, son birkaç tur ve kısaltılmış cevaplar gönderilir |
-| Yönlendirme | `src/router.py` | Her soru aramaya gitmez: `meta`, `followup`, `notes` |
-| Yeniden yazma | `src/rewriter.py` | "peki teslim tarihi?" tek başına anlamsızdır; geçmişle bağımsız bir arama sorgusuna çevrilir |
+| Niyet analizi | `src/rewriter.py`, `src/router.py` | Her soru aramaya gitmez: `analyze` niyeti ve bağımsız arama sorgusunu üretir |
+| Kaynak cevabı | `src/sources.py` | "Hangi dosyada?" LLM'siz, atıf numaralarından cevaplanır |
 | Geri getirme | `src/retriever.py` | Sorguyu embed et, en benzer top-k parça |
 | Bütçe | `src/conversation.py` | `num_ctx` sınırı: geçmiş ve parçalar sığacak şekilde kırpılır |
 | Üretim | `src/generator.py` | Sadece bağlama dayalı prompt, kaynak atfı, "bilmiyorum" |
@@ -112,6 +123,7 @@ Yeniden yazılmış sorgu asistan cevabıyla birlikte kaydedilir ve arayüzde ce
 Soru:  Proje Nova bütçesi nedir?   -> notes    Cevap: Proje Nova'nın bütçesi 400 bin liradır [1].
 Soru:  peki teslim tarihi?         -> notes    Aranan: Proje Nova'nın teslim tarihi ne zaman?
                                                Cevap: ... 30 Haziran olarak belirlenmiştir [1].
+Soru:  hangi dosyada bahsetmiş?    -> sources  (LLM yok, önceki cevabın atıf yaptığı dosyalar)
 Soru:  doğru mu?                   -> followup (yeni arama yok, önceki kaynaklarla kontrol)
 ```
 
@@ -167,11 +179,25 @@ Bu yüzden varsayılan `bge-m3` + 512. Tek soru yaklaşık 0.04 hit puanı eder;
 
 Ortalama condense gecikmesi 0.47 sn. Route doğruluğu 30/30 = 1.00 (takip turları, geçmiş varken). Etiket kuralı: `followup` yalnızca önceki cevabın kendisi hakkındaki sorulardır ("doğru mu?", "kısalt", "ilkini açar mısın"); "Peki onun bütçesi ne?" gibi eksiltili sorular yeni arama gerektirdiği için `notes` etiketlidir (yeniden yazma + arama). Ayrıntı: `eval/followup_results.md`. Not: setteki gerçek `followup` turu azdır (5/30), bu yüzden route sayısı router'ın kalıp kapsamı hakkında sınırlı bilgi verir.
 
+### Niyet analizi (26 konuşma, 52 tur; ayrıntı ve önce/sonra: `eval/followup_results.md`)
+
+| Metrik | Kural router + condense | analyze |
+|---|---|---|
+| Intent genel | 0.77 | 0.71 |
+| notes / followup / sources / meta | 1.00 / 0.58 / 0.00 / 0.50 | 0.59 / 1.00 / 0.67 / 1.00 |
+| hit@3 / MRR | 0.88 / 0.835 | 0.84 / 0.807 |
+| Gecikme | 0.37 sn | 0.71 sn |
+
+`sources` ve `meta` belirgin iyileşti, ama 4B model kısa eksiltili `notes` sorularını sık sık `followup` sanıyor; genel doğruluk ve geri getirme bu ölçümde düştü.
+
 ## Bilinen sınırlamalar
+
+- **Niyet hatası:** küçük LLM kısa "peki kira?" gibi soruları `followup` sayabilir; o zaman yeni arama yapılmaz ve önceki kaynaklarla cevaplanır.
+- **Kaynak cevabı yalnızca bir önceki cevabı kapsar;** atıf yoksa getirilen tüm kaynaklar listelenir.
 
 - **Metadata filtresi yok:** "toplanti_proje_nova.md dosyasında ne yazıyor?" gibi dosya adı verilen sorular yine tüm notlarda aranır, kaynaklar karışabilir.
 - **Yinelenen kaynaklar:** aynı içerik hem `.pdf` hem `.html` olarak varsa iki kez getirilebilir.
-- **Kural tabanlı router:** kalıplara dayanır; kalıbın dışındaki ifadeler `notes` yoluna düşer.
+- **Geçmişsiz ilk soru kural tabanlıdır:** kalıbın dışındaki ifadeler `notes` yoluna düşer.
 - Taranmış PDF'ler (OCR yok) atlanır.
 - Sohbet geçmişi yalnızca son birkaç turla sınırlıdır (token bütçesi).
 
