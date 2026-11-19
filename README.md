@@ -33,6 +33,11 @@ Ağır işler (model yükleme, indeksleme, LLM) arka planda çalışır; arayüz
 `.md` veya `.txt` (UTF-8) dosyalarını `data/notes/` içine koy (örnekleri silebilirsin), sonra yeniden `index` çalıştır.
 Başlıklar (`# `, `## `) kaynak gösterirken kullanılır, bu yüzden notları başlıkla yapılandırmak yardımcı olur.
 
+### Not klasörü seçme
+Notlar herhangi bir klasörden okunur (alt klasörler dahil, `.md`/`.txt`, UTF-8; UTF-8 olmayanlar uyarıyla atlanır). Masaüstünde "Klasör seç" / "Örnek notlara dön", Streamlit'te kenar çubuğundaki "Not klasörü", CLI'da:
+`uv run python -m src.cli set-notes-dir /yol/notlarim` (kalıcı) veya `index|ask --notes-dir /yol` (tek seferlik).
+Ayar `~/.config/kisisel-not-arama/settings.json` dosyasında tutulur; her klasörün kendi indeksi vardır.
+
 ## Sorgu yönlendirme (routing)
 RAG'de her soru aramaya gitmek zorunda değil. `src/router.py` önce soruya bakar: "merhaba", "sen kimsin", "hangi modeli kullanıyorsun" gibi sohbet/asistan soruları `meta` olur, arama yapılmadan `answer_meta` ile cevaplanır (kaynak yok). Diğer her şey `notes` olarak normal RAG akışına girer. Kurallar bilerek temkinlidir: "Python nedir" notlara gider. Test: `uv run pytest`.
 

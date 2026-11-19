@@ -1,5 +1,6 @@
 """ADIM 1 - YÜKLE: Not dosyalarını oku. Her not = göreli yol + metin."""
 import os
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -46,8 +47,9 @@ def load_notes(folder: Path | None = None) -> list[Doc]:
     docs = []
     for path in list_note_files(folder):
         try:
-            text = path.read_text(encoding="utf-8", errors="replace")
-        except OSError:
-            continue   # okunamayan dosyayı atla
+            text = path.read_text(encoding="utf-8-sig")
+        except (OSError, UnicodeDecodeError) as e:
+            warnings.warn(f"Not atlandı ({path}): {e.__class__.__name__}")
+            continue   # okunamayan / UTF-8 olmayan dosyayı atla
         docs.append(Doc(source=rel_source(path, folder), text=text))
     return docs

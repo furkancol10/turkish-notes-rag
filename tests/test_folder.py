@@ -58,3 +58,12 @@ def test_index_name_differs_per_folder(tmp_path):
     assert na == index.index_name("BAAI/bge-m3", "fixed", 512, a)
     settings.set_override(a)
     assert index.index_name("BAAI/bge-m3", "fixed", 512) == na
+
+
+def test_non_utf8_and_broken_symlink_skipped(tmp_path):
+    (tmp_path / "ok.md").write_text("merhaba", encoding="utf-8")
+    (tmp_path / "bad.txt").write_bytes(b"\xff\xfe\x00bad\x80")
+    (tmp_path / "kirik.md").symlink_to(tmp_path / "yok.md")
+    with pytest.warns(UserWarning):
+        docs = load_notes(tmp_path)
+    assert [d.source for d in docs] == ["ok.md"]
