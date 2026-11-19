@@ -89,12 +89,46 @@ _FOLLOWUP = [
 _FOLLOWUP_RE = [re.compile(p) for p in _FOLLOWUP]
 
 
+# --- Kaynak soruları: "önceki cevap hangi dosyadan/sayfadan geldi?" (yalnızca geçmiş varken) ---
+# Sadece ÖNCEKİ cevaba gönderme yapan kalıplar (bu/bundan/bunu/zamir ya da fiilsiz kısa); konulu
+# ("toplantı notları hangi dosyada var") sorular LLM sınıflandırıcısına bırakılır.
+_SRC_NOUN = r"(dosya|dosyada|dosyda|dosyadan|dosyadaydi|not|notta|nottan|notlarda|notlardan|belge|belgede|belgeden|rapor|raporda|raporlarda|rapordan|sayfa|sayfada|sayfadan|pdf|pdfte|pdfde|kaynak|kaynakta|kaynaktan|yerde|yerden)"
+_SRC_THIS = r"(bu|bunu|bunlari|bundan|bunun|onu|ondan|bu konu|bu konuyu|bu konudan|bu bilgi|bu bilgiyi|bu bilgiden|bu cevap|bu cevabi)"
+_SRC_VERB = r"(bahsetmis|bahsediyor|bahseder|bahsedilmis|geciyor|gecer|gecmis|yaziyor|yazmis|yaziyordu|var|vardi|anlatiyor|anlatmis|anlatilmis|belirtmis|belirtiliyor|yer aliyor|ifade ediliyor|soyluyor|soylenmis|mevcut|aciklanmis|aciklaniyor)"
+_SOURCES = [
+    rf"(peki |ya |bu |bunlar |bunu )?(hangi|ne) {_SRC_NOUN}( {_SRC_THIS})?( {_SRC_VERB})?( {_SRC_THIS})?( mu| mi)?",
+    rf"(peki |ya )?{_SRC_THIS} (hangi|ne) {_SRC_NOUN}( {_SRC_VERB})?( mu| mi)?",
+    rf"(peki |ya )?(hangi|ne) {_SRC_NOUN} (icinde|icerisinde|icin)( {_SRC_THIS})?( {_SRC_VERB})?",
+    # kaynağın ne / kaynaklar neler
+    r"(peki |ya )?(bunun |bunlarin |cevabin |cevabinin )?(kaynagin|kaynak|kaynaklarin|kaynaklar|kaynagini|kaynaklari|kaynagi)( ne| neydi| nedir| neler| nerede| nelerdi| neresi| hangisi| hangileri| goster| ver)( misin)?",
+    r"(kaynak|kaynaklar|dosya|dosyalar|dosya adi) (goster|ver|goster bana|listele|neler)",
+    # nereden buldun
+    r"(bunu |bu bilgiyi |bu cevabi |onu )?(nereden|nerden|neresinden|nereden aldin) ?(buldun|aldin|cikardin|biliyorsun|ogrendin|geldi|geliyor|aldin bunu|buldun bunu)?",
+    # bu hangi dosya / sayfa
+    r"(bu|bunlar) (hangi )?(dosya|dosyalar|not|notlar|belge|belgeler|rapor|raporlar|sayfa|sayfalar)(dan|den|tan|ten)? (geliyor|geldi|alindi)",
+    rf"(peki |ya )?(bu |bunlar )?(hangi )?(dosya|sayfa|not|belge|rapor|pdf)( numarasi| adi| ismi)? (neydi|ne|hangisi|hangisiydi)",
+    r"(hangi|ne) (dosya|dosyayi|notu|notlari|belgeyi|raporu|sayfayi|kaynagi|kaynaklari) (kullandin|kullanarak|temel aldin|baz aldin|okudun|inceledin)( bunun icin)?",
+    r"(bunu )?(hangi )?(dosyalara|notlara|kaynaklara|sayfalara) (baktin|dayanarak|dayaniyor)",
+]
+_SOURCES_RE = [re.compile(p) for p in _SOURCES]
+
+
+def is_sources(question: str) -> bool:
+    """Önceki cevabın kaynağını (dosya/sayfa/not) soran kalıp mı? (kural tabanlı, LLM'siz)"""
+    q = normalize(question)
+    return bool(q) and any(r.fullmatch(q) for r in _SOURCES_RE)
+
+
 def route(question: str, has_history: bool = False) -> str:
     """"meta" (asistanla ilgili / sohbet), "followup" (önceki cevabın kendisi hakkında;
-    yalnızca geçmiş varken) veya "notes" (notlarda ara) döner."""
+    yalnızca geçmiş varken), "sources" (önceki cevabın hangi dosya/sayfadan geldiği; yalnızca
+    geçmiş varken, _SOURCES kalıpları; eski _FOLLOWUP kaynak kalıpları "followup" olarak kalır)
+    veya "notes" (notlarda ara) döner."""
     q = normalize(question)
     if q and any(r.fullmatch(q) for r in _META_RE):
         return "meta"
     if has_history and q and any(r.fullmatch(q) for r in _FOLLOWUP_RE):
         return "followup"
+    if has_history and is_sources(question):
+        return "sources"
     return "notes"
