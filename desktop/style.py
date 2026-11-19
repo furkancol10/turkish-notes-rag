@@ -106,3 +106,41 @@ QPushButton#send {{ background: {c['accent']}; color: {c['on_accent']}; border: 
 QPushButton#send:hover {{ background: {c['accent_hover']}; }}
 QPushButton#send:disabled {{ background: {c['surface2']}; color: {c['muted']}; }}
 """
+
+
+def build_sidebar_stylesheet(pal: QPalette) -> str:
+    """Sidebar bileşeni için ek kurallar; build_stylesheet() sonrasına eklenir."""
+    c = colors(pal)
+    return f"""
+#sidebar QPushButton#newChat {{ background: {c['accent']}; color: {c['on_accent']};
+    font-weight: 600; text-align: center; padding: 10px; border-radius: 10px; }}
+#sidebar QPushButton#newChat:hover {{ background: {c['accent_hover']}; }}
+#sidebar QPushButton#folderHead {{ background: {c['surface']}; border: 1px solid {c['border']};
+    border-radius: 10px; padding: 0; }}
+#sidebar QPushButton#folderHead:hover {{ border-color: {c['accent']}; }}
+#sidebar QLabel#folderName {{ font-weight: 600; background: transparent; }}
+#sidebar QLabel#staleDot {{ color: #e5a50a; font-size: 8pt; background: transparent; }}
+#sidebar QLabel#muted {{ background: transparent; }}
+#sidebar QFrame#folderBody {{ background: {c['surface']}; border: 1px solid {c['border']};
+    border-radius: 10px; }}
+#sidebar QFrame#folderBody QLabel {{ background: transparent; }}
+#sidebar QPushButton#action {{ padding: 5px 8px; }}
+#sidebar QPushButton#notesToggle {{ color: {c['muted']}; padding: 5px 8px; }}
+#sidebar QLabel#notesList {{ color: {c['muted']}; font-size: 9pt; }}
+#sidebar QScrollArea#chatList, #sidebar QWidget#chatListInner {{
+    background: transparent; border: none; }}
+#sidebar QFrame#chatRow {{ background: transparent; border-radius: 8px; }}
+#sidebar QFrame#chatRow:hover {{ background: {c['surface']}; }}
+#sidebar QFrame#chatRow[current="true"] {{ background: {c['surface2']};
+    border-left: 3px solid {c['accent']}; }}
+#sidebar QFrame#chatRow QLabel {{ background: transparent; }}
+#sidebar QPushButton#rowDelete {{ padding: 0; text-align: center; border-radius: 6px; }}
+#sidebar QLineEdit#renameEdit {{ background: {c['field']}; color: {c['fg']};
+    border: 1px solid {c['accent']}; border-radius: 6px; padding: 2px 4px; }}
+#sidebar QPushButton#link {{ color: {c['muted']}; font-size: 8pt; padding: 2px 6px;
+    text-decoration: underline; }}
+#sidebar QPushButton#link:hover {{ color: {c['fg']}; background: transparent; }}
+#sidebar QPushButton#settings {{ background: {c['surface']}; border: 1px solid {c['border']};
+    padding: 9px 12px; }}
+#sidebar QPushButton#settings:hover {{ border-color: {c['accent']}; }}
+"""
