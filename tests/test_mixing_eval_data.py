@@ -3,7 +3,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = json.loads((ROOT / "eval" / "mixing_questions.json").read_text("utf-8"))
-DOCS = ROOT.parent / "Katalog" / "Docs"
+import os
+DOCS = Path(os.environ.get("MIXING_DOCS_DIR", "/nonexistent"))
 
 
 def test_schema():

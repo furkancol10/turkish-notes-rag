@@ -98,3 +98,11 @@ NCAT = build_catalog(NOTES, {"toplanti_proje_nova.md": "Proje Nova Toplantısı"
 ])
 def test_detect_specificity(q, exp):
     assert detect(q, NCAT) == exp
+
+
+def test_same_stem_duplicates_count_as_one_doc():
+    """Comparison of two reports that each exist as .pdf and .html must keep all four files."""
+    srcs = ["deepseekRag.html", "deepseekRag.pdf", "geminiRag.pdf", "qwenRag.html", "qwenRag.pdf"]
+    cat = build_catalog(srcs)
+    got = detect("DeepSeek ve Qwen raporlarında değerlendirme nasıl?", cat)
+    assert got == ["deepseekRag.html", "deepseekRag.pdf", "qwenRag.html", "qwenRag.pdf"]

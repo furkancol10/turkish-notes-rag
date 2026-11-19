@@ -35,6 +35,8 @@ uv sync                      # bağımlılıklar (CUDA torch 2.15 / cu132 wheel 
 ollama pull qwen3.5:4b       # üretim (LLM) modeli
 ```
 
+GPU: `pyproject.toml` torch'u CUDA 13.2 (`cu132`) wheel'inden alır (~3 GB indirme; CUDA 13.2 destekleyen NVIDIA sürücüsü gerekir). NVIDIA GPU'nuz yoksa indirme boyutunu küçültmek için `[[tool.uv.index]]` adresini `https://download.pytorch.org/whl/cpu` yapıp `uv lock` çalıştırın; uygulama CUDA yoksa kendiliğinden CPU'ya düşer.
+
 - **Embedding:** `BAAI/bge-m3`, toplu işlerde (indeksleme, eval) **GPU'da fp16** (CUDA yoksa CPU), tek soru embedding'i CPU'da çalışır; indeksleme öncesi Ollama LLM'i boşaltılır, sonrasında GPU modeli bırakılır (tepe VRAM ~1-1.5 GB). İlk kullanımda Hugging Face'ten otomatik iner (`~/.cache/huggingface`). Elle bir şey yapman gerekmez.
 - **LLM:** `qwen3.5:4b`, Ollama üzerinden (GPU varsa kullanır).
 
@@ -110,8 +112,8 @@ Her asistan mesajı niyetiyle (`intent`) birlikte kaydedilir. `followup` ve `sou
 | Pencere | `src/conversation.py` | Geçmişin tamamı değil, son birkaç tur ve kısaltılmış cevaplar gönderilir |
 | Niyet analizi | `src/rewriter.py`, `src/router.py` | Her soru aramaya gitmez: `analyze` niyeti ve bağımsız arama sorgusunu üretir |
 | Kaynak cevabı | `src/sources.py` | "Hangi dosyada?" LLM'siz, atıf numaralarından cevaplanır |
-| Geri getirme | `src/retriever.py` | Sorguyu embed et, en benzer top-k parça |
-| Skor eşiği | `desktop/services.py` | En iyi parçanın kosinüs skoru eşiğin altındaysa LLM çağrılmaz: "Bu bilgi notlarda yok." + "En yakın eşleşme: ... (skor 0.38) — eşik 0.45" (kaynaklar yine listelenir) |
+| Geri getirme | `src/retriever.py`, `src/doc_filter.py` | Sorguyu embed et, en benzer top-k parça. Soru bir belgeyi anıyorsa ("chatgpt ne önermiş", "deepseekRag.pdf'te…") arama o belgeyle sınırlanır (en çok 3 belge; aynı adlı `.pdf`+`.html` tek sayılır; eşleşme yoksa filtresiz arama). Aynı içerikli `.pdf`/`.html` parçalar tekilleştirilir |
+| Skor eşiği | `desktop/services.py` | Belge filtresinden SONRA, süzülmüş/tekilleştirilmiş sonuçların en iyi skoruna uygulanır (filtre boşsa filtresiz aramaya düşülür, eşik onun skoruna bakar). En iyi parçanın kosinüs skoru eşiğin altındaysa LLM çağrılmaz: "Bu bilgi notlarda yok." + "En yakın eşleşme: ... (skor 0.38) — eşik 0.40" (kaynaklar yine listelenir) |
 | Bütçe | `src/conversation.py` | `num_ctx` sınırı: geçmiş ve parçalar sığacak şekilde kırpılır |
 | Üretim | `src/generator.py` | Sadece bağlama dayalı prompt, kaynak atfı, "bilmiyorum" |
 | Değerlendirme | `eval/` | hit@k ve MRR ile ayarı ölçerek yapmak |
@@ -197,14 +199,43 @@ Ortalama condense gecikmesi 0.47 sn. Route doğruluğu 30/30 = 1.00 (takip turla
 
 LLM "followup" dese bile soruda kapalı takip sözcükleri (doğru mu, kısalt, açıkla...) dışında yeni içerik sözcüğü varsa (`router.has_new_content`) niyet `notes` yapılır; kesin followup/sources kalıpları LLM'den önce çalışır. Ayarlamada kullanılmayan 9 turluk held-out sette doğruluk 8/9 (ayarlama öncesi 6/9). Ancak bu set tam bağımsız değildir (ayarlamadan önce bir kez görüldü, kapıya sonradan sözcük eklendi) ve 1.00 değerleri ayarlama kümesi üzerindedir; kümeler küçük olduğundan sonuçlar yaklaşıktır, gerçek doğruluk daha düşük olabilir.
 
+### Skor eşiği kalibrasyonu (`eval/threshold_results.md`, 49 tuning + 34 dondurulmuş soru)
+
+Kural: yanlış-ret <= %5 iken en çok doğru-ret. Tuning kümesinde seçilen eşik 0.44; dondurulmuş kümede (tek değerlendirme):
+
+| Küme | Yanlış-ret | Doğru-ret |
+|---|---|---|
+| tuning | 4.0% | 37.5% |
+| dondurulmuş | 12.5% | 22.2% |
+
+Varsayılan 0.40 bilerek daha temkinli seçildi (yanlış-ret'i düşük tutar). Dürüst yorum: cevaplanabilir (ort. top-1 0.59) ve cevaplanamaz (0.50) skorlar çok örtüşüyor; near-miss ve entity-swap soruları hiç reddedilmiyor, yani eşik yalnızca bariz alakasız (off-topic) sorularda işe yarar. Küçük örnek, anlamlı bir güven aralığı yok.
+
+### Belgeler arası karışma (`eval/mixing_results.md`, k=10)
+
+| Mod | Korpus | Tür | N | Arama saflığı | Kirlenme | Yabancı atıflı cevap | Anahtar bilgi |
+|---|---|---|---|---|---|---|---|
+| off | notes | tek belge | 21 | 13% | 0% | 0% | 98% |
+| off | notes | karşılaştırma | 4 | 22% | 0% | 0% | - |
+| off | notes | tümü | 25 | 14% | 0% | 0% | 98% |
+| off | docs | tek belge | 10 | 39% | 0% | 0% | 85% |
+| off | docs | karşılaştırma | 2 | 60% | 22% | 50% | - |
+| off | docs | tümü | 12 | 42% | 4% | 8% | 85% |
+| auto | notes | tek belge | 21 | 82% | 2% | 5% | 95% |
+| auto | notes | karşılaştırma | 4 | 100% | 0% | 0% | - |
+| auto | notes | tümü | 25 | 85% | 2% | 4% | 95% |
+| auto | docs | tek belge | 10 | 100% | 0% | 0% | 100% |
+| auto | docs | karşılaştırma | 2 | 100% | 0% | 0% | - |
+
+Saflık = top-k parçanın istenen belgelerden payı; yabancı atıflı = cevabın istenmeyen belgeye atıf yapma oranı (LLM çıktısı çalıştırmalar arasında çok değişir: aynı koşulun tekrarında docs/off yabancı atıf %25'ten %8'e indi). Üretim iki modda da yeni gruplu prompt ile yapılır, yani eski prompt ayrıca ölçülmedi. Docs korpusu 6 dosyalık (3 rapor x pdf/html) küçük bir seti kapsar ve depoda yok (`MIXING_DOCS_DIR` ile verilir); N küçük (karşılaştırma: 2 docs, 4 notes), yüzdeler gürültülüdür.
+
 ## Bilinen sınırlamalar
 
 - **Niyet hatası:** küçük LLM kimi zaman yanlış sınıflandırabilir; `followup` için yeni-içerik kapısı vardır, ama `notes` yerine `sources`/`meta` seçimi yalnızca kurallar ve prompt ile korunur.
 - **Kaynak cevabı yalnızca bir önceki cevabı kapsar;** atıf yoksa getirilen tüm kaynaklar listelenir.
 - **Varlık karışması:** "Proje Nova bütçesi?" → "peki kira?" gibi belirsiz takiplerde notlarda Nova'nın kirası yoksa 4B model başka bir notun kira bilgisini (doğru etiketleyerek: "kişisel kiranız…") verebilir; "notlarda yok" demeyi her zaman başaramaz.
 
-- **Metadata filtresi yok:** "toplanti_proje_nova.md dosyasında ne yazıyor?" gibi dosya adı verilen sorular yine tüm notlarda aranır, kaynaklar karışabilir.
-- **Yinelenen kaynaklar:** aynı içerik hem `.pdf` hem `.html` olarak varsa iki kez getirilebilir.
+- **Belge filtresi sezgiseldir:** dosya adı/başlık sözcüklerine bakar; adı sıradan bir sözcük olan belge ("bütçe") yalnızca büyük harfle yazılırsa ya da tek eşleşme ise seçilir; 3'ten fazla belge eşleşirse filtre uygulanmaz. Karşılaştırma sorularında yabancı belge atfı ölçüldü (aşağıda) ama LLM yine de nadiren yanlış belgeye atıf yapabilir.
+- **Skor eşiği zayıf bir ayırıcıdır:** bge-m3'te cevaplanabilir ve cevaplanamaz soruların skorları örtüşür (aşağıya bakın); eşik yalnızca bariz alakasız sorularda devreye girer.
 - **Geçmişsiz ilk soru kural tabanlıdır:** kalıbın dışındaki ifadeler `notes` yoluna düşer.
 - Taranmış PDF'ler (OCR yok) atlanır.
 - Sohbet geçmişi yalnızca son birkaç turla sınırlıdır (token bütçesi).
@@ -240,8 +271,6 @@ Ayrıntılı liste: [`TODO.md`](TODO.md)
 
 - **Atıf numaraları ayarı:** Ayarlarda `[1]`, `[2]` işaretlerini açıp kapatma (kaynaklar "Kaynakları göster" altında kalır).
 - **Kişisel talimatlar:** Ayarlarda tüm sohbetlerde geçerli serbest talimat kutusu ("kısa cevap ver, madde madde yaz" gibi). LLM konuşmadan öğrenmediği için kalıcı tercihler bu yolla verilecek.
-- **Metadata filtresi:** Soruda dosya/rapor adı geçerse arama o dosyayla sınırlanacak.
-- **Yinelenen kaynakları tekilleştirme:** Aynı içeriğin `.pdf` ve `.html` kopyaları.
-- **Değerlendirme:** retrieval skor eşiği ("notlarda yok" için), gerçekçi korpus, dondurulmuş test seti ve cevap metrikleri (doğruluk, kaynağa sadakat).
+- **Değerlendirme:** gerçekçi korpus ve cevap metrikleri (doğruluk, kaynağa sadakat).
 - **Varlık kontrolü:** Sorulan kişi/proje bulunan parçada yoksa "notlarda yok" denmesi.
 - **Arayüz:** LLM ile üretilen örnek sorular, geliştirme modu (otomatik yeniden başlatma), ayarlarda ⓘ açıklamalar.

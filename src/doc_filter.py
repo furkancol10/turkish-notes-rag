@@ -105,6 +105,11 @@ def _specific(alias: tuple, qtoks: list[str], caps: set[str]) -> bool:
     return any(c in caps and _tok_match(c, t) for c in qtoks)
 
 
+def _n_docs(sources) -> int:
+    """Aynı gövdeli dosyalar (deepseekRag.pdf + deepseekRag.html) tek belge sayılır."""
+    return len({PurePosixPath(s).stem.lower() for s in sources})
+
+
 def detect(question: str, catalog: dict[str, set[tuple]]) -> list[str] | None:
     qtoks = _tokens(question)
     caps = _caps(question)
@@ -115,7 +120,7 @@ def detect(question: str, catalog: dict[str, set[tuple]]) -> list[str] | None:
             continue
         (spec if any(_specific(a, qtoks, caps) for a in m) else common).append(s)
     hit = spec or (common if len(common) == 1 else [])
-    if not hit or len(hit) > MAX_DOCS:
+    if not hit or _n_docs(hit) > MAX_DOCS:
         return None
     return sorted(hit)
 
@@ -126,7 +131,7 @@ def detect_many(questions: list[str], catalog) -> list[str] | None:
         d = detect(q, catalog) if q else None
         if d:
             found.update(d)
-    return sorted(found) if found and len(found) <= MAX_DOCS else None
+    return sorted(found) if found and _n_docs(found) <= MAX_DOCS else None
 
 
 # --- Tekilleştirme ---

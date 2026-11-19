@@ -4,6 +4,7 @@ Metrikler: arama saflığı (top-k parçanın izinli belgelerden payı), cevap k
 izinli olmayanların payı), >=1 yabancı atıflı cevap %, anahtar bilgi (key_fact) kapsaması.
 Sadece public API: src.retriever.retrieve(q, k, backend), src.generator.answer(q, results)."""
 import argparse
+import os
 import json
 import re
 import tempfile
@@ -12,7 +13,8 @@ from pathlib import Path
 
 HERE = Path(__file__).parent
 ROOT = HERE.parent
-DOCS_DIR = ROOT.parent / "Katalog" / "Docs"   # salt okunur
+# "docs" korpusu: PDF/HTML rapor klasörü (depoda yok). MIXING_DOCS_DIR ortam değişkeni ya da --docs-dir ile verilir.
+DOCS_DIR = Path(os.environ["MIXING_DOCS_DIR"]) if os.environ.get("MIXING_DOCS_DIR") else None
 
 
 def fold(s: str) -> str:
@@ -51,11 +53,12 @@ def main():
     ap.add_argument("--corpus", choices=["notes", "docs"])
     ap.add_argument("--k", type=int, default=10)
     ap.add_argument("--modes", default="off,auto", help="doc_filter modları: off (filtre yok, baz çizgi), auto (belge filtresi)")
+    ap.add_argument("--docs-dir", help="docs korpusu klasörü (varsayılan: $MIXING_DOCS_DIR); yoksa docs korpusu atlanır")
     ap.add_argument("--out", default=str(HERE / "mixing_results.md"))
     a = ap.parse_args()
     items = json.loads((HERE / "mixing_questions.json").read_text("utf-8"))
 
-    import os
+    docs_dir = Path(a.docs_dir) if a.docs_dir else DOCS_DIR
     tmp = tempfile.mkdtemp(prefix="mixing_eval_")
     os.environ["XDG_CONFIG_HOME"] = tmp
     from src import config, settings
@@ -67,8 +70,11 @@ def main():
         from src.generator import answer as gen
 
     rows = []
-    for corpus, folder in (("notes", config.NOTES_DIR), ("docs", DOCS_DIR)):
+    for corpus, folder in (("notes", config.NOTES_DIR), ("docs", docs_dir)):
         if a.corpus and a.corpus != corpus:
+            continue
+        if folder is None or not Path(folder).is_dir():
+            print(f"[{corpus}] atlandı: klasör yok (MIXING_DOCS_DIR / --docs-dir verin)", flush=True)
             continue
         settings.set_override(folder)
         print(f"[{corpus}] indeks kuruluyor: {build_index().summary()}", flush=True)

@@ -7,14 +7,14 @@ LLM konuşmadan öğrenmez; tercihler prompt'a ya da koda konmalı.
 - [ ] "Bundan sonra … yapma" gibi sohbet içi talimatları yönlendiricide tanıyıp kişisel talimatlara kaydetmeyi önermek (onay ile).
 
 ## Arama kalitesi
-- [ ] **Metadata filtresi:** Soruda dosya/rapor adı geçerse ("chatgpt ne önermiş", "deepseekRag.pdf'te…") aramayı o dosyayla sınırla. (Katalogdaki sonraki proje konusu.)
-- [ ] **Yinelenen kaynaklar:** Aynı içerik hem `.pdf` hem `.html` ise parçaları tekilleştir.
+- [x] **Metadata filtresi:** Soruda dosya/rapor adı geçerse ("chatgpt ne önermiş", "deepseekRag.pdf'te…") aramayı o dosyayla sınırla. (Katalogdaki sonraki proje konusu.)
+- [x] **Yinelenen kaynaklar:** Aynı içerik hem `.pdf` hem `.html` ise parçaları tekilleştir.
 - [ ] **Varlık karışması:** "Proje Nova" → "peki kira?" gibi durumlarda başka nottaki bilgiyi vermek yerine "notlarda yok" demesi için ek kontrol (ör. sorgudaki varlık adı bulunan parçada geçiyor mu).
 
 ## Değerlendirme ve sağlamlık
-- [ ] **Retrieval skor eşiği:** En iyi parçanın skoru eşiğin altındaysa LLM'e gitmeden "Bu bilgi notlarda yok" de. Yeni regex yamaları yerine belirsiz soruları bu eşikle çöz; eşiği eval ile seç.
+- [x] **Retrieval skor eşiği:** En iyi parçanın skoru eşiğin altındaysa LLM'e gitmeden "Bu bilgi notlarda yok" de. Yeni regex yamaları yerine belirsiz soruları bu eşikle çöz; eşiği eval ile seç.
 - [ ] **Gerçekçi korpus:** Örnek notlar küçük ve sorular onlara göre yazıldı, eval doymuş durumda. Gerçek notlara benzeyen, daha büyük ve dağınık bir not seti hazırla.
-- [ ] **Dondurulmuş test seti:** Ayarlamada hiç görülmeyen, sonradan değiştirilmeyen ayrı bir soru seti; sonuçlar yalnız bu sette raporlanır.
+- [x] **Dondurulmuş test seti:** Ayarlamada hiç görülmeyen, sonradan değiştirilmeyen ayrı bir soru seti; sonuçlar yalnız bu sette raporlanır.
 - [ ] **Cevap metrikleri:** Yalnız retrieval (hit@k/MRR) değil; cevabın doğruluğu, kaynağa sadakat (faithfulness) ve "notlarda yok" isabeti ölçülsün.
 
 ## Arayüz
