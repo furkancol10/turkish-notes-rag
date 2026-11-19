@@ -9,7 +9,7 @@ from .router import normalize
 MAX_DOCS = 3          # bundan çok belge eşleşirse belirsiz say -> filtre yok
 MAX_DF = 3            # bir takma ad bundan çok belgede geçiyorsa ayırt edici değil, at
 MIN_LEN = 3
-JACCARD = 0.9
+JACCARD = 0.8          # sıralı 3'lü kelime gruplarında (shingle) benzerlik eşiği
 
 # Tek başına hiçbir şey ayırt etmeyen sözcükler (normalize edilmiş biçimde)
 GENERIC = {
@@ -27,8 +27,23 @@ BUILTIN = {
 }
 
 
+# Bilinen Türkçe ekler (ASCII'ye katlanmış); takma ad + ek eşleşmesi yalnız bunlarla kabul edilir
+_TR_SUFFIXES = {
+    "n", "m", "in", "nin", "un", "nun", "i", "yi", "u", "yu", "a", "ya", "e", "ye",
+    "da", "de", "ta", "te", "dan", "den", "tan", "ten", "la", "le", "yla", "yle",
+    "lar", "ler", "lari", "leri", "larin", "lerin", "daki", "deki", "nda", "nde",
+    "ndan", "nden", "na", "ne", "si", "su", "sin", "sun", "im", "um", "imiz",
+    "mde", "mda", "mden", "mdan", "imde", "imda", "imden", "imdan", "imi", "ini", "mi", "mu", "ni", "nu", "umu", "unu", "ki", "ndaki", "ndeki",
+}
+
+
 def _canon(tok: str) -> str:
-    return BUILTIN.get(tok, tok)
+    if tok in BUILTIN:
+        return BUILTIN[tok]
+    for k, v in BUILTIN.items():      # "chatgptye" (kesme işaretsiz ek)
+        if len(k) >= 4 and tok.startswith(k) and tok[len(k):] in _TR_SUFFIXES:
+            return v
+    return tok
 
 
 def _split_name(stem: str) -> list[str]:
@@ -70,7 +85,11 @@ def _tok_match(qt: str, alias_tok: str) -> bool:
     if qt == alias_tok:
         return True
     # Türkçe ek toleransı: "novanın", "chatgpt'nin" (kısa takma adlarda yalnız tam eşleşme)
-    return len(alias_tok) >= 4 and qt.startswith(alias_tok) and len(qt) - len(alias_tok) <= 4
+    return len(alias_tok) >= 4 and qt.startswith(alias_tok) and qt[len(alias_tok):] in _TR_SUFFIXES
+
+
+def _is_common(tok: str) -> bool:
+    return tok in COMMON or any(tok.endswith(s) and tok[: -len(s)] in COMMON for s in _TR_SUFFIXES)
 
 
 def _matches(qtoks: list[str], alias: tuple) -> bool:
@@ -100,14 +119,14 @@ def _specific(alias: tuple, qtoks: list[str], caps: set[str]) -> bool:
     if len(alias) > 1:
         return True
     t = alias[0]
-    if t in BUILTIN.values() or t not in COMMON:
+    if t in BUILTIN.values() or not _is_common(t):
         return True
     return any(c in caps and _tok_match(c, t) for c in qtoks)
 
 
 def _n_docs(sources) -> int:
     """Aynı gövdeli dosyalar (deepseekRag.pdf + deepseekRag.html) tek belge sayılır."""
-    return len({PurePosixPath(s).stem.lower() for s in sources})
+    return len({str(PurePosixPath(s).with_suffix("")).lower() for s in sources})
 
 
 def detect(question: str, catalog: dict[str, set[tuple]]) -> list[str] | None:
@@ -139,6 +158,11 @@ def _norm_text(t: str) -> str:
     return " ".join(re.sub(r"\W+", " ", t.lower()).split())
 
 
+def _shingles(nt: str, n: int = 3) -> set:
+    w = nt.split()
+    return {tuple(w[i:i + n]) for i in range(max(1, len(w) - n + 1))} if w else set()
+
+
 def dedupe(results: list, k: int | None = None) -> list:
     """Aynı/yakın içerikli parçalardan birini tut (pdf tercih: sayfa no); sıra korunur."""
     kept: list = []
@@ -146,7 +170,7 @@ def dedupe(results: list, k: int | None = None) -> list:
     for ch, sc in results:
         nt = _norm_text(ch.text)
         h = hashlib.sha1(nt.encode()).hexdigest()
-        ws = set(nt.split())
+        ws = _shingles(nt)
         dup = None
         for i, (h2, ws2) in enumerate(keys):
             if h == h2 or (ws and ws2 and len(ws & ws2) / len(ws | ws2) >= JACCARD):
