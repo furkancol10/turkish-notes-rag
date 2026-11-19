@@ -25,6 +25,7 @@ def set_an(monkeypatch, intent, query=None):
 @pytest.fixture
 def calls(monkeypatch):
     c = {}
+    monkeypatch.setattr(services.config, "ENTITY_GUARD_ENABLED", False)   # koruma tests/test_entities.py'de
     monkeypatch.setattr(services, "load_embed_model", lambda: None)
     monkeypatch.setattr(services, "index_status", lambda: object())
     monkeypatch.setattr(services, "answer_meta", lambda q: "meta")

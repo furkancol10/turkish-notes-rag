@@ -3,7 +3,7 @@ from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
 
-from src import config, history as _hist, settings
+from src import config, entities, history as _hist, settings
 from src.embedder import get_model
 from src.conversation import fit_budget, window
 from src.generator import answer, answer_followup, answer_meta
@@ -115,6 +115,18 @@ def cited_sources(text: str, sources: list[dict]) -> list[dict]:
     return [sources[i - 1] for i in idxs] if idxs else list(sources)
 
 
+def _doc_catalog(backend):
+    """Belge adı/başlık takma adları (doc_filter'ın ele aldığı varlıkları ayıklamak için); alınamazsa None."""
+    try:
+        from src.doc_filter import build_catalog
+        from src.index import get_index
+        idx = get_index(backend, index_name(config.EMBED_MODEL, config.CHUNK_STRATEGY, config.CHUNK_SIZE))
+        titles = idx.doc_titles()
+        return build_catalog(list(titles), titles)
+    except Exception:
+        return None
+
+
 def ask(question: str, top_k: int, backend: str, prior_messages=None,
         threshold=None, threshold_enabled=None):
     """Tüm hat: pencere -> analiz (niyet + sorgu) -> meta | kaynaklar | takip | (getir -> bütçele -> üret).
@@ -157,6 +169,12 @@ def ask(question: str, top_k: int, backend: str, prior_messages=None,
         if top < threshold:
             info.update({"intent": "notes", "query": query, "below_threshold": True, "top_score": top,
                          "threshold": threshold, "note": below_threshold_note(results, top, threshold)})
+            return NOT_IN_NOTES, results, info
+    if config.ENTITY_GUARD_ENABLED and results:
+        miss = entities.missing(query, [c.text for c, _ in results], _doc_catalog(backend))
+        if miss:
+            info.update({"intent": "notes", "entity_missing": miss,
+                         "note": "Notlarda " + ", ".join(f"“{m}”" for m in miss) + " geçen bir bölüm bulunamadı."})
             return NOT_IN_NOTES, results, info
     history, results = fit_budget(history, results, question)
     try:

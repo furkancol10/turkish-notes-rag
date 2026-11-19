@@ -9,7 +9,7 @@ LLM konuşmadan öğrenmez; tercihler prompt'a ya da koda konmalı.
 ## Arama kalitesi
 - [x] **Metadata filtresi:** Soruda dosya/rapor adı geçerse ("chatgpt ne önermiş", "deepseekRag.pdf'te…") aramayı o dosyayla sınırla. (Katalogdaki sonraki proje konusu.)
 - [x] **Yinelenen kaynaklar:** Aynı içerik hem `.pdf` hem `.html` ise parçaları tekilleştir.
-- [ ] **Varlık karışması:** "Proje Nova" → "peki kira?" gibi durumlarda başka nottaki bilgiyi vermek yerine "notlarda yok" demesi için ek kontrol (ör. sorgudaki varlık adı bulunan parçada geçiyor mu).
+- [x] **Varlık karışması (kısmen):** `src/entities.py` koruması eklendi (soruda özel ad var ve getirilen hiçbir parçada geçmiyorsa LLM yok); ölçüm: eval/entity_results.md. Kalan: adın notlarda başka bağlamda geçtiği karışmalar çözülmedi. Orijinal fikir: "Proje Nova" → "peki kira?" gibi durumlarda başka nottaki bilgiyi vermek yerine "notlarda yok" demesi için ek kontrol (ör. sorgudaki varlık adı bulunan parçada geçiyor mu).
 
 ## Değerlendirme ve sağlamlık
 - [x] **Retrieval skor eşiği:** En iyi parçanın skoru eşiğin altındaysa LLM'e gitmeden "Bu bilgi notlarda yok" de. Yeni regex yamaları yerine belirsiz soruları bu eşikle çöz; eşiği eval ile seç.

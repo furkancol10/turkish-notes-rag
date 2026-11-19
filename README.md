@@ -228,6 +228,10 @@ Varsayılan 0.40 bilerek daha temkinli seçildi (yanlış-ret'i düşük tutar).
 
 Saflık = top-k parçanın istenen belgelerden payı; yabancı atıflı = cevabın istenmeyen belgeye atıf yapma oranı (LLM çıktısı çalıştırmalar arasında çok değişir: aynı koşulun tekrarında docs/off yabancı atıf %25'ten %8'e indi). Üretim iki modda da yeni gruplu prompt ile yapılır, yani eski prompt ayrıca ölçülmedi. Docs korpusu 6 dosyalık (3 rapor x pdf/html) küçük bir seti kapsar ve depoda yok (`MIXING_DOCS_DIR` ile verilir); N küçük (karşılaştırma: 2 docs, 4 notes), yüzdeler gürültülüdür.
 
+### Varlık koruması
+
+Belge filtresi yalnızca dosya adı/başlıkta geçen varlıkları ele alır. `src/entities.py` içerikte geçen özel adları kapsar: sorgudan özel ad adayları çıkarılır (cümle başı hariç büyük harfli sözcükler/öbekler, kesme işaretli adlar, tırnaklı terimler, `RTX4090` gibi kodlar; genel sözcükler ve belge adıyla eşleşenler atılır). Adların HİÇBİRİ getirilen parçaların hiçbirinde (Türkçe ek toleransıyla) geçmiyorsa LLM çağrılmaz: "Bu bilgi notlarda yok." ve "Notlarda “X” geçen bir bölüm bulunamadı." gösterilir. `config.ENTITY_GUARD_ENABLED = False` ile kapanır. Ölçüm ve dürüst sınırları: `eval/entity_results.md` (koruma küçük sette neredeyse hiç tetiklenmedi: ad notlarda başka bağlamda geçtiğinde karışma sürer).
+
 ## Bilinen sınırlamalar
 
 - **Niyet hatası:** küçük LLM kimi zaman yanlış sınıflandırabilir; `followup` için yeni-içerik kapısı vardır, ama `notes` yerine `sources`/`meta` seçimi yalnızca kurallar ve prompt ile korunur.
