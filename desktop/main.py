@@ -1,16 +1,17 @@
 """Masaüstü arayüz:  uv run python -m desktop.main"""
 import sys
 
-from PySide6.QtCore import QUrl
+from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QDesktopServices
-from PySide6.QtWidgets import (QApplication, QButtonGroup, QFileDialog, QHBoxLayout, QLabel,
+from PySide6.QtWidgets import (QApplication, QFileDialog, QFrame, QHBoxLayout, QLabel,
                                QLineEdit, QListWidget, QMainWindow, QMessageBox, QProgressBar,
-                               QPushButton, QRadioButton, QSpinBox, QVBoxLayout, QWidget)
+                               QPushButton, QRadioButton, QSpinBox, QStyle, QVBoxLayout, QWidget)
 
 from src import config
 
 from . import services
 from .chat_view import ChatView
+from . import style
 from .workers import Worker
 
 
@@ -22,6 +23,9 @@ class MainWindow(QMainWindow):
         self._workers = set()   # çalışan iş parçacıklarını canlı tut
         self._busy = 0
         self._model_ready = False
+        app = QApplication.instance()
+        style.apply_font(app)
+        app.setStyleSheet(style.build_stylesheet(app.palette()))
         self._build_ui()
         self.refresh_side()
         # Embedding modelini arka planda, bir kez yükle
@@ -31,28 +35,57 @@ class MainWindow(QMainWindow):
     # ---------- arayüz ----------
     def _build_ui(self):
         root = QWidget()
+        root.setObjectName("root")
         self.setCentralWidget(root)
         row = QHBoxLayout(root)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(0)
+        st = self.style()
+
+        def section(text):
+            lb = QLabel(text.upper())
+            lb.setObjectName("section")
+            return lb
+
+        def flat(text, icon):
+            b = QPushButton(text)
+            b.setIcon(st.standardIcon(icon))
+            b.setCursor(Qt.PointingHandCursor)
+            return b
 
         # Sol panel
         side = QVBoxLayout()
+        side.setContentsMargins(16, 16, 16, 16)
+        side.setSpacing(6)
+        title = QLabel("Kişisel Not Arama")
+        title.setObjectName("appTitle")
         self.notes_label = QLabel()
         self.notes_list = QListWidget()
-        self.btn_add = QPushButton("Not ekle")
-        self.btn_open = QPushButton("Notlar klasörünü aç")
-        self.btn_reindex = QPushButton("Yeniden indeksle")
+        self.btn_add = flat("Not ekle", QStyle.SP_FileDialogNewFolder)
+        self.btn_open = flat("Notlar klasörünü aç", QStyle.SP_DirOpenIcon)
+        self.btn_reindex = flat("Yeniden indeksle", QStyle.SP_BrowserReload)
         self.progress = QProgressBar()
         self.progress.setRange(0, 0)   # belirsiz ilerleme
+        self.progress.setTextVisible(False)
         self.progress.setVisible(False)
         self.index_label = QLabel()
+        self.index_label.setObjectName("muted")
         self.index_label.setWordWrap(True)
         self.top_k = QSpinBox(minimum=1, maximum=10, value=config.TOP_K)
         self.rb_numpy, self.rb_chroma = QRadioButton("numpy"), QRadioButton("chroma")
         (self.rb_chroma if config.INDEX_BACKEND == "chroma" else self.rb_numpy).setChecked(True)
-        self.btn_clear = QPushButton("Sohbeti temizle")
-        for w in (self.notes_label, self.notes_list, self.btn_add, self.btn_open,
-                  self.btn_reindex, self.progress, self.index_label):
-            side.addWidget(w)
+        self.btn_clear = flat("Sohbeti temizle", QStyle.SP_TrashIcon)
+        side.addWidget(title)
+        side.addWidget(section("Notlar"))
+        side.addWidget(self.notes_label)
+        side.addWidget(self.notes_list, 1)
+        side.addWidget(self.btn_add)
+        side.addWidget(self.btn_open)
+        side.addWidget(section("İndeks"))
+        side.addWidget(self.btn_reindex)
+        side.addWidget(self.progress)
+        side.addWidget(self.index_label)
+        side.addWidget(section("Ayarlar"))
         side.addWidget(QLabel("Kaç parça getirilsin (top_k)"))
         side.addWidget(self.top_k)
         side.addWidget(QLabel("İndeks yöntemi"))
@@ -60,31 +93,53 @@ class MainWindow(QMainWindow):
         bk.addWidget(self.rb_numpy)
         bk.addWidget(self.rb_chroma)
         side.addLayout(bk)
+        side.addWidget(section("Sohbet"))
         side.addWidget(self.btn_clear)
         side_w = QWidget()
+        side_w.setObjectName("sidebar")
         side_w.setLayout(side)
-        side_w.setFixedWidth(280)
+        side_w.setFixedWidth(290)
         row.addWidget(side_w)
 
         # Sohbet
         chat = QVBoxLayout()
+        chat.setContentsMargins(0, 0, 0, 0)
+        chat.setSpacing(0)
         self.chat = ChatView()
         self.input = QLineEdit(placeholderText="Notlarına bir soru sor")
-        self.btn_send = QPushButton("Gönder")
-        inp = QHBoxLayout()
-        inp.addWidget(self.input)
-        inp.addWidget(self.btn_send)
-        chat.addWidget(self.chat)
-        chat.addLayout(inp)
+        self.input.setObjectName("input")
+        self.btn_send = QPushButton("➤")
+        self.btn_send.setObjectName("send")
+        self.btn_send.setToolTip("Gönder")
+        self.btn_send.setCursor(Qt.PointingHandCursor)
+        bar = QWidget()
+        bar.setObjectName("inputBar")
+        bl = QHBoxLayout(bar)
+        bl.setContentsMargins(28, 8, 28, 18)
+        wrap = QFrame()
+        wrap.setObjectName("inputWrap")
+        iw = QHBoxLayout(wrap)
+        iw.setContentsMargins(16, 5, 5, 5)
+        iw.addWidget(self.input)
+        iw.addWidget(self.btn_send)
+        bl.addWidget(wrap)
+        chat.addWidget(self.chat, 1)
+        chat.addWidget(bar)
         row.addLayout(chat, 1)
 
         self.input.returnPressed.connect(self.send)
         self.btn_send.clicked.connect(self.send)
+        self.chat.suggestion.connect(self.ask_example)
         self.btn_add.clicked.connect(self.add_note)
         self.btn_open.clicked.connect(self.open_folder)
         self.btn_reindex.clicked.connect(self.reindex)
         self.btn_clear.clicked.connect(self.chat.clear)
         self.statusBar().showMessage("Hazır")
+
+    def ask_example(self, q):
+        if not self._busy:
+            self.input.setText(q)
+            self.send()
 
     def backend(self):
         return "chroma" if self.rb_chroma.isChecked() else "numpy"
@@ -139,15 +194,18 @@ class MainWindow(QMainWindow):
             return
         self.input.clear()
         self.chat.add("user", q)
+        self.chat.show_typing()
         self.run(services.ask, self._on_answer, self._on_ask_failed,
                  "Notlarda aranıyor ve cevap üretiliyor...", q, self.top_k.value(), self.backend())
 
     def _on_answer(self, res):
         ans, results = res
+        self.chat.hide_typing()
         self.chat.add("assistant", ans, results)
         self.statusBar().showMessage("Cevap hazır", 5000)
 
     def _on_ask_failed(self, e):
+        self.chat.hide_typing()
         kind = getattr(e, "kind", "other")
         self.statusBar().showMessage("Hata")
         if kind == "index":
