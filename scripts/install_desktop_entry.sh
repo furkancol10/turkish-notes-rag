@@ -17,6 +17,7 @@ Exec="$UV" run --project "$ROOT" python -m desktop.main
 Icon=$ICON
 Terminal=false
 Categories=Office;Utility;
+StartupWMClass=kisisel-not-arama
 DESKTOP
 chmod +x "$DEST"
 echo "Yazıldı: $DEST"

@@ -267,8 +267,18 @@ class MainWindow(QMainWindow):
         super().closeEvent(ev)
 
 
+APP_ID = "kisisel-not-arama"  # .desktop dosya adıyla aynı olmalı (dock adı/ikonu buradan eşleşir)
+
+
 def main():
+    from pathlib import Path
+    from PySide6.QtGui import QIcon
+
+    QApplication.setApplicationName(APP_ID)
+    QApplication.setApplicationDisplayName("Kişisel Not Arama")
+    QApplication.setDesktopFileName(APP_ID)  # Wayland app_id / X11 WM_CLASS
     app = QApplication(sys.argv)
+    app.setWindowIcon(QIcon(str(Path(__file__).with_name("icon.svg"))))
     win = MainWindow()
     win.show()
     sys.exit(app.exec())
