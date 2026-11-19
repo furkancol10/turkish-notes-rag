@@ -127,7 +127,7 @@ def ask(question: str, top_k: int, backend: str, prior_messages=None):
     src = last_sources(prior_messages) if intent in ("followup", "sources") else []
     if intent in ("followup", "sources") and not src:   # dayanacak kaynak yok: normal aramaya düş
         intent = "notes"
-    info = {"intent": intent, "query": query if query != question else None}
+    info = {"intent": intent, "query": query if intent == "notes" and query != question else None}
     if intent == "meta":               # asistanla ilgili soru: arama yok, kaynak yok
         try:
             return answer_meta(question), [], info

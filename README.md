@@ -189,7 +189,7 @@ Ortalama condense gecikmesi 0.47 sn. Route doğruluğu 30/30 = 1.00 (takip turla
 | hit@3 / MRR | 0.88 / 0.835 | 0.84 / 0.807 | 0.94 / 0.907 |
 | Gecikme | 0.37 sn | 0.71 sn | 0.44 sn |
 
-LLM "followup" dese bile soruda kapalı takip sözcükleri (doğru mu, kısalt, açıkla...) dışında yeni içerik sözcüğü varsa (`router.has_new_content`) niyet `notes` yapılır; kesin followup/sources kalıpları LLM'den önce çalışır. Ayarlamada kullanılmayan 9 turluk held-out sette doğruluk 8/9 (ayarlama öncesi 6/9). Kümeler küçük olduğundan sonuçlar yaklaşıktır.
+LLM "followup" dese bile soruda kapalı takip sözcükleri (doğru mu, kısalt, açıkla...) dışında yeni içerik sözcüğü varsa (`router.has_new_content`) niyet `notes` yapılır; kesin followup/sources kalıpları LLM'den önce çalışır. Ayarlamada kullanılmayan 9 turluk held-out sette doğruluk 8/9 (ayarlama öncesi 6/9). Ancak bu set tam bağımsız değildir (ayarlamadan önce bir kez görüldü, kapıya sonradan sözcük eklendi) ve 1.00 değerleri ayarlama kümesi üzerindedir; kümeler küçük olduğundan sonuçlar yaklaşıktır, gerçek doğruluk daha düşük olabilir.
 
 ## Bilinen sınırlamalar
 

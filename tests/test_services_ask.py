@@ -134,3 +134,16 @@ def test_meta_intent_with_history(calls, monkeypatch):
     set_an(monkeypatch, "meta")
     ans, res, info = services.ask("sen kimsin?", 5, "numpy", PRIOR)
     assert ans == "meta" and res == [] and info["intent"] == "meta" and "ret" not in calls
+
+
+def test_sources_never_shows_rewritten_query(calls, monkeypatch):
+    set_an(monkeypatch, "sources", "Nova bütçesi hangi dosyada geçiyor?")
+    _, _, info = services.ask("hangi dosyada?", 5, "numpy", PRIOR2)
+    assert info["query"] is None
+
+
+def test_sources_out_of_range_citation_lists_all(calls, monkeypatch):
+    set_an(monkeypatch, "sources")
+    prior = [PRIOR[0], {"role": "assistant", "text": "450 bin [7].", "sources": SRC2}]
+    _, res, _ = services.ask("hangi dosyada?", 5, "numpy", prior)
+    assert len(res) == 2

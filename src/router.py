@@ -149,7 +149,7 @@ _FU_FUNC = {
     "ver", "goster", "soyle", "cevap", "cevabi", "cevabin", "cevabini", "yazdigin", "soyledigin", "dedigin",
     "verdigin", "siraladin", "yaptin", "buldun", "yazar", "yaz", "ac", "acar", "sana", "benim", "bence",
     "icin", "gore", "kismi", "kismini", "kisim", "maddeyi", "maddesi", "maddeleri", "hakkinda", "tekrar",
-    "cikar", "cikarir", "yeniden", "sonra", "once", "gibi", "mesela", "lutfen", "misin", "sunlari", "bunlari", "hepsini",
+    "cikar", "cikarir", "dok", "kadar", "yeniden", "sonra", "once", "gibi", "mesela", "lutfen", "misin", "sunlari", "bunlari", "hepsini",
 }
 _FU_CUE = re.compile(
     r"^(dogru|kesin|gercek|yanlis|hatali|neden|niye|nicin|kisalt|kisa|ozet|acikla|anlat|madde|liste|tablo|"
@@ -170,7 +170,7 @@ def has_new_content(question: str, previous_answer: str = "") -> bool:
     ans = _words(previous_answer)
     new = []
     for w in words:
-        if w in _FU_FUNC or _FU_FUNC_RE.match(w) or _FU_CUE.match(w) or len(w) < 3:
+        if w in _FU_FUNC or w in _FU_CUE_EXACT or _FU_FUNC_RE.match(w) or _FU_CUE.match(w) or len(w) < 3:
             continue
         new.append(w)
     if not new:

@@ -129,3 +129,21 @@ def test_followup_rule_skips_llm(monkeypatch):
 @pytest.mark.parametrize("q", ["sayfa kaçta", "bunları hangi notta tutmuşum", "kaçıncı sayfada"])
 def test_new_sources_rules(q):
     assert is_sources(q)
+
+
+ANS2 = ("Proje Nova bütçesi 500 bin TL'dir. Ofis kirası ayda 20 bin TL, İstanbul'da. "
+        "Re-ranking ilk sonuçları yeniden sıralar [1].")
+
+
+@pytest.mark.parametrize("q", ["kirası ne kadar", "kira neden bu kadar yüksek", "teslim tarihini kısalt",
+                               "peki personel maaşları", "Ankara'yı açıkla", "maliyetini kısalt",
+                               "bütçesi neden 600 bin", "ilk sonuçların maliyeti", "bütçesini neden artırdık"])
+def test_guard_adversarial_new_content(q):
+    assert has_new_content(q, ANS2)
+
+
+@pytest.mark.parametrize("q", ["bütçesini kısalt", "bütçesini kısaca anlat", "re-ranking'i açıkla",
+                               "sen emin misin", "bunu tabloya dök", "İstanbul'u açıkla", "daha kısa yaz",
+                               "ilk sonuçları açıkla"])
+def test_guard_adversarial_no_new_content(q):
+    assert not has_new_content(q, ANS2)
