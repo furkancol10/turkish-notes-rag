@@ -1,0 +1,413 @@
+[
+ {
+  "corpus": "notes",
+  "question": "Proje Atlas'ın bütçesi ne kadar?",
+  "allowed_docs": [
+   "toplanti_proje_atlas.md"
+  ],
+  "key_facts": [
+   "80 bin"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "notes",
+  "question": "Proje Atlas'ın teslim tarihi ne zaman?",
+  "allowed_docs": [
+   "toplanti_proje_atlas.md"
+  ],
+  "key_facts": [
+   "14 mart"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "notes",
+  "question": "Proje Atlas'ta veritabanı geçişinden kim sorumlu?",
+  "allowed_docs": [
+   "toplanti_proje_atlas.md"
+  ],
+  "key_facts": [
+   "mehmet"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "notes",
+  "question": "Proje Nova'nın bütçesi ne kadar?",
+  "allowed_docs": [
+   "toplanti_proje_nova.md"
+  ],
+  "key_facts": [
+   "400 bin"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "notes",
+  "question": "Proje Nova'nın teslim tarihi nedir?",
+  "allowed_docs": [
+   "toplanti_proje_nova.md"
+  ],
+  "key_facts": [
+   "30 haziran"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "notes",
+  "question": "Proje Nova toplantısında ana risk neydi?",
+  "allowed_docs": [
+   "toplanti_proje_nova.md"
+  ],
+  "key_facts": [
+   "tasarim"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "notes",
+  "question": "Kişisel bütçemde kira ne kadar?",
+  "allowed_docs": [
+   "kisisel_butce.md"
+  ],
+  "key_facts": [
+   "12.500"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "notes",
+  "question": "Aylık tasarruf hedefim kaç TL?",
+  "allowed_docs": [
+   "kisisel_butce.md"
+  ],
+  "key_facts": [
+   "9.000"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "notes",
+  "question": "İmam bayıldı tarifi nasıl yapılır?",
+  "allowed_docs": [
+   "tarif_imam_bayildi.md"
+  ],
+  "key_facts": [
+   "zeytinyag",
+   "40 dakika"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "notes",
+  "question": "İmam bayıldıda kıyma var mı?",
+  "allowed_docs": [
+   "tarif_imam_bayildi.md"
+  ],
+  "key_facts": [
+   "kiyma yok"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "notes",
+  "question": "Karnıyarık kaç derecede kaç dakika pişer?",
+  "allowed_docs": [
+   "tarif_karniyarik.md"
+  ],
+  "key_facts": [
+   "180",
+   "25 dakika"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "notes",
+  "question": "Karnıyarık için kaç gram kıyma lazım?",
+  "allowed_docs": [
+   "tarif_karniyarik.md"
+  ],
+  "key_facts": [
+   "200 g"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "notes",
+  "question": "Homo Deus'un ana tezi nedir?",
+  "allowed_docs": [
+   "kitap_homo_deus.md"
+  ],
+  "key_facts": [
+   "olumsuzluk"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "notes",
+  "question": "Homo Deus'ta Dataizm ne demek?",
+  "allowed_docs": [
+   "kitap_homo_deus.md"
+  ],
+  "key_facts": [
+   "veri"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "notes",
+  "question": "Sapiens'te tarım devrimi hakkında ne yazıyor?",
+  "allowed_docs": [
+   "kitap_sapiens.md"
+  ],
+  "key_facts": [
+   "aldatmaca"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "notes",
+  "question": "Sapiens'e göre bilişsel devrim ne zaman oldu?",
+  "allowed_docs": [
+   "kitap_sapiens.md"
+  ],
+  "key_facts": [
+   "70 bin"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "notes",
+  "question": "21 Ders kitabında eğitim için önerilen dört K nedir?",
+  "allowed_docs": [
+   "kitap_21_ders.md"
+  ],
+  "key_facts": [
+   "elestirel",
+   "yaraticilik"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "notes",
+  "question": "21 Ders'te Harari günde kaç saat meditasyon yapıyor?",
+  "allowed_docs": [
+   "kitap_21_ders.md"
+  ],
+  "key_facts": [
+   "iki saat"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "notes",
+  "question": "Docker'da port yönlendirme nasıl yapılır?",
+  "allowed_docs": [
+   "teknik_docker.md"
+  ],
+  "key_facts": [
+   "-p",
+   "8080"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "notes",
+  "question": "Docker Compose'ta depends_on servisin hazır olmasını bekler mi?",
+  "allowed_docs": [
+   "teknik_docker_compose.md"
+  ],
+  "key_facts": [
+   "healthcheck"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "notes",
+  "question": "Kapadokya balon turu kaça ve saat kaçta?",
+  "allowed_docs": [
+   "seyahat_kapadokya.md"
+  ],
+  "key_facts": [
+   "150 euro",
+   "05:30"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "docs",
+  "question": "ChatGPT raporu hangi projeleri önermiş?",
+  "allowed_docs": [
+   "gptRag"
+  ],
+  "key_facts": [
+   "pdf dokuman",
+   "universite ders"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "docs",
+  "question": "GPT raporunda kaç proje öneriliyor?",
+  "allowed_docs": [
+   "gptRag"
+  ],
+  "key_facts": [
+   "8"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "docs",
+  "question": "Gemini raporunda en ileri proje hangisi?",
+  "allowed_docs": [
+   "geminiRag"
+  ],
+  "key_facts": [
+   "graphrag",
+   "bilgi grafigi"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "docs",
+  "question": "Gemini raporundaki e-ticaret chatbot projesi hangi arama yöntemini kullanıyor?",
+  "allowed_docs": [
+   "geminiRag"
+  ],
+  "key_facts": [
+   "hibrit",
+   "bm25"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "docs",
+  "question": "DeepSeek raporunda kaç proje var ve hangileri?",
+  "allowed_docs": [
+   "deepseekRag"
+  ],
+  "key_facts": [
+   "6",
+   "not asistani"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "docs",
+  "question": "DeepSeek raporunda chunk_size ne olarak önerilmiş?",
+  "allowed_docs": [
+   "deepseekRag"
+  ],
+  "key_facts": [
+   "1000"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "docs",
+  "question": "Qwen raporundaki önerilen proje sırası nedir?",
+  "allowed_docs": [
+   "qwenRag"
+  ],
+  "key_facts": [
+   "2 → 5 → 3"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "docs",
+  "question": "Qwen raporunda ölçüm laboratuvarı projesi nedir?",
+  "allowed_docs": [
+   "qwenRag"
+  ],
+  "key_facts": [
+   "olcum"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "docs",
+  "question": "Qwen raporunda router'lı RAG projesinin zorluğu nedir?",
+  "allowed_docs": [
+   "qwenRag"
+  ],
+  "key_facts": [
+   "zor"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "docs",
+  "question": "Gemini raporundaki Text-to-SQL projesi hangi araçları öneriyor?",
+  "allowed_docs": [
+   "geminiRag"
+  ],
+  "key_facts": [
+   "sqlite",
+   "postgresql"
+  ],
+  "comparison": false
+ },
+ {
+  "corpus": "notes",
+  "question": "Proje Atlas ile Proje Nova'nın bütçelerini karşılaştır.",
+  "allowed_docs": [
+   "toplanti_proje_atlas.md",
+   "toplanti_proje_nova.md"
+  ],
+  "key_facts": [],
+  "comparison": true
+ },
+ {
+  "corpus": "notes",
+  "question": "İmam bayıldı ile karnıyarık arasındaki fark nedir?",
+  "allowed_docs": [
+   "tarif_imam_bayildi.md",
+   "tarif_karniyarik.md"
+  ],
+  "key_facts": [],
+  "comparison": true
+ },
+ {
+  "corpus": "notes",
+  "question": "Sapiens ile Homo Deus'un odağı nasıl farklı?",
+  "allowed_docs": [
+   "kitap_sapiens.md",
+   "kitap_homo_deus.md"
+  ],
+  "key_facts": [],
+  "comparison": true
+ },
+ {
+  "corpus": "notes",
+  "question": "Kişisel bütçem mi Proje Atlas bütçesi mi daha büyük?",
+  "allowed_docs": [
+   "kisisel_butce.md",
+   "toplanti_proje_atlas.md"
+  ],
+  "key_facts": [],
+  "comparison": true
+ },
+ {
+  "corpus": "docs",
+  "question": "ChatGPT ve Gemini raporlarının önerdiği projeleri karşılaştır.",
+  "allowed_docs": [
+   "gptRag",
+   "geminiRag"
+  ],
+  "key_facts": [],
+  "comparison": true
+ },
+ {
+  "corpus": "docs",
+  "question": "DeepSeek ve Qwen raporlarında değerlendirme projesi nasıl ele alınmış?",
+  "allowed_docs": [
+   "deepseekRag",
+   "qwenRag"
+  ],
+  "key_facts": [],
+  "comparison": true
+ }
+]
