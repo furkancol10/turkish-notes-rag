@@ -63,13 +63,20 @@ def build_catalog(sources: list[str], titles: dict[str, str] | None = None) -> d
     for src in sources:
         al: set[tuple] = set()
         toks = _split_name(PurePosixPath(src).stem)
-        for t in toks:
-            if t not in GENERIC and len(t) >= MIN_LEN:
+        title_raw = titles.get(src, "")
+        name_slot = _name_slot(title_raw) if title_raw else None
+        for i, t in enumerate(toks):
+            if t in GENERIC or len(t) < MIN_LEN:
+                continue
+            if t in BUILTIN.values() or _single_is_specific(i, t, name_slot):
                 al.add((t,))
         for n in range(2, len(toks) + 1):
             for i in range(len(toks) - n + 1):
                 al.add(tuple(toks[i:i + n]))
         title = _tokens(titles.get(src, ""))
+        for i in range(len(title) - 1):      # sayı içeren ikili ("21 ders"): adın parçası
+            if any(w.isdigit() for w in title[i:i + 2]):
+                al.add(tuple(title[i:i + 2]))
         if 0 < len(title) <= 6:
             if len(title) > 1:
                 al.add(tuple(title))
@@ -79,6 +86,28 @@ def build_catalog(sources: list[str], titles: dict[str, str] | None = None) -> d
         for a in al:
             df[a] = df.get(a, 0) + 1
     return {s: {a for a in al if df[a] <= MAX_DF} for s, al in raw.items()}
+
+
+def _name_slot(title: str) -> tuple[set[str], str | None]:
+    """Başlıktaki ad kısmı. "Film Notu: Inception" -> ({inception}, None): iki nokta sonrası ad sayılır.
+    İki nokta yoksa ({tüm başlık sözcükleri}, ilk sözcük): ilk sözcük konu/kategori sayılır, ad olamaz
+    ("Veri Yapıları Ders Notları"); "Proje Nova Toplantısı" -> nova ad olabilir."""
+    t = title.strip()
+    if ":" in t:
+        return set(_tokens(t.rsplit(":", 1)[1])), None
+    toks = _tokens(t)
+    return set(toks), (toks[0] if len(toks) > 1 else None)
+
+
+def _single_is_specific(idx: int, tok: str, slot) -> bool:
+    """Tek sözcük yalnız özel adsa (başlıktaki ad kısmı / kategori önekinden sonraki ad) belgeyi işaret eder.
+    Sıradan isimler (_is_common) ve konu sözcükleri asla; başlık yoksa kategori önekinden sonraki sözcük."""
+    if _is_common(tok):
+        return False
+    if slot is None:
+        return idx > 0
+    names, first = slot
+    return tok in names and tok != first
 
 
 def _tok_match(qt: str, alias_tok: str) -> bool:
@@ -105,40 +134,23 @@ COMMON = {
 }
 
 
-def _caps(question: str) -> set[str]:
-    """Soruda büyük harfle başlayan (cümle başı hariç) sözcükler: özel ad adayı."""
-    words = re.findall(r"[^\W\d_]+", question)
-    out = set()
-    for w in words[1:]:
-        if w[0].isupper():
-            out.update(_tokens(w))
-    return out
-
-
-def _specific(alias: tuple, qtoks: list[str], caps: set[str]) -> bool:
-    if len(alias) > 1:
-        return True
-    t = alias[0]
-    if t in BUILTIN.values() or not _is_common(t):
-        return True
-    return any(c in caps and _tok_match(c, t) for c in qtoks)
-
-
 def _n_docs(sources) -> int:
     """Aynı gövdeli dosyalar (deepseekRag.pdf + deepseekRag.html) tek belge sayılır."""
     return len({str(PurePosixPath(s).with_suffix("")).lower() for s in sources})
 
 
+def _typed_file(question: str, src: str) -> bool:
+    """Kullanıcı dosya adını/gövdesini aynen yazdı ("kisisel_butce.md", "gptRag")."""
+    q = question.lower()
+    p = PurePosixPath(src)
+    return p.name.lower() in q or (len(p.stem) >= 4 and p.stem.lower() in q)
+
+
 def detect(question: str, catalog: dict[str, set[tuple]]) -> list[str] | None:
+    """Yalnız belirli göndermeler filtreler: yerleşik takma ad, çok sözcüklü ad, özel ad, yazılmış dosya adı.
+    Sıradan isimler (bütçe, film, veri...) tek başına asla filtrelemez."""
     qtoks = _tokens(question)
-    caps = _caps(question)
-    spec, common = [], []
-    for s, al in catalog.items():
-        m = [a for a in al if _matches(qtoks, a)]
-        if not m:
-            continue
-        (spec if any(_specific(a, qtoks, caps) for a in m) else common).append(s)
-    hit = spec or (common if len(common) == 1 else [])
+    hit = [s for s, al in catalog.items() if _typed_file(question, s) or any(_matches(qtoks, a) for a in al)]
     if not hit or _n_docs(hit) > MAX_DOCS:
         return None
     return sorted(hit)
