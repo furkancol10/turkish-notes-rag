@@ -105,9 +105,15 @@ class Bubble(QWidget):
             for i, (c, s) in enumerate(results, 1):
                 box_lay.addWidget(SourceItem(i, c, s))
             box.setVisible(False)
-            toggle.toggled.connect(lambda on: (
-                box.setVisible(on),
-                toggle.setText(("▾ Kaynakları gizle" if on else "▸ Kaynakları göster") + f" ({n})")))
+
+            def _toggle_sources(on):
+                # Açınca balon tam genişliğe çıkar ve kapatınca da öyle kalır (metin yeniden kesilmez)
+                if on:
+                    frame.setMaximumWidth(MAX_W)
+                box.setVisible(on)
+                toggle.setText(("▾ Kaynakları gizle" if on else "▸ Kaynakları göster") + f" ({n})")
+
+            toggle.toggled.connect(_toggle_sources)
             lay.addWidget(toggle, 0, Qt.AlignLeft)
             lay.addWidget(box)
         if user:
@@ -123,7 +129,17 @@ class Bubble(QWidget):
             who = QLabel("Asistan")
             who.setObjectName("who")
             col.addWidget(who)
-            col.addWidget(frame, 0, Qt.AlignLeft)
+            if typing:
+                col.addWidget(frame, 0, Qt.AlignLeft)
+            else:
+                # Hizalama verilmeden eklenince Qt satır kaydırmalı metnin yüksekliğini
+                # genişliğe göre doğru hesaplar; balon genişliğini metne göre sınırlıyoruz.
+                fm = msg.fontMetrics()
+                natural = max(fm.horizontalAdvance(line) for line in (text or " ").splitlines() or [" "])
+                if results:
+                    natural = max(natural, toggle.sizeHint().width())
+                frame.setMaximumWidth(min(MAX_W, natural + 40))
+                col.addWidget(frame)
             col.addStretch(1)
             left = QVBoxLayout()
             left.addWidget(av)
