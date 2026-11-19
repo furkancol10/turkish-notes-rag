@@ -99,7 +99,7 @@ Geçmiş yoksa `analyze` yalnızca kural yolunu kullanır (LLM çağrısı yok);
 | `sources` | "Hangi dosyada/sayfada?" | Önceki cevabın atıf yaptığı kaynaklar, LLM'siz deterministik liste |
 | `meta` | Asistan hakkında ("kimsin", teşekkür) | Arama ve kaynak yok |
 
-`followup` ve `sources` için önceki asistan mesajında kaynak yoksa `notes` yoluna düşülür. `services.ask` `(cevap, sonuçlar, {"intent", "query"})` döner; `query` yalnızca sorudan farklıysa doludur.
+Her asistan mesajı niyetiyle (`intent`) birlikte kaydedilir. `followup` ve `sources`, kaynak listesi ya da meta cevabını değil, kaynaklı **son içerik cevabını** (`history.last_notes_message`, niyeti `notes`/`followup`) temel alır; böyle bir mesaj yoksa `notes` yoluna düşülür. Cevap prompt'u, bağlamdaki bilgi sorulan kişi/proje/konuya ait değilse "Bu bilgi notlarda yok" demesini ister. `services.ask` `(cevap, sonuçlar, {"intent", "query"})` döner; `query` yalnızca sorudan farklıysa doludur.
 
 | Adım | Dosya | Ne öğretiyor |
 |---|---|---|
@@ -195,6 +195,7 @@ LLM "followup" dese bile soruda kapalı takip sözcükleri (doğru mu, kısalt, 
 
 - **Niyet hatası:** küçük LLM kimi zaman yanlış sınıflandırabilir; `followup` için yeni-içerik kapısı vardır, ama `notes` yerine `sources`/`meta` seçimi yalnızca kurallar ve prompt ile korunur.
 - **Kaynak cevabı yalnızca bir önceki cevabı kapsar;** atıf yoksa getirilen tüm kaynaklar listelenir.
+- **Varlık karışması:** "Proje Nova bütçesi?" → "peki kira?" gibi belirsiz takiplerde notlarda Nova'nın kirası yoksa 4B model başka bir notun kira bilgisini (doğru etiketleyerek: "kişisel kiranız…") verebilir; "notlarda yok" demeyi her zaman başaramaz.
 
 - **Metadata filtresi yok:** "toplanti_proje_nova.md dosyasında ne yazıyor?" gibi dosya adı verilen sorular yine tüm notlarda aranır, kaynaklar karışabilir.
 - **Yinelenen kaynaklar:** aynı içerik hem `.pdf` hem `.html` olarak varsa iki kez getirilebilir.
