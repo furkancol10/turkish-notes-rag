@@ -78,3 +78,23 @@ def test_dedupe_prefers_pdf_and_fills_k():
     near = [(Chunk("1", "a", "", " ".join(f"w{i}" for i in range(30))), 1),
             (Chunk("2", "b", "", " ".join(f"w{i}" for i in range(29)) + " zz"), 1)]
     assert len(dedupe(near)) == 1
+
+
+NOTES = ["kisisel_butce.md", "toplanti_proje_nova.md", "toplanti_proje_atlas.md", "tarif_imam_bayildi.md",
+         "tarif_karniyarik.md", "tarif_menemen.md", "gptRag.pdf", "geminiRapor.pdf", "seyahat_istanbul.md",
+         "seyahat_eskisehir.md", "kitap_sapiens.md"]
+NCAT = build_catalog(NOTES, {"toplanti_proje_nova.md": "Proje Nova Toplantısı"})
+
+
+@pytest.mark.parametrize("q,exp", [
+    ("Proje Nova bütçesi nedir?", ["toplanti_proje_nova.md"]),
+    ("kişisel bütçemde kira ne kadar", ["kisisel_butce.md"]),
+    ("imam bayıldı tarifi", ["tarif_imam_bayildi.md"]),
+    ("karnıyarık tarifi nasıl", ["tarif_karniyarik.md"]),
+    ("chatgpt hangi projeleri önermiş", ["gptRag.pdf"]),
+    ("gemini ve chatgpt'yi karşılaştır", ["geminiRapor.pdf", "gptRag.pdf"]),
+    ("seyahat planı nedir", None),
+    ("genel olarak ne yapmalıyım", None),
+])
+def test_detect_specificity(q, exp):
+    assert detect(q, NCAT) == exp

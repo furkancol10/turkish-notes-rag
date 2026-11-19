@@ -78,9 +78,43 @@ def _matches(qtoks: list[str], alias: tuple) -> bool:
     return any(all(_tok_match(qtoks[i + j], alias[j]) for j in range(n)) for i in range(len(qtoks) - n + 1))
 
 
+# Dosya adı gövdesinden gelen, tek başına ayırt edici olmayan sıradan isimler (normalize edilmiş)
+COMMON = {
+    "butce", "tarif", "toplanti", "ders", "kitap", "film", "seyahat", "spor", "saglik", "uyku", "fikir", "blog",
+    "yazi", "yazilari", "haftalik", "aylik", "gunluk", "program", "kosu", "liste", "listeler", "kelime", "kelimeler",
+    "giris", "plan", "yemek", "corba", "komut", "komutlari", "teknik", "not", "notlar", "ozet", "rapor", "proje",
+}
+
+
+def _caps(question: str) -> set[str]:
+    """Soruda büyük harfle başlayan (cümle başı hariç) sözcükler: özel ad adayı."""
+    words = re.findall(r"[^\W\d_]+", question)
+    out = set()
+    for w in words[1:]:
+        if w[0].isupper():
+            out.update(_tokens(w))
+    return out
+
+
+def _specific(alias: tuple, qtoks: list[str], caps: set[str]) -> bool:
+    if len(alias) > 1:
+        return True
+    t = alias[0]
+    if t in BUILTIN.values() or t not in COMMON:
+        return True
+    return any(c in caps and _tok_match(c, t) for c in qtoks)
+
+
 def detect(question: str, catalog: dict[str, set[tuple]]) -> list[str] | None:
     qtoks = _tokens(question)
-    hit = [s for s, al in catalog.items() if any(_matches(qtoks, a) for a in al)]
+    caps = _caps(question)
+    spec, common = [], []
+    for s, al in catalog.items():
+        m = [a for a in al if _matches(qtoks, a)]
+        if not m:
+            continue
+        (spec if any(_specific(a, qtoks, caps) for a in m) else common).append(s)
+    hit = spec or (common if len(common) == 1 else [])
     if not hit or len(hit) > MAX_DOCS:
         return None
     return sorted(hit)
