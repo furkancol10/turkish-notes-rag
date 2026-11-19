@@ -4,7 +4,7 @@ import time
 
 from PySide6.QtCore import QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QPainter
-from PySide6.QtWidgets import (QFrame, QHBoxLayout, QLabel, QPlainTextEdit, QPushButton,
+from PySide6.QtWidgets import (QFrame, QSizePolicy, QHBoxLayout, QLabel, QPlainTextEdit, QPushButton,
                                QScrollArea, QToolButton, QVBoxLayout, QWidget)
 
 from src.chunker import chunk_label
@@ -149,6 +149,35 @@ class Bubble(QWidget):
             row.addStretch(0)
 
 
+class ExampleButton(QPushButton):
+    """Örnek soru düğmesi: metin sığmazsa ortadan kısaltılır (tooltip'te tam metin), asla kırpılmaz."""
+    MAX_W = 380
+
+    def __init__(self, text):
+        super().__init__()
+        self._full = text
+        self.setToolTip(text)
+        self.setMaximumWidth(self.MAX_W)
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        self._elide()
+
+    def minimumSizeHint(self):
+        return QSize(60, super().minimumSizeHint().height())
+
+    def sizeHint(self):
+        fm = self.fontMetrics()
+        h = super().sizeHint().height()
+        return QSize(min(self.MAX_W, fm.horizontalAdvance(self._full) + 40), h)
+
+    def _elide(self):
+        avail = max(40, self.width() - 36) if self.width() > 1 else self.MAX_W - 36
+        self.setText(self.fontMetrics().elidedText(self._full, Qt.ElideRight, avail))
+
+    def resizeEvent(self, ev):
+        super().resizeEvent(ev)
+        self._elide()
+
+
 class EmptyState(QWidget):
     picked = Signal(str)
 
@@ -184,10 +213,9 @@ class EmptyState(QWidget):
         else:
             self._sub.setText("Henüz not yok. Soldan bir klasör seç veya 'Not ekle' ile not ekle.")
         for q in qs:
-            b = QPushButton(q)
+            b = ExampleButton(q)
             b.setObjectName("example")
             b.setCursor(Qt.PointingHandCursor)
-            b.setMaximumWidth(380)
             b.clicked.connect(lambda _=False, q=q: self.picked.emit(q))
             self._lay.insertWidget(self._lay.count() - 1, b, 0, Qt.AlignCenter)
             self._btns.append(b)

@@ -91,19 +91,141 @@ def _headings(path: Path) -> list[str]:
     return []
 
 
-def example_questions(folder: Path | None = None, n: int = 3, rng=random) -> list[str]:
-    """Farklı dosyalardan en çok n örnek soru; uygun başlık yoksa dosya adı kullanılır."""
-    files = list_note_files(folder)
-    rng.shuffle(files)
-    out = []
-    for p in files[:12]:
+_STOP = set("""ve veya ile için gibi daha çok en bir bu şu o da de ki mi mı mu mü ne ama fakat ancak
+çünkü ise olan olarak her hem tüm bazı kadar sonra önce göre ayrıca yani ya den dan ten tan
+the and for with that this from are was were into your you can not but have has use used using
+bunu bunun bunlar şunu onu onun ben sen biz siz var yok olur edilir edilen yapılır yapılan
+sayfa adım proje aşama örnek not notlar notları kullanılır kullanılacak yapılacak etmek yapmak
+sonuç kullanıcı amaç zorluk seviye süre ileri orta başlangıç temel çıktı hedef adımlar yapılacak
+bilgi cevap yanıt doğal dille bölüm liste örnekler önemli gerekir sağlar ayrı farklı yeni basit
+kendine örneğin çalışmalar amacı edin olduğunu önerileri oluşan ları leri ların lerin sorulardan
+kitabı çözüm eklemek eklenir verilir üretim getirme""".split())
+_TOK = re.compile(r"[A-Za-zÇĞİÖŞÜçğıöşü][A-Za-zÇĞİÖŞÜçğıöşü0-9\-]{2,}")
+_PREFIX = re.compile(r"^\s*(?:(?:Adım|Aşama|Proje|Bölüm|Kısım)\s*\d+\s*[:\-–—.]*|\d{1,2}\s*[.)]|[IVX]+\.)\s*", re.I)
+_TEXT_CACHE: dict = {}
+
+
+def _low(t: str) -> str:
+    return t.replace("İ", "i").replace("I", "ı").lower()
+
+
+def _file_text(p: Path) -> str:
+    from .formats import parse
+    try:
+        st = p.stat()
+        key = (str(p), st.st_mtime, st.st_size)
+    except OSError:
+        return ""
+    if key not in _TEXT_CACHE:
+        if len(_TEXT_CACHE) > 200:
+            _TEXT_CACHE.clear()
         try:
-            cands = [c for c in (_clean(h) for h in _headings(p)) if _ok(c)]
+            _TEXT_CACHE[key] = parse(p).text[:300_000]
         except Exception:
-            cands = []
-        title = rng.choice(cands) if cands else _clean(p.stem.replace("_", " ").replace("-", " "))
-        if _ok(title) and title not in out:
-            out.append(title)
-        if len(out) == n:
-            break
-    return [f"«{t}» hakkında notlarımda ne var?" for t in out]
+            _TEXT_CACHE[key] = ""
+    return _TEXT_CACHE[key]
+
+
+def _title_of(h: str) -> str | None:
+    """Başlık gibi görünen metin (2-6 kelime, cümle değil, 'Adım N:' öneksiz) ya da None."""
+    t = _clean(_PREFIX.sub("", re.sub(r"\s+", " ", h)))
+    words = t.split()
+    if not (2 <= len(words) <= 6) or len(t) > 32 or t.endswith("…") or t[0].islower():
+        return None
+    if re.search(r"[.?!;,]", t) or not _ok(t):
+        return None
+    return t
+
+
+def _concepts(texts: dict) -> list[tuple[float, str, Path]]:
+    """TF-IDF (tekli+ikili terimler): dosyada sık, diğer dosyalarda seyrek terimler."""
+    import math
+    from collections import Counter
+    tf, df = {}, Counter()
+    surface: dict[str, Counter] = {}
+    for p, txt in texts.items():
+        c = Counter()
+        for seg in re.split(r"[\n.,;:!?()|•\[\]\"“”—–]+", txt):
+            toks = [m.group() for m in _TOK.finditer(seg)]
+            low = [_low(t).strip("-") for t in toks]
+            for i, w in enumerate(low):
+                if w in _STOP or len(w) < 4:
+                    continue
+                c[w] += 1
+                surface.setdefault(w, Counter())[toks[i]] += 1
+                if i + 1 < len(low) and low[i + 1] not in _STOP and len(low[i + 1]) >= 4 \
+                        and not toks[i][0].isupper() and not toks[i + 1][0].isupper():
+                    bg = f"{w} {low[i + 1]}"
+                    c[bg] += 1
+                    surface.setdefault(bg, Counter())[f"{toks[i]} {toks[i + 1]}"] += 1
+        tf[p] = c
+        df.update(c.keys())
+    n = len(texts)
+    out = []
+    for p, c in tf.items():
+        for term, k in c.items():
+            bigram = " " in term
+            if k < (2 if bigram else 3):
+                continue
+            idf = math.log((n + 1) / (df[term] + 0.5)) + 1 if n > 1 else 1.0
+            form = surface[term].most_common(1)[0][0]
+            if len(form) > 26:
+                continue
+            bonus = 1.6 if any(ch.isupper() for ch in form[1:]) or "-" in form else 1.0
+            out.append((math.log(1 + k) * idf * (1.4 if bigram else 1.0) * bonus, form, p))
+    return out
+
+
+def _pick(pool, used_files, used_texts, rng, allow_repeat_file):
+    pool = sorted(pool, key=lambda x: -x[0] * (0.6 + 0.8 * rng.random()))
+    for sc, t, p in pool:
+        if t.lower() in used_texts or (p in used_files and not allow_repeat_file):
+            continue
+        return t, p
+    return None
+
+
+def example_questions(folder: Path | None = None, n: int = 3, rng=random) -> list[str]:
+    """Anahtar kavram (TF-IDF) ve bölüm başlıklarından n örnek soru; ayrı dosyalardan olmaya çalışır."""
+    files = list_note_files(folder)[:40]
+    texts = {p: _file_text(p) for p in files}
+    texts = {p: t for p, t in texts.items() if t.strip()}
+    concepts = _concepts(texts) if texts else []
+    titles = []
+    for p in texts:
+        try:
+            hs = _headings(p)
+        except Exception:
+            hs = []
+        for k, h in enumerate(hs):
+            t = _title_of(h)
+            if t:
+                titles.append((1.0 + (0.5 if k < 3 else 0), t, p))
+
+    def norm(pool):
+        m = max((x[0] for x in pool), default=1) or 1
+        return [(s / m, t, p) for s, t, p in pool]
+    concepts, titles = norm(concepts), norm(titles)
+    out, used_f, used_t = [], set(), set()
+    for rep in (False, True):
+        for kind in "ctctct":
+            if len(out) >= n:
+                break
+            r = _pick(concepts if kind == "c" else titles, used_f, used_t, rng, rep)
+            if not r:
+                continue
+            t, p = r
+            used_f.add(p)
+            used_t.add(t.lower())
+            if kind == "c":
+                q = f"«{t}» nedir?" if t[0].isupper() and " " in t else \
+                    rng.choice([f"«{t}» nedir?", f"«{t}» nasıl çalışır?"])
+            else:
+                q = f"«{t}» hakkında ne yazıyor?"
+            out.append(q)
+    if not out:  # başlık/kavram yok: dosya adı
+        for p in files[:n]:
+            t = _clean(p.stem.replace("_", " ").replace("-", " "))
+            if _ok(t):
+                out.append(f"«{t}» hakkında ne yazıyor?")
+    return out[:n]
