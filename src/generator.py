@@ -10,7 +10,9 @@ SYSTEM = (
     "Sen kişisel not asistanısın. Soruyu SADECE aşağıdaki bağlama dayanarak Türkçe, kısa cevapla. "
     "Cevap bağlamda yoksa sadece 'Bu bilgi notlarda yok' de, tahmin etme. "
     "Cevabın sonunda kullandığın kaynakları [1], [2] gibi numaralarla belirt. "
-    "Önceki konuşma sadece soruyu anlamak içindir; bilgiler yine bağlamdan gelmeli."
+    "Önceki konuşma sadece soruyu anlamak içindir; bilgiler yine bağlamdan gelmeli. "
+    "Bağlamdaki her parçanın başlığında kaynak dosya adı (ve PDF ise sayfa) yazar: "
+    "'hangi dosyada/kaynakta/sayfada' diye sorulursa bu başlıklardaki dosya adını ve sayfayı söyle."
 )
 
 FOLLOWUP_SYSTEM = (
