@@ -48,11 +48,65 @@ def _dedupe(seq):
     return out
 
 
-def extract(query: str, catalog: dict | None = None) -> list[str]:
+# Cümle başında büyük harfli ama özel ad olmayan sık sözcükler (normalize); ayrıca not korpusundaki küçük harfli sözcükler
+COMMON = {
+    "bugun", "dun", "yarin", "toplantida", "toplanti", "kitap", "kitabi", "nasil", "neden", "hangi", "kim", "kimin",
+    "ne", "nerede", "nezaman", "kac", "butce", "gecen", "bu", "bana", "benim", "notlarimda", "listele", "goster",
+    "anlat", "soyle", "ozetle", "bul", "var", "yok", "hic", "hep", "simdi", "sonra", "once", "daha", "en", "cok",
+    "biraz", "tum", "butun", "her", "bazi", "baska", "yeni", "eski", "son", "ilk", "gunun", "haftanin", "ayin",
+    "tarif", "tarifi", "plan", "plani", "not", "notlar", "ders", "proje", "gorev", "fikir", "liste", "hedef",
+    "tarih", "saat", "gun", "hafta", "ay", "yil", "sabah", "aksam", "gece", "oglen", "kimse", "birisi", "herkes",
+    "evet", "hayir", "lutfen", "acaba", "peki", "hani", "yani", "ayrica", "ozellikle", "genelde", "mesela",
+}
+_vocab_cache: dict = {}
+
+
+def _vocab_words(text: str) -> set[str]:
+    out = set()
+    for t in _fold_words(text):
+        out.add(t)
+        for k in range(1, 4):
+            if len(t) - k >= 4:
+                out.add(t[:-k])
+    return out
+
+
+def corpus_vocab() -> set[str]:
+    """Not korpusunda KÜÇÜK harfle geçen sözcükler (ek toleranslı), notlar değişince yeniden kurulur. Not yoksa boş."""
+    try:
+        from . import loader, settings
+        folder = settings.notes_dir()
+        key = (str(folder), loader.newest_mtime(folder))
+        if _vocab_cache.get("key") != key:
+            words: set[str] = set()
+            for d in loader.load_notes(folder):
+                words |= _vocab_words(" ".join(w for w in re.findall(_W, d.text) if w[0].islower()))
+            _vocab_cache.update(key=key, words=words)
+        return _vocab_cache["words"]
+    except Exception:
+        return set()
+
+
+def _is_common(w: str, vocab: set[str]) -> bool:
+    t = "".join(_fold_words(w))
+    if t in COMMON or t in vocab:
+        return True
+    return any(t[:-k] in vocab or t[:-k] in COMMON or t[:-k] in STOP for k in range(1, 4) if len(t) - k >= 4)
+
+
+def extract(query: str, catalog: dict | None = None, vocab: set[str] | None = None) -> list[str]:
     """Sorudan özel ad adayları: tırnaklı terimler, alfasayısal kodlar, büyük harfli sözcük/öbekler
     (cümle başındaki büyük harf sayılmaz; kesme işaretli cümle başı sözcük sayılır). catalog verilirse
-    belge adıyla eşleşenler (doc_filter'ın işi) atılır."""
+    belge adıyla eşleşenler (doc_filter'ın işi) atılır. Cümle başındaki büyük harfli sözcük, STOP/COMMON'da
+    ya da korpusta küçük harfle geçmiyorsa (ör. "Zeynep ne dedi?") ad adayıdır; korpus sözlüğü (vocab, verilmezse
+    notlardan kurulur) boşsa bu genişleme kapalıdır (muhafazakâr)."""
     q = query or ""
+    if vocab is None:
+        vocab = corpus_vocab()
+        init_names = bool(vocab)
+    else:
+        init_names = True
+        vocab = _vocab_words(" ".join(vocab))
     out: list[str] = [m.group(1).strip() for m in _QUOTE_RE.finditer(q)]
     q_noquote = _QUOTE_RE.sub(" ", q)
     out += [m.group(0) for m in _CODE_RE.finditer(q_noquote)]
@@ -80,7 +134,10 @@ def extract(query: str, catalog: dict | None = None) -> list[str]:
         pos = m.end()
         first = w[0].isupper()
         sent_start = m.start() in starts
-        if first and (not sent_start or "'" in w or "’" in w):
+        initial_name = (sent_start and init_names and not span and not _is_common(re.split(r"['’]", w)[0], vocab)
+                        and not _is_stop(re.split(r"['’]", w)[0]) and len(w) > 2
+                        and not re.match(r"[\d\-]", q_noquote[m.end():m.end() + 1]))
+        if first and (not sent_start or "'" in w or "’" in w or initial_name):
             stem = re.split(r"['’]", w)[0]
             if _is_stop(stem) and not span:
                 continue
@@ -126,9 +183,9 @@ def present(entity: str, chunk_texts) -> bool:
     return False
 
 
-def missing(query: str, chunk_texts, catalog: dict | None = None) -> list[str]:
+def missing(query: str, chunk_texts, catalog: dict | None = None, vocab: set[str] | None = None) -> list[str]:
     """Soruda özel ad varsa ve HİÇBİRİ parçalarda yoksa adların listesi, aksi halde []."""
-    ents = extract(query, catalog)
+    ents = extract(query, catalog, vocab)
     texts = list(chunk_texts)
     if ents and not any(present(e, texts) for e in ents):
         return ents
