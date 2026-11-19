@@ -58,8 +58,7 @@ def test_model_cached_per_device(monkeypatch):
     created = []
 
     class Fake:
-        def __init__(self, name, device): created.append(device)
-        def half(self): return self
+        def __init__(self, name, device, **kw): created.append(device)
     import sentence_transformers
     monkeypatch.setattr(sentence_transformers, "SentenceTransformer", Fake)
     embedder.get_model("cpu"); embedder.get_model("cpu"); embedder.get_model("cuda")

@@ -48,9 +48,10 @@ def get_model(device: str = "cpu", name: str | None = None):
     from sentence_transformers import SentenceTransformer
     key = (name or config.EMBED_MODEL, device)
     if key not in _models:
-        m = SentenceTransformer(key[0], device=device)
+        kw = {}
         if device.startswith("cuda") and config.EMBED_INDEX_DTYPE == "float16":
-            m = m.half()
+            kw["model_kwargs"] = {"torch_dtype": "float16"}  # doğrudan fp16 yükle (fp32 tepe VRAM'i yok)
+        m = SentenceTransformer(key[0], device=device, **kw)
         _models[key] = m
     return _models[key]
 
