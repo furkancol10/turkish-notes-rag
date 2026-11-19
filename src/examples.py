@@ -7,6 +7,9 @@ from .loader import list_note_files
 
 MAX_LEN = 50
 _JUNK = re.compile(r"ÖRNEK NOT|^[\W\d_]*$|^(sayfa|page)\s*\d+$", re.I)
+_GENERIC = {"rapor", "raporu", "sayfa", "içindekiler", "giriş", "özet", "sonuç", "kaynakça",
+            "özet", "ekler", "önsöz", "başlangıç", "page", "contents", "introduction",
+            "conclusion", "summary", "abstract", "references", "tablo", "şekil"}
 
 
 def _clean(t: str) -> str:
@@ -18,7 +21,52 @@ def _clean(t: str) -> str:
 
 
 def _ok(t: str) -> bool:
-    return len(t) >= 4 and not _JUNK.search(t) and sum(c.isalpha() for c in t) >= 3
+    if len(t) < 4 or _JUNK.search(t) or sum(c.isalpha() for c in t) < 3:
+        return False
+    words = t.split()
+    return not (len(words) == 1 and (words[0].lower().strip("….") in _GENERIC or len(t) < 6)) \
+        and t.lower().strip("….") not in _GENERIC
+
+
+_NUMBERED = re.compile(r"^(\d{1,2}[.)]|Proje \d+\s*[:\-—]|Adım \d+\s*:|Bölüm \d+)\s*\S")
+
+
+def _pdf_headings(pdf, max_pages: int = 30) -> list[str]:
+    """Yazı boyutu gövdeden büyük satırlar + numaralı başlıklar; sayfalar arası tekrarlayanlar
+    (üst/alt bilgi) ve tek kelimelik/genel başlıklar hariç."""
+    import collections
+    body = collections.Counter()
+    cand = []                                   # (sayfa, boyut, metin)
+    for pno, page in enumerate(pdf):
+        if pno >= max_pages:
+            break
+        for b in page.get_text("dict")["blocks"]:
+            prev = None
+            for ln in b.get("lines", []):
+                txt = "".join(sp["text"] for sp in ln["spans"]).strip()
+                if not txt:
+                    continue
+                size = round(max(sp["size"] for sp in ln["spans"]) * 2) / 2
+                body[size] += len(txt)
+                if prev and prev[1] == size and not _NUMBERED.match(txt) and len(prev[2]) < 70:
+                    cand[-1] = (pno, size, prev[2] + " " + txt)     # kırık başlık satırını birleştir
+                    prev = cand[-1]
+                else:
+                    cand.append((pno, size, txt))
+                    prev = cand[-1]
+    if not body:
+        return []
+    base = body.most_common(1)[0][0]
+    seen = collections.Counter(t.lower() for _, _, t in cand)
+    out = []
+    for pno, size, t in cand:
+        if seen[t.lower()] > 1 or len(t) > 90:
+            continue
+        if t[0].islower():
+            continue                              # kırık satır parçası
+        if size >= base + 2 or _NUMBERED.match(t):
+            out.append(t)
+    return out
 
 
 def _headings(path: Path) -> list[str]:
@@ -39,8 +87,7 @@ def _headings(path: Path) -> list[str]:
     if ext == ".pdf":
         import pymupdf
         with pymupdf.open(path) as pdf:
-            if len(pdf):
-                return [l for l in pdf[0].get_text().splitlines() if _ok(_clean(l))][:3]
+            return _pdf_headings(pdf)
     return []
 
 

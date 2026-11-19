@@ -17,6 +17,8 @@ class Parsed:
 
 # Taranmış/metinsiz PDF eşiği: sayfa başına ortalama bu kadar karakterden azsa atla
 MIN_CHARS_PER_PAGE = 10
+MAX_PDF_PAGES = 2000
+MAX_FILE_BYTES = 100 * 1024 * 1024
 NO_TEXT_MSG = "metin yok (taranmış olabilir, OCR desteklenmiyor)"
 
 
@@ -25,6 +27,33 @@ def _clean_pdf(t: str) -> str:
     t = re.sub(r"[ \t]+", " ", t)
     t = re.sub(r"[ \t]*\n[ \t]*", "\n", t)
     return re.sub(r"\n{3,}", "\n\n", t).strip()
+
+
+_PAGE_NUM = re.compile(r"\d+")
+
+
+def _norm_line(l: str) -> str:
+    return _PAGE_NUM.sub("#", l.strip().lower())
+
+
+def strip_margins(texts: list[str]) -> list[str]:
+    """Sayfaların ilk/son 2 satırında çoğu sayfada tekrarlanan satırları (üst/alt bilgi,
+    'Sayfa N', sayfa numarası) atar. 3'ten az sayfada dokunmaz."""
+    n = len(texts)
+    if n < 3:
+        return texts
+    pl = [[l for l in t.split("\n") if l.strip()] for t in texts]
+    cnt: dict[str, int] = {}
+    for lines in pl:
+        for k in {_norm_line(l) for l in lines[:2] + lines[-2:]}:
+            cnt[k] = cnt.get(k, 0) + 1
+    rep = {k for k, v in cnt.items() if v >= max(3, 0.8 * n)}
+    out = []
+    for lines in pl:
+        drop = {i for i in list(range(min(2, len(lines)))) + list(range(max(0, len(lines) - 2), len(lines)))
+                if _norm_line(lines[i]) in rep}
+        out.append("\n".join(l for i, l in enumerate(lines) if i not in drop))
+    return out
 
 
 def read_text(path: Path) -> Parsed:
@@ -38,8 +67,15 @@ def read_pdf(path: Path) -> Parsed:
     import pymupdf
     try:
         with pymupdf.open(path) as pdf:
-            pages = [(i, _clean_pdf(p.get_text())) for i, p in enumerate(pdf, 1)]
-    except Exception as e:  # bozuk/şifreli PDF
+            if pdf.needs_pass:
+                raise SkipFile("şifreli PDF")
+            if len(pdf) > MAX_PDF_PAGES:
+                raise SkipFile(f"çok uzun PDF (>{MAX_PDF_PAGES} sayfa)")
+            raw = [p.get_text() for p in pdf]
+        pages = [(i, _clean_pdf(t)) for i, t in enumerate(strip_margins(raw), 1)]
+    except SkipFile:
+        raise
+    except Exception as e:  # bozuk PDF
         raise SkipFile(f"okunamadı ({e.__class__.__name__})")
     total = sum(len(t) for _, t in pages)
     if total < max(20, MIN_CHARS_PER_PAGE * len(pages)):
@@ -135,4 +171,6 @@ def is_supported(name: str) -> bool:
 
 
 def parse(path: Path) -> Parsed:
+    if path.stat().st_size > MAX_FILE_BYTES:
+        raise SkipFile("dosya çok büyük (>100 MB)")
     return FORMATS[path.suffix.lower()][1](path)
