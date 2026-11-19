@@ -2,12 +2,12 @@
 from datetime import datetime
 from pathlib import Path
 
-from src import config
+from src import config, settings
 from src.chunker import chunk_docs
 from src.embedder import _model, embed_passages
 from src.generator import answer, answer_meta
 from src.index import get_index, index_name
-from src.loader import load_notes
+from src.loader import list_note_files, load_notes, newest_mtime, rel_source
 from src.notes_io import save_note
 from src.retriever import retrieve
 from src.router import route
@@ -18,9 +18,38 @@ def load_embed_model():
     return _model(config.EMBED_MODEL)
 
 
-def list_notes() -> list[Path]:
-    config.NOTES_DIR.mkdir(parents=True, exist_ok=True)
-    return sorted(p for p in config.NOTES_DIR.iterdir() if p.suffix in (".md", ".txt"))
+def notes_dir() -> Path:
+    return settings.notes_dir()
+
+
+def list_notes() -> list[str]:
+    """Notların klasöre göre göreli yolları (alt klasörler dahil)."""
+    d = settings.notes_dir()
+    return [rel_source(p, d) for p in list_note_files(d)]
+
+
+def folder_problem():
+    """Etkin klasörle ilgili kullanıcıya gösterilecek sorun metni veya None."""
+    d = settings.notes_dir()
+    try:
+        settings.validate_dir(d)
+    except ValueError as e:
+        return str(e)
+    return None
+
+
+def notes_changed() -> bool:
+    """Notlardan en yenisi indeksten sonra değiştiyse True."""
+    ts, newest = index_status(), newest_mtime()
+    return bool(ts and newest and newest > ts.timestamp())
+
+
+def set_folder(path) -> str:
+    return str(settings.set_notes_dir(path))
+
+
+def reset_folder():
+    settings.reset_notes_dir()
 
 
 def index_status():
@@ -32,6 +61,8 @@ def index_status():
 
 def reindex():
     docs = load_notes()
+    if not docs:
+        raise ValueError(f"Bu klasörde .md/.txt not bulunamadı: {settings.notes_dir()}")
     chunks = chunk_docs(docs)
     vecs = embed_passages([c.text for c in chunks])
     name = index_name(config.EMBED_MODEL, config.CHUNK_STRATEGY, config.CHUNK_SIZE)
@@ -41,7 +72,7 @@ def reindex():
 
 
 def import_note(src_path: str):
-    """Dosyayı NOTES_DIR'e temizlenmiş adla kopyalar; kaydedilen adı döner, geçersizse None."""
+    """Dosyayı not klasörüne temizlenmiş adla kopyalar; kaydedilen adı döner, geçersizse None."""
     return save_note(src_path, Path(src_path).read_bytes())
 
 

@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (QApplication, QFileDialog, QFrame, QHBoxLayout, Q
                                QLineEdit, QListWidget, QMainWindow, QMessageBox, QProgressBar,
                                QPushButton, QRadioButton, QSpinBox, QStyle, QVBoxLayout, QWidget)
 
-from src import config
+from src import config, settings
 
 from . import services
 from .chat_view import ChatView
@@ -59,7 +59,14 @@ class MainWindow(QMainWindow):
         side.setSpacing(6)
         title = QLabel("Kişisel Not Arama")
         title.setObjectName("appTitle")
-        self.notes_label = QLabel()
+        self.folder_label = QLabel()
+        self.folder_label.setObjectName("muted")
+        self.btn_folder = flat("Klasör seç", QStyle.SP_DirIcon)
+        self.btn_sample = flat("Örnek notlara dön", QStyle.SP_ArrowBack)
+        self.notes_toggle = QPushButton()
+        self.notes_toggle.setCursor(Qt.PointingHandCursor)
+        self.notes_open = bool(settings.get("notes_list_open", False))
+        self._notes_count = 0
         self.notes_list = QListWidget()
         self.btn_add = flat("Not ekle", QStyle.SP_FileDialogNewFolder)
         self.btn_open = flat("Notlar klasörünü aç", QStyle.SP_DirOpenIcon)
@@ -76,9 +83,13 @@ class MainWindow(QMainWindow):
         (self.rb_chroma if config.INDEX_BACKEND == "chroma" else self.rb_numpy).setChecked(True)
         self.btn_clear = flat("Sohbeti temizle", QStyle.SP_TrashIcon)
         side.addWidget(title)
+        side.addWidget(section("Not klasörü"))
+        side.addWidget(self.folder_label)
+        side.addWidget(self.btn_folder)
+        side.addWidget(self.btn_sample)
         side.addWidget(section("Notlar"))
-        side.addWidget(self.notes_label)
-        side.addWidget(self.notes_list, 1)
+        side.addWidget(self.notes_toggle)
+        side.addWidget(self.notes_list)
         side.addWidget(self.btn_add)
         side.addWidget(self.btn_open)
         side.addWidget(section("İndeks"))
@@ -107,6 +118,9 @@ class MainWindow(QMainWindow):
         side.addLayout(bk)
         side.addWidget(section("Sohbet"))
         side.addWidget(self.btn_clear)
+        side.addStretch(0)
+        self._side = side
+        self._apply_notes_open()
         side_w = QWidget()
         side_w.setObjectName("sidebar")
         side_w.setLayout(side)
@@ -144,6 +158,9 @@ class MainWindow(QMainWindow):
         self.chat.suggestion.connect(self.ask_example)
         self.btn_add.clicked.connect(self.add_note)
         self.btn_open.clicked.connect(self.open_folder)
+        self.notes_toggle.clicked.connect(self.toggle_notes)
+        self.btn_folder.clicked.connect(self.choose_folder)
+        self.btn_sample.clicked.connect(self.use_sample)
         self.btn_reindex.clicked.connect(self.reindex)
         self.btn_clear.clicked.connect(self.chat.clear)
         self.statusBar().showMessage("Hazır")
@@ -157,23 +174,57 @@ class MainWindow(QMainWindow):
         return "chroma" if self.rb_chroma.isChecked() else "numpy"
 
     def refresh_side(self):
+        d = services.notes_dir()
+        full = str(d)
+        fm = self.folder_label.fontMetrics()
+        self.folder_label.setText(fm.elidedText(full, Qt.ElideMiddle, 250))
+        self.folder_label.setToolTip(full)
+        self.btn_sample.setEnabled(not settings.is_default() and not self._busy)
         notes = services.list_notes()
-        self.notes_label.setText(f"Notlar ({len(notes)})")
+        self._notes_count = len(notes)
+        self._apply_notes_open()
         self.notes_list.clear()
-        self.notes_list.addItems([p.name for p in notes])
+        self.notes_list.addItems(notes)
+        problem = services.folder_problem()
         ts = services.index_status()
+        if problem:
+            tail = problem
+        elif not notes:
+            tail = "Bu klasörde .md/.txt not yok."
+        elif not ts:
+            tail = "Henüz indeks yok. 'Yeniden indeksle'ye bas."
+        else:
+            tail = f"Son indeksleme: {ts:%Y-%m-%d %H:%M}"
+            if services.notes_changed():
+                tail += "\nNotlar değişti, yeniden indeksle."
         self.index_label.setText(
-            f"Model: {config.EMBED_MODEL}\nParça boyutu: {config.CHUNK_SIZE} karakter\n"
-            + (f"Son indeksleme: {ts:%Y-%m-%d %H:%M}" if ts else
-               "Henüz indeks yok. 'Yeniden indeksle'ye bas."))
+            f"Model: {config.EMBED_MODEL}\nParça boyutu: {config.CHUNK_SIZE} karakter\n" + tail)
+
+    def _apply_notes_open(self):
+        self.notes_toggle.setText(f"{'▾' if self.notes_open else '▸'} Notlar ({self._notes_count})")
+        self.notes_list.setVisible(self.notes_open)
+        # açıkken liste boşluğu alır; kapalıyken boşluk alttaki esnek aralığa gider
+        n = self._side.count()
+        self._side.setStretchFactor(self.notes_list, 1 if self.notes_open else 0)
+        self._side.setStretch(n - 1, 0 if self.notes_open else 1)
+
+    def toggle_notes(self):
+        self.notes_open = not self.notes_open
+        try:
+            settings.set("notes_list_open", self.notes_open)
+        except OSError:
+            pass
+        self._apply_notes_open()
 
     # ---------- iş parçacığı yönetimi ----------
     def set_busy(self, delta):
         self._busy += delta
         busy = self._busy > 0
-        for w in (self.btn_send, self.input, self.btn_reindex, self.btn_add):
+        for w in (self.btn_send, self.input, self.btn_reindex, self.btn_add,
+                  self.btn_folder, self.btn_sample):
             w.setEnabled(not busy)
         if not busy:
+            self.btn_sample.setEnabled(not settings.is_default())
             self.input.setFocus()
 
     def run(self, fn, on_done, on_fail, message, *args):
@@ -258,8 +309,38 @@ class MainWindow(QMainWindow):
         self.refresh_side()
 
     def open_folder(self):
-        config.NOTES_DIR.mkdir(parents=True, exist_ok=True)
-        QDesktopServices.openUrl(QUrl.fromLocalFile(str(config.NOTES_DIR)))
+        d = services.notes_dir()
+        d.mkdir(parents=True, exist_ok=True)
+        QDesktopServices.openUrl(QUrl.fromLocalFile(str(d)))
+
+    def choose_folder(self):
+        path = QFileDialog.getExistingDirectory(self, "Not klasörü seç", str(services.notes_dir()))
+        if not path:
+            return
+        try:
+            services.set_folder(path)
+        except ValueError as e:
+            QMessageBox.warning(self, "Klasör seçilemedi", str(e))
+            return
+        self._folder_changed()
+
+    def use_sample(self):
+        services.reset_folder()
+        self._folder_changed()
+
+    def _folder_changed(self):
+        self.refresh_side()
+        n = len(services.list_notes())
+        self.statusBar().showMessage(f"Not klasörü değişti: {n} not", 8000)
+        if n == 0:
+            QMessageBox.information(self, "Not bulunamadı",
+                                    "Bu klasörde (alt klasörler dahil) .md/.txt not yok.")
+            return
+        msg = f"{n} not bulundu. Şimdi indekslensin mi?"
+        if n > 2000:
+            msg += "\nKlasör büyük, biraz sürebilir."
+        if QMessageBox.question(self, "Yeniden indeksle", msg) == QMessageBox.Yes:
+            self.reindex()
 
     def closeEvent(self, ev):
         for w in list(self._workers):   # çalışan işler bitene kadar bekle

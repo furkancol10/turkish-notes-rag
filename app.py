@@ -4,12 +4,12 @@ from pathlib import Path
 
 import streamlit as st
 
-from src import config
+from src import config, settings
 from src.chunker import chunk_docs
 from src.embedder import _model, embed_passages
 from src.generator import answer, answer_meta
 from src.index import get_index, index_name
-from src.loader import load_notes
+from src.loader import list_note_files, load_notes, newest_mtime, rel_source
 from src.notes_io import save_note
 from src.retriever import retrieve
 from src.router import route
@@ -32,6 +32,8 @@ def index_status():
 
 def reindex():
     docs = load_notes()
+    if not docs:
+        raise ValueError("Bu klasörde .md/.txt not bulunamadı.")
     chunks = chunk_docs(docs)
     vecs = embed_passages([c.text for c in chunks])
     name = index_name(config.EMBED_MODEL, config.CHUNK_STRATEGY, config.CHUNK_SIZE)
@@ -52,13 +54,28 @@ def is_connection_error(e: Exception) -> bool:
 
 
 # ---------------- Kenar çubuğu ----------------
-config.NOTES_DIR.mkdir(parents=True, exist_ok=True)
 with st.sidebar:
+    st.header("Not klasörü")
+    folder_in = st.text_input("Klasör yolu", value=str(settings.notes_dir()))
+    c1, c2 = st.columns(2)
+    if c1.button("Uygula"):
+        try:
+            settings.set_notes_dir(folder_in)
+            st.rerun()
+        except ValueError as e:
+            st.error(str(e))
+    if c2.button("Örnek notlar"):
+        settings.reset_notes_dir()
+        st.rerun()
+
     st.header("Notlar")
-    notes = sorted(p for p in config.NOTES_DIR.iterdir() if p.suffix in (".md", ".txt"))
+    _dir = settings.notes_dir()
+    notes = [rel_source(p, _dir) for p in list_note_files(_dir)]
+    if not notes:
+        st.info("Bu klasörde .md/.txt not yok.")
     with st.expander(f"{len(notes)} not"):
         for p in notes:
-            st.text(p.name)
+            st.text(p)
     uploads = st.file_uploader("Not yükle (.md / .txt)", type=["md", "txt"],
                                accept_multiple_files=True)
     if uploads and st.button("Yüklenenleri kaydet"):
@@ -71,10 +88,16 @@ with st.sidebar:
 
     st.header("İndeks")
     if st.button("Yeniden indeksle"):
-        with st.spinner("İndeksleniyor (not okuma, parçalama, embed)..."):
-            n_docs, n_chunks = reindex()
-        st.success(f"{n_docs} not → {n_chunks} parça")
+        try:
+            with st.spinner("İndeksleniyor (not okuma, parçalama, embed)..."):
+                n_docs, n_chunks = reindex()
+            st.success(f"{n_docs} not → {n_chunks} parça")
+        except ValueError as e:
+            st.warning(str(e))
     ts = index_status()
+    _newest = newest_mtime(_dir)
+    if ts and _newest and _newest > ts.timestamp():
+        st.warning("Notlar değişti, yeniden indeksle.")
     st.caption(f"Model: {config.EMBED_MODEL}  \nParça boyutu: {config.CHUNK_SIZE} karakter  \n"
                f"Son indeksleme: {ts:%Y-%m-%d %H:%M}" if ts else
                "Henüz indeks yok. 'Yeniden indeksle'ye bas.")

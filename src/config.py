@@ -2,7 +2,7 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-NOTES_DIR = ROOT / "data" / "notes"      # notların (.md/.txt) olduğu klasör
+NOTES_DIR = ROOT / "data" / "notes"      # varsayılan (örnek) notlar; etkin klasör: src.settings.notes_dir()
 INDEX_DIR = ROOT / "data" / "index"      # index buraya yazılır (git'e girmez)
 
 # --- Embedding modelleri (hepsi CPU'da çalışır) ---

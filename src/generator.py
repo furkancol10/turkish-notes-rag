@@ -1,7 +1,8 @@
 """ADIM 6 - ÜRET: Bulunan parçaları prompt'a koy, LLM sadece bunlara dayanarak cevaplasın."""
 import ollama
 
-from . import config
+from . import config, settings
+from .loader import list_note_files
 
 SYSTEM = (
     "Sen kişisel not asistanısın. Soruyu SADECE aşağıdaki bağlama dayanarak Türkçe, kısa cevapla. "
@@ -29,7 +30,7 @@ def answer(question: str, results) -> str:
 
 def meta_system() -> str:
     # Gerçekleri config'ten çek ki ayarlar değişince cevap da doğru kalsın
-    n = sum(1 for f in config.NOTES_DIR.glob("*") if f.suffix in (".md", ".txt"))
+    n = len(list_note_files(settings.notes_dir()))
     return (
         "Sen 'Kişisel Not Arama asistanı'sın. Kullanıcının kendi notlarından (şu an "
         f"{n} not) soruları cevaplarsın. Notlar {config.EMBED_MODEL} embedding modeliyle "

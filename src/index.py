@@ -1,18 +1,27 @@
 """ADIM 4 - İNDEKSLE: Vektörleri sakla ve en benzerlerini bul. İki yöntem, aynı arayüz:
   NumpyIndex  - vektörler bir matris; arama = matris çarpımı (kosinüs benzerliği). Şeffaf, öğretici.
   ChromaIndex - ChromaDB vektör veritabanı; diske kalıcı yazar."""
+import hashlib
 import json
 import re
+from pathlib import Path
 
 import numpy as np
 
 from . import config
+from . import settings
 from .chunker import Chunk
 
 
-def index_name(model: str, strategy: str, size: int) -> str:
-    slug = re.sub(r"[^a-zA-Z0-9]+", "_", model).strip("_")[:40]
-    return f"{slug}_{strategy}_{size}"[:60]
+def folder_hash(notes_dir=None) -> str:
+    p = Path(notes_dir) if notes_dir else settings.notes_dir()
+    return hashlib.sha1(str(p.resolve()).encode("utf-8")).hexdigest()[:8]
+
+
+def index_name(model: str, strategy: str, size: int, notes_dir=None) -> str:
+    """Model/strateji/boyut + not klasörünün kısa hash'i (klasör değişince eski indeks kullanılmaz)."""
+    slug = re.sub(r"[^a-zA-Z0-9]+", "_", model).strip("_")[:36]
+    return f"{slug}_{strategy}_{size}"[:50] + "_" + folder_hash(notes_dir)
 
 
 class NumpyIndex:

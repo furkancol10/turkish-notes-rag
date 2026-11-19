@@ -1,7 +1,7 @@
 """Streamlit ve masaüstü arayüzünün ortak not-kaydetme yardımcıları."""
 from pathlib import Path
 
-from src import config
+from src import settings
 
 ALLOWED_SUFFIXES = (".md", ".txt")
 
@@ -15,10 +15,11 @@ def safe_note_name(name: str):
 
 
 def save_note(name: str, data: bytes):
-    """Notu NOTES_DIR'e kaydeder; kaydedilen adı döner, geçersizse None."""
+    """Notu not klasörüne kaydeder; kaydedilen adı döner, geçersizse None."""
     safe = safe_note_name(name)
     if safe is None:
         return None
-    config.NOTES_DIR.mkdir(parents=True, exist_ok=True)
-    (config.NOTES_DIR / safe).write_bytes(data)
+    folder = settings.notes_dir()
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / safe).write_bytes(data)
     return safe
