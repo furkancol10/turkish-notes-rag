@@ -88,6 +88,8 @@ class Bubble(QWidget):
             lay.addWidget(TypingDots())
         else:
             msg = QLabel(text)
+            # Asistan cevabı Markdown (kalın, liste) olarak gösterilir; kullanıcı metni düz kalır
+            msg.setTextFormat(Qt.PlainText if user else Qt.MarkdownText)
             msg.setWordWrap(True)
             msg.setTextInteractionFlags(Qt.TextSelectableByMouse)
             lay.addWidget(msg)
