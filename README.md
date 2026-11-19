@@ -37,3 +37,6 @@ Başlıklar (`# `, `## `) kaynak gösterirken kullanılır, bu yüzden notları 
 
 Tüm ayarlar (model, chunk boyutu, top_k, yollar) `src/config.py` içinde. Chunk stratejisini veya modeli
 değiştirirsen `index`'i yeniden çalıştır.
+
+## Lisans
+MIT (bkz. `LICENSE`).

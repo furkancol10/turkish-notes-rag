@@ -18,7 +18,11 @@ if q := st.chat_input("Notlarına bir soru sor"):
     st.session_state.msgs.append(("user", q, ""))
     with st.chat_message("user"):
         st.write(q)
-    results = retrieve(q)
+    try:
+        results = retrieve(q)
+    except Exception:  # indeks yoksa kullanıcıya ne yapacağını söyle
+        st.error("İndeks bulunamadı. Önce çalıştır: uv run python -m src.cli index")
+        st.stop()
     ans = answer(q, results)
     src = "\n\n".join(f"**[{i}] {c.source}** / {c.heading} (skor {s:.2f})\n\n> {c.text[:300]}..."
                       for i, (c, s) in enumerate(results, 1))
