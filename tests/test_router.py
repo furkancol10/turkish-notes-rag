@@ -44,7 +44,7 @@ def test_app_usage_topic_stays_notes(q):
     assert route(q) == "notes"
 
 
-FOLLOWUP = ["doğru mu", "Bu doğru mu?", "emin misin", "Emin misin?", "yanlış değil mi", "kesin mi",
+FOLLOWUP = ["ilkini biraz açar mısın", "üçüncüsünü anlat", "bunu kısa bir liste yap", "doğru mu", "Bu doğru mu?", "emin misin", "Emin misin?", "yanlış değil mi", "kesin mi",
             "daha kısa anlat", "özetle", "Özetler misin", "madde madde yaz", "tablo yap",
             "basitçe anlat", "2. maddeyi açıkla", "ilkini detaylandır", "neden", "Niye?",
             "kaynağın ne", "nereden buldun", "hangi nottan aldın", "bunu açıkla", "daha basit anlat",

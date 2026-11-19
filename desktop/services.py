@@ -116,8 +116,10 @@ def ask(question: str, top_k: int, backend: str, prior_messages=None):
             return answer_meta(question), [], info
         except Exception as e:
             raise _fail_llm(e)
+    src = last_sources(prior_messages) if r == "followup" else []
+    if r == "followup" and not src:    # dayanacak kaynak yok (ör. önceki cevap meta): normal aramaya düş
+        r = info["route"] = "notes"
     if r == "followup":                # önceki cevabın kaynaklarıyla cevapla, yeni arama yok
-        src = last_sources(prior_messages)
         try:
             return answer_followup(question, history, src), _as_results(src), info
         except Exception as e:

@@ -10,13 +10,13 @@
    },
    {
     "question": "Peki onun bütçesi ne?",
-    "expected_route": "followup",
+    "expected_route": "notes",
     "expected_source": "toplanti_proje_nova.md",
     "reference_answer": "Proje Nova'nın bütçesi 400 bin lira."
    },
    {
     "question": "Kimler katıldı?",
-    "expected_route": "followup",
+    "expected_route": "notes",
     "expected_source": "toplanti_proje_nova.md",
     "reference_answer": "Elif, Burak ve not sahibi katıldı."
    }
@@ -33,7 +33,7 @@
    },
    {
     "question": "Burak'ın görevi ne zamana kadar?",
-    "expected_route": "followup",
+    "expected_route": "notes",
     "expected_source": "toplanti_proje_nova.md",
     "reference_answer": "Notta Burak için tarih verilmemiş; API taslağını hazırlayacak."
    },
@@ -56,13 +56,13 @@
    },
    {
     "question": "Ya Proje Nova'nınki?",
-    "expected_route": "followup",
+    "expected_route": "notes",
     "expected_source": "toplanti_proje_nova.md",
     "reference_answer": "Proje Nova'nın teslim tarihi 30 Haziran."
    },
    {
     "question": "Hangisinin bütçesi daha yüksek?",
-    "expected_route": "followup",
+    "expected_route": "notes",
     "expected_source": "toplanti_proje_nova.md",
     "reference_answer": "Proje Nova (400 bin lira), Atlas 80 bin TL."
    }
@@ -79,13 +79,13 @@
    },
    {
     "question": "Ya imam bayıldı?",
-    "expected_route": "followup",
+    "expected_route": "notes",
     "expected_source": "tarif_imam_bayildi.md",
     "reference_answer": "İmam bayıldı fırında değil, az suyla kısık ateşte 40 dakika pişer."
    },
    {
     "question": "Hangisi soğuk yeniyor?",
-    "expected_route": "followup",
+    "expected_route": "notes",
     "expected_source": "tarif_imam_bayildi.md",
     "reference_answer": "İmam bayıldı soğuk yenir."
    }
@@ -108,7 +108,7 @@
    },
    {
     "question": "Bunun ısınması nasıl?",
-    "expected_route": "followup",
+    "expected_route": "notes",
     "expected_source": "spor_kosu_programi.md",
     "reference_answer": "5 dakika tempolu yürüyüş."
    }
@@ -154,7 +154,7 @@
    },
    {
     "question": "Balon turu kaça?",
-    "expected_route": "followup",
+    "expected_route": "notes",
     "expected_source": "seyahat_kapadokya.md",
     "reference_answer": "Kişi başı yaklaşık 150 euro, buluşma saati 05:30."
    }
@@ -177,7 +177,7 @@
    },
    {
     "question": "Bilişsel devrim ne zaman olmuş?",
-    "expected_route": "followup",
+    "expected_route": "notes",
     "expected_source": "kitap_sapiens.md",
     "reference_answer": "Yaklaşık 70 bin yıl önce."
    }
@@ -200,7 +200,7 @@
    },
    {
     "question": "Kişisel çıkarımım neydi?",
-    "expected_route": "followup",
+    "expected_route": "notes",
     "expected_source": "kitap_atomic_habits.md",
     "reference_answer": "Kimlik temelli düşünmek: 'okuyan biriyim' demek; iki dakika kuralıyla başlıyor."
    }
@@ -217,7 +217,7 @@
    },
    {
     "question": "Kirası ne kadar?",
-    "expected_route": "followup",
+    "expected_route": "notes",
     "expected_source": "kisisel_butce.md",
     "reference_answer": "Kira 12.500 TL."
    },
@@ -263,13 +263,13 @@
    },
    {
     "question": "Bu geçişi kim yapıyor?",
-    "expected_route": "followup",
+    "expected_route": "notes",
     "expected_source": "toplanti_proje_atlas.md",
     "reference_answer": "Mehmet veritabanı geçişinden sorumlu."
    },
    {
     "question": "Testler ne zaman başlıyor?",
-    "expected_route": "followup",
+    "expected_route": "notes",
     "expected_source": "toplanti_proje_atlas.md",
     "reference_answer": "Test aşaması şubat sonunda başlayacak."
    }
@@ -286,7 +286,7 @@
    },
    {
     "question": "Yanına ne yakışır?",
-    "expected_route": "followup",
+    "expected_route": "notes",
     "expected_source": "tarif_karniyarik.md",
     "reference_answer": "Pirinç pilavı."
    },
@@ -309,7 +309,7 @@
    },
    {
     "question": "Peki veri kalıcılığı için ne yapıyordum?",
-    "expected_route": "followup",
+    "expected_route": "notes",
     "expected_source": "teknik_docker_compose.md",
     "reference_answer": "Adlandırılmış volume: pgdata:/var/lib/postgresql/data."
    },
@@ -332,13 +332,13 @@
    },
    {
     "question": "Diz ağrısı olursa ne yapayım?",
-    "expected_route": "followup",
+    "expected_route": "notes",
     "expected_source": "spor_kosu_programi.md",
     "reference_answer": "Bir gün ara ver."
    },
    {
     "question": "Haftada kaç gün koşuyorum?",
-    "expected_route": "followup",
+    "expected_route": "notes",
     "expected_source": "spor_kosu_programi.md",
     "reference_answer": "Haftada 3 gün."
    }

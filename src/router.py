@@ -70,11 +70,12 @@ _FOLLOWUP = [
     r"(daha )?(kisa|kisaca|ozet|basit|sade|net|detayli|uzun)( (anlat|yaz|olur mu|olsun|ifade et|soyle|cevapla|anlatir misin|yazar misin))?",
     r"(bunu |cevabi |onu )?(kisalt|ozetle|ozetler misin|ozetle bakalim|sadelestir|basitlestir|tekrar yaz|yeniden yaz|tekrar anlat|baska turlu anlat)( misin)?",
     r"(bunu |onu |cevabi )?(madde madde|maddeler halinde|liste halinde|tablo halinde|tablo seklinde|liste yap|tablo yap|tabloya dok|listele)( (yaz|anlat|yap|goster|ver|yazar misin))?( misin)?",
+    r"(bunu |onu |cevabi )?(kisa bir |kisa |kisaca )?(liste|tablo|madde) (yap|yaz|haline getir)( misin)?",
     r"(bunu |onu )?(basitce|sade bir dille|kisaca|ozetle) (anlat|acikla|yaz)( misin)?",
     r"(bunu )?(turkceye|ingilizceye) (cevir|cevirir misin)",
     # bir kısmı açma
     rf"{_ORD} (madde|maddeyi|maddeyi|maddesini|maddenin|maddesi)( hakkinda)?( daha)? (acikla|acikla misin|acar misin|detaylandir|detaylandirir misin|anlat|anlatir misin|ayrintilandir)",
-    rf"{_ORD}(ni|yi|ini|sini|nu|u|si)? (daha )?(acikla|acikla misin|acar misin|detaylandir|detaylandirir misin|anlat|anlatir misin|ayrintilandir)",
+    rf"{_ORD}(ni|yi|ini|sini|sunu|nu|u|si)? (biraz |daha )?(acikla|acikla misin|acar misin|detaylandir|detaylandirir misin|anlat|anlatir misin|ayrintilandir)",
     r"(bunu|onu|bunlari|bu kismi|bu maddeyi) (daha )?(acikla|acar misin|detaylandir|detaylandirir misin|ayrintilandir|genislet|aciklar misin|acikla misin)",
     r"(biraz |daha )?(detaylandir|detay ver|aciklar misin|acikla|genislet|devam et|devam)",
     r"(neden|niye|nicin|neden boyle|neden oyle|neden peki|neden yani|peki neden|yani neden|nasil yani)",

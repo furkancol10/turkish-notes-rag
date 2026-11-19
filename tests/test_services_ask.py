@@ -84,3 +84,10 @@ def test_ask_error_kinds(calls, monkeypatch):
     with pytest.raises(services.AskError) as e:
         services.ask("soru", 5, "numpy", [])
     assert e.value.kind == "ollama"
+
+
+def test_followup_without_sources_falls_back_to_search(calls):
+    prior = [{"role": "user", "text": "merhaba", "sources": []},
+             {"role": "assistant", "text": "Selam!", "sources": []}]
+    ans, res, info = services.ask("doğru mu?", 5, "numpy", prior)
+    assert info["route"] == "notes" and "fu" not in calls and "ret" in calls

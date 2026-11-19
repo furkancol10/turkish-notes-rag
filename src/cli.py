@@ -65,11 +65,13 @@ def cmd_chat(args):
             break
         h = window(msgs)
         r = route(q, bool(h))
+        prev = next((m["sources"] for m in reversed(msgs) if m["role"] == "assistant"), [])
+        if r == "followup" and not prev:   # dayanacak kaynak yok: normal arama
+            r = "notes"
         query, results = None, []
         if r == "meta":
             ans = answer_meta(q)
         elif r == "followup":
-            prev = next((m["sources"] for m in reversed(msgs) if m["role"] == "assistant"), [])
             ans = answer_followup(q, h, prev)
             print(f"[takip: {len(prev)} önceki kaynak]")
             msgs += [{"role": "user", "text": q, "sources": []},

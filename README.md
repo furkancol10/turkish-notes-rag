@@ -165,7 +165,7 @@ Bu yüzden varsayılan `bge-m3` + 512. Tek soru yaklaşık 0.04 hit puanı eder;
 | Ham soru (baseline) | 0.81 | 0.753 |
 | Yoğunlaştırılmış (rewrite) | 0.96 | 0.920 |
 
-Ortalama condense gecikmesi 0.50 sn. Ayrıntı: `eval/followup_results.md`. Not: tablodaki "route doğruluğu" (0.30) yanıltıcıdır; veri setinde "Peki onun bütçesi ne?" gibi sorular `followup` etiketli, oysa router yalnızca önceki cevabın kendisi hakkındaki soruları ("doğru mu?") `followup` sayar, bunlar yeniden yazma + arama ile `notes` yoluna gider.
+Ortalama condense gecikmesi 0.47 sn. Route doğruluğu 30/30 = 1.00 (takip turları, geçmiş varken). Etiket kuralı: `followup` yalnızca önceki cevabın kendisi hakkındaki sorulardır ("doğru mu?", "kısalt", "ilkini açar mısın"); "Peki onun bütçesi ne?" gibi eksiltili sorular yeni arama gerektirdiği için `notes` etiketlidir (yeniden yazma + arama). Ayrıntı: `eval/followup_results.md`. Not: setteki gerçek `followup` turu azdır (5/30), bu yüzden route sayısı router'ın kalıp kapsamı hakkında sınırlı bilgi verir.
 
 ## Bilinen sınırlamalar
 
