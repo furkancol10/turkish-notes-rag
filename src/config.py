@@ -11,7 +11,7 @@ EMBED_MODELS = [
     "trmteb/turkish-embedding-model",
     "BAAI/bge-m3",
 ]
-EMBED_MODEL = EMBED_MODELS[0]  # varsayılan
+EMBED_MODEL = "BAAI/bge-m3"  # varsayılan: 24 soruluk testte en iyi (hit@1 .96, MRR .979, chunk 512)
 # Model kartlarına göre üçü de sorgu/pasaj öneki GEREKTİRMİYOR (bge-m3 kartı: "no instructions").
 # Başka bir model eklersen (ör. e5: "query: " / "passage: ") buraya yaz.
 QUERY_PREFIX = {m: "" for m in EMBED_MODELS}
