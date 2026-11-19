@@ -26,7 +26,8 @@ uv run python -m desktop.main            # yerel pencere (Streamlit'e alternatif
 bash scripts/install_desktop_entry.sh    # uygulama menüsüne kısayol ekler (yol kurulum anında hesaplanır)
 bash scripts/uninstall_desktop_entry.sh  # kısayolu ve ikonu kaldırır
 ```
-Sohbet, kaynakları açılır liste olarak gösterme, not ekleme, yeniden indeksleme, top_k ve backend ayarı.
+Sohbet, kaynakları açılır liste olarak gösterme, not ekleme, yeniden indeksleme.
+Sol panelde sohbet geçmişi (yeni/aç/yeniden adlandır/sil/tümünü sil) bulunur; sohbetler `~/.local/share/kisisel-not-arama/chats/` altında JSON olarak saklanır ve uygulama son sohbeti açarak başlar. top_k ve indeks yöntemi "Ayarlar" penceresinden değişir ve kalıcıdır (`~/.config/kisisel-not-arama/`).
 Ağır işler (model yükleme, indeksleme, LLM) arka planda çalışır; arayüz donmaz. Ollama çalışmalıdır.
 
 ## Kendi notlarını ekleme

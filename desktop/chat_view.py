@@ -1,6 +1,7 @@
 """Sohbet alanı: mesaj balonları, kaynak çipleri, yazıyor göstergesi ve boş durum."""
 import math
 import time
+from types import SimpleNamespace
 
 from PySide6.QtCore import QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QPainter
@@ -279,3 +280,12 @@ class ChatView(QScrollArea):
             if w:
                 w.deleteLater()
         self._empty.show()
+
+    def load_messages(self, messages):
+        """Kayıtlı mesajları (history biçimi) yeniden çizer; kaynaklar açılır/kapanır kalır."""
+        self.clear()
+        for m in messages:
+            res = [(SimpleNamespace(source=s.get("source", ""), heading=s.get("heading", ""),
+                                    page=s.get("page"), text=s.get("text", "")),
+                    float(s.get("score", 0.0))) for s in m.get("sources") or []]
+            self.add(m.get("role", "assistant"), m.get("text", ""), res)

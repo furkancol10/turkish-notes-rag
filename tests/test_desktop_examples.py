@@ -8,6 +8,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 def test_examples_refresh_on_folder_change(tmp_path, monkeypatch):
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "cfg"))
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
     from PySide6.QtWidgets import QApplication
     app = QApplication.instance() or QApplication([])
     from desktop import main as m

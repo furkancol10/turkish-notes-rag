@@ -3,15 +3,16 @@ import sys
 
 from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QDesktopServices
-from PySide6.QtWidgets import (QApplication, QFileDialog, QFrame, QHBoxLayout, QLabel,
-                               QLineEdit, QListWidget, QMainWindow, QMessageBox, QProgressBar,
-                               QPushButton, QRadioButton, QSpinBox, QStyle, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QFileDialog, QFrame, QHBoxLayout, QLineEdit,
+                               QMainWindow, QMessageBox, QPushButton, QWidget, QVBoxLayout)
 
-from src import config, settings
+from src import config, history, settings
 from src.formats import DIALOG_FILTER, LABEL_TEXT, NO_NOTES_MSG
 
 from . import services
 from .chat_view import ChatView
+from .settings_dialog import SettingsDialog
+from .sidebar import Sidebar
 from . import style
 from .workers import Worker
 
@@ -24,11 +25,17 @@ class MainWindow(QMainWindow):
         self._workers = set()   # çalışan iş parçacıklarını canlı tut
         self._busy = 0
         self._model_ready = False
+        self._asking = False
+        self.top_k = settings.get_top_k()
+        self.backend = settings.get_backend()
+        self.cur = history.new_chat("")
         app = QApplication.instance()
         style.apply_font(app)
-        app.setStyleSheet(style.build_stylesheet(app.palette()))
+        app.setStyleSheet(style.build_stylesheet(app.palette())
+                          + style.build_sidebar_stylesheet(app.palette()))
         self._build_ui()
         self.refresh_side()
+        self._restore_last()
         # Embedding modelini arka planda, bir kez yükle
         self.run(services.load_embed_model, self._on_model_loaded, self._on_model_failed,
                  "Embedding modeli yükleniyor...")
@@ -41,92 +48,11 @@ class MainWindow(QMainWindow):
         row = QHBoxLayout(root)
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(0)
-        st = self.style()
-
-        def section(text):
-            lb = QLabel(text.upper())
-            lb.setObjectName("section")
-            return lb
-
-        def flat(text, icon):
-            b = QPushButton(text)
-            b.setIcon(st.standardIcon(icon))
-            b.setCursor(Qt.PointingHandCursor)
-            return b
-
-        # Sol panel
-        side = QVBoxLayout()
-        side.setContentsMargins(16, 16, 16, 16)
-        side.setSpacing(6)
-        title = QLabel("Kişisel Not Arama")
-        title.setObjectName("appTitle")
-        self.folder_label = QLabel()
-        self.folder_label.setObjectName("muted")
-        self.btn_folder = flat("Klasör seç", QStyle.SP_DirIcon)
-        self.btn_sample = flat("Örnek notlara dön", QStyle.SP_ArrowBack)
-        self.notes_toggle = QPushButton()
-        self.notes_toggle.setCursor(Qt.PointingHandCursor)
-        self.notes_open = bool(settings.get("notes_list_open", False))
-        self._notes_count = 0
-        self.notes_list = QListWidget()
-        self.btn_add = flat("Not ekle", QStyle.SP_FileDialogNewFolder)
-        self.btn_open = flat("Notlar klasörünü aç", QStyle.SP_DirOpenIcon)
-        self.btn_reindex = flat("Yeniden indeksle", QStyle.SP_BrowserReload)
-        self.progress = QProgressBar()
-        self.progress.setRange(0, 0)   # belirsiz ilerleme
-        self.progress.setTextVisible(False)
-        self.progress.setVisible(False)
-        self.index_label = QLabel()
-        self.index_label.setObjectName("muted")
-        self.index_label.setWordWrap(True)
-        self.top_k = QSpinBox(minimum=1, maximum=15, value=config.TOP_K)
-        self.rb_numpy, self.rb_chroma = QRadioButton("numpy"), QRadioButton("chroma")
-        (self.rb_chroma if config.INDEX_BACKEND == "chroma" else self.rb_numpy).setChecked(True)
-        self.btn_clear = flat("Sohbeti temizle", QStyle.SP_TrashIcon)
-        side.addWidget(title)
-        side.addWidget(section("Not klasörü"))
-        side.addWidget(self.folder_label)
-        side.addWidget(self.btn_folder)
-        side.addWidget(self.btn_sample)
-        side.addWidget(section("Notlar"))
-        side.addWidget(self.notes_toggle)
-        side.addWidget(self.notes_list)
-        side.addWidget(self.btn_add)
-        side.addWidget(self.btn_open)
-        side.addWidget(section("İndeks"))
-        side.addWidget(self.btn_reindex)
-        side.addWidget(self.progress)
-        side.addWidget(self.index_label)
-        side.addWidget(section("Ayarlar"))
-        side.addWidget(QLabel("Kaç parça getirilsin (top_k)"))
-        self.top_k.setAlignment(Qt.AlignCenter)
-        kr = QHBoxLayout()
-        kr.setSpacing(6)
-        for sym, d in (("\u2212", -1), ("+", 1)):
-            sb = QPushButton(sym)
-            sb.setObjectName("step")
-            sb.setCursor(Qt.PointingHandCursor)
-            sb.setAutoRepeat(True)
-            sb.clicked.connect(lambda _=False, d=d: self.top_k.stepBy(d))
-            kr.addWidget(sb)
-            if d < 0:
-                kr.addWidget(self.top_k, 1)
-        side.addLayout(kr)
-        side.addWidget(QLabel("İndeks yöntemi"))
-        bk = QHBoxLayout()
-        bk.addWidget(self.rb_numpy)
-        bk.addWidget(self.rb_chroma)
-        side.addLayout(bk)
-        side.addWidget(section("Sohbet"))
-        side.addWidget(self.btn_clear)
-        side.addStretch(0)
-        self._side = side
-        self._apply_notes_open()
-        side_w = QWidget()
-        side_w.setObjectName("sidebar")
-        side_w.setLayout(side)
-        side_w.setFixedWidth(290)
-        row.addWidget(side_w)
+        self.side = Sidebar()
+        self.side.setFixedWidth(290)
+        self.side.set_folder_section_open(settings.get_folder_section_open())
+        self.side.set_notes_list_open(bool(settings.get("notes_list_open", False)))
+        row.addWidget(self.side)
 
         # Sohbet
         chat = QVBoxLayout()
@@ -157,13 +83,21 @@ class MainWindow(QMainWindow):
         self.input.returnPressed.connect(self.send)
         self.btn_send.clicked.connect(self.send)
         self.chat.suggestion.connect(self.ask_example)
-        self.btn_add.clicked.connect(self.add_note)
-        self.btn_open.clicked.connect(self.open_folder)
-        self.notes_toggle.clicked.connect(self.toggle_notes)
-        self.btn_folder.clicked.connect(self.choose_folder)
-        self.btn_sample.clicked.connect(self.use_sample)
-        self.btn_reindex.clicked.connect(self.reindex)
-        self.btn_clear.clicked.connect(self.chat.clear)
+        sd = self.side
+        sd.add_note_requested.connect(self.add_note)
+        sd.open_folder_requested.connect(self.open_folder)
+        sd.choose_folder_requested.connect(self.choose_folder)
+        sd.reset_folder_requested.connect(self.use_sample)
+        sd.reindex_requested.connect(self.reindex)
+        sd.new_chat_requested.connect(self.new_chat)
+        sd.chat_selected.connect(self.open_chat)
+        sd.chat_delete_requested.connect(self.delete_chat)
+        sd.chat_rename_requested.connect(self.rename_chat)
+        sd.delete_all_requested.connect(self.delete_all_chats)
+        sd.settings_requested.connect(self.open_settings)
+        sd.notes_list_toggled.connect(lambda v: self._persist(settings.set, "notes_list_open", v))
+        sd.folder_section_toggled.connect(
+            lambda v: self._persist(settings.set_folder_section_open, v))
         self.statusBar().showMessage("Hazır")
 
     def ask_example(self, q):
@@ -171,24 +105,22 @@ class MainWindow(QMainWindow):
             self.input.setText(q)
             self.send()
 
-    def backend(self):
-        return "chroma" if self.rb_chroma.isChecked() else "numpy"
+    @staticmethod
+    def _persist(fn, *args):
+        try:
+            fn(*args)
+        except OSError:
+            pass
 
     def refresh_side(self):
         d = services.notes_dir()
-        full = str(d)
-        fm = self.folder_label.fontMetrics()
-        self.folder_label.setText(fm.elidedText(full, Qt.ElideMiddle, 250))
-        self.folder_label.setToolTip(full)
-        self.btn_sample.setEnabled(not settings.is_default() and not self._busy)
+        self.side.set_folder(str(d), settings.is_default())
         notes = services.list_notes()
         self.chat.set_examples(services.example_questions())
-        self._notes_count = len(notes)
-        self._apply_notes_open()
-        self.notes_list.clear()
-        self.notes_list.addItems(notes)
+        self.side.set_notes(notes)
         problem = services.folder_problem()
         ts = services.index_status()
+        stale = False
         if problem:
             tail = problem
         elif not notes:
@@ -197,36 +129,108 @@ class MainWindow(QMainWindow):
             tail = "Henüz indeks yok. 'Yeniden indeksle'ye bas."
         else:
             tail = f"Son indeksleme: {ts:%Y-%m-%d %H:%M}"
-            if services.notes_changed():
+            stale = services.notes_changed()
+            if stale:
                 tail += "\nNotlar değişti, yeniden indeksle."
-        self.index_label.setText(
-            f"Model: {config.EMBED_MODEL}\nParça boyutu: {config.CHUNK_SIZE} karakter\n" + tail)
+        self.side.set_index_status(tail, stale)
 
-    def _apply_notes_open(self):
-        self.notes_toggle.setText(f"{'▾' if self.notes_open else '▸'} Notlar ({self._notes_count})")
-        self.notes_list.setVisible(self.notes_open)
-        # açıkken liste boşluğu alır; kapalıyken boşluk alttaki esnek aralığa gider
-        n = self._side.count()
-        self._side.setStretchFactor(self.notes_list, 1 if self.notes_open else 0)
-        self._side.setStretch(n - 1, 0 if self.notes_open else 1)
+    # ---------- ayarlar ----------
+    def open_settings(self):
+        info = {"embed_model": config.EMBED_MODEL, "llm_model": config.LLM_MODEL,
+                "chunk_size": f"{config.CHUNK_SIZE} karakter",
+                "num_ctx": config.LLM_OPTIONS.get("num_ctx"),
+                "notes_dir": str(services.notes_dir())}
+        dlg = SettingsDialog(self, top_k=self.top_k, backend=self.backend, info=info)
+        if dlg.exec():
+            v = dlg.values()
+            self.top_k, self.backend = v["top_k"], v["backend"]
+            self._persist(settings.set_top_k, self.top_k)
+            self._persist(settings.set_backend, self.backend)
 
-    def toggle_notes(self):
-        self.notes_open = not self.notes_open
+    # ---------- sohbet geçmişi ----------
+    def _refresh_chats(self):
+        self.side.set_chats(history.list_chats())
+        self.side.set_current_chat(self.cur["id"])
+
+    def _fresh(self):
+        self.cur = history.new_chat(str(services.notes_dir()))
+        self.chat.clear()
+        self.side.set_current_chat(self.cur["id"])
+
+    def new_chat(self):
+        if self._asking:
+            return self.statusBar().showMessage("Cevap bekleniyor...", 3000)
+        self._fresh()
+        self._persist(settings.set_last_chat_id, None)
+
+    def open_chat(self, cid):
+        if self._asking:
+            self.side.set_current_chat(self.cur["id"])
+            return self.statusBar().showMessage("Cevap bekleniyor...", 3000)
+        c = history.load_chat(cid)
+        if c is None:
+            self._refresh_chats()
+            return
+        self.cur = c
+        self.chat.load_messages(c["messages"])
+        self.side.set_current_chat(cid)
+        self._persist(settings.set_last_chat_id, cid)
+
+    def delete_chat(self, cid):
+        if self._asking:
+            return self.statusBar().showMessage("Cevap bekleniyor...", 3000)
+        if QMessageBox.question(self, "Sohbeti sil", "Bu sohbet silinsin mi?") != QMessageBox.Yes:
+            return
+        history.delete_chat(cid)
+        if cid == self.cur["id"]:
+            self._fresh()
+            self._persist(settings.set_last_chat_id, None)
+        self._refresh_chats()
+
+    def delete_all_chats(self):
+        if self._asking:
+            return self.statusBar().showMessage("Cevap bekleniyor...", 3000)
+        if QMessageBox.question(self, "Tümünü sil",
+                                "Tüm sohbetler silinsin mi?") != QMessageBox.Yes:
+            return
+        history.delete_all()
+        self._fresh()
+        self._persist(settings.set_last_chat_id, None)
+        self._refresh_chats()
+
+    def rename_chat(self, cid, title):
+        history.rename_chat(cid, title)
+        if cid == self.cur["id"]:
+            c = history.load_chat(cid)
+            if c:
+                self.cur["title"] = c.get("title", "")
+        self._refresh_chats()
+
+    def _record(self, role, text, sources=None):
+        self.cur["messages"].append({"role": role, "text": text, "sources": sources or []})
         try:
-            settings.set("notes_list_open", self.notes_open)
-        except OSError:
-            pass
-        self._apply_notes_open()
+            history.save_chat(self.cur)
+            settings.set_last_chat_id(self.cur["id"])
+        except (OSError, ValueError):
+            return
+        self._refresh_chats()
+
+    def _restore_last(self):
+        cid = settings.get_last_chat_id()
+        c = history.load_chat(cid) if cid else None
+        if c and c["messages"]:
+            self.cur = c
+            self.chat.load_messages(c["messages"])
+        self._refresh_chats()
 
     # ---------- iş parçacığı yönetimi ----------
     def set_busy(self, delta):
         self._busy += delta
         busy = self._busy > 0
-        for w in (self.btn_send, self.input, self.btn_reindex, self.btn_add,
-                  self.btn_folder, self.btn_sample):
+        for w in (self.btn_send, self.input):
             w.setEnabled(not busy)
+        self.side.set_busy(busy)
         if not busy:
-            self.btn_sample.setEnabled(not settings.is_default())
             self.input.setFocus()
 
     def run(self, fn, on_done, on_fail, message, *args):
@@ -259,17 +263,22 @@ class MainWindow(QMainWindow):
             return
         self.input.clear()
         self.chat.add("user", q)
+        self._record("user", q)
         self.chat.show_typing()
+        self._asking = True
         self.run(services.ask, self._on_answer, self._on_ask_failed,
-                 "Notlarda aranıyor ve cevap üretiliyor...", q, self.top_k.value(), self.backend())
+                 "Notlarda aranıyor ve cevap üretiliyor...", q, self.top_k, self.backend)
 
     def _on_answer(self, res):
         ans, results = res
+        self._asking = False
         self.chat.hide_typing()
         self.chat.add("assistant", ans, results)
+        self._record("assistant", ans, history.sources_from_results(results))
         self.statusBar().showMessage("Cevap hazır", 5000)
 
     def _on_ask_failed(self, e):
+        self._asking = False
         self.chat.hide_typing()
         kind = getattr(e, "kind", "other")
         self.statusBar().showMessage("Hata")
@@ -284,19 +293,16 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Hata", str(e))
 
     def reindex(self):
-        self.progress.setVisible(True)
         self.run(services.reindex, self._on_reindexed, self._on_reindex_failed,
                  "İndeksleniyor (okuma, parçalama, embed)...")
 
     def _on_reindexed(self, res):
-        self.progress.setVisible(False)
         self.refresh_side()
         msg = res.summary()
         self.statusBar().showMessage(msg, 8000)
         QMessageBox.information(self, "İndeksleme bitti", msg)
 
     def _on_reindex_failed(self, e):
-        self.progress.setVisible(False)
         self.statusBar().showMessage("İndeksleme başarısız")
         QMessageBox.critical(self, "İndeksleme başarısız", str(e))
 
