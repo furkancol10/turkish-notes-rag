@@ -181,18 +181,19 @@ Ortalama condense gecikmesi 0.47 sn. Route doğruluğu 30/30 = 1.00 (takip turla
 
 ### Niyet analizi (26 konuşma, 52 tur; ayrıntı ve önce/sonra: `eval/followup_results.md`)
 
-| Metrik | Kural router + condense | analyze |
-|---|---|---|
-| Intent genel | 0.77 | 0.71 |
-| notes / followup / sources / meta | 1.00 / 0.58 / 0.00 / 0.50 | 0.59 / 1.00 / 0.67 / 1.00 |
-| hit@3 / MRR | 0.88 / 0.835 | 0.84 / 0.807 |
-| Gecikme | 0.37 sn | 0.71 sn |
+| Metrik | Kural router + condense | analyze (ilk) | analyze + kapı + prompt |
+|---|---|---|---|
+| Intent genel | 0.77 | 0.71 | 1.00 |
+| notes / followup / sources / meta | 1.00 / 0.58 / 0.00 / 0.50 | 0.59 / 1.00 / 0.67 / 1.00 | 1.00 / 1.00 / 1.00 / 1.00 |
+| Anahtar kelime korunumu | 5/8 | 5/8 | 8/8 |
+| hit@3 / MRR | 0.88 / 0.835 | 0.84 / 0.807 | 0.94 / 0.907 |
+| Gecikme | 0.37 sn | 0.71 sn | 0.44 sn |
 
-`sources` ve `meta` belirgin iyileşti, ama 4B model kısa eksiltili `notes` sorularını sık sık `followup` sanıyor; genel doğruluk ve geri getirme bu ölçümde düştü.
+LLM "followup" dese bile soruda kapalı takip sözcükleri (doğru mu, kısalt, açıkla...) dışında yeni içerik sözcüğü varsa (`router.has_new_content`) niyet `notes` yapılır; kesin followup/sources kalıpları LLM'den önce çalışır. Ayarlamada kullanılmayan 9 turluk held-out sette doğruluk 8/9 (ayarlama öncesi 6/9). Kümeler küçük olduğundan sonuçlar yaklaşıktır.
 
 ## Bilinen sınırlamalar
 
-- **Niyet hatası:** küçük LLM kısa "peki kira?" gibi soruları `followup` sayabilir; o zaman yeni arama yapılmaz ve önceki kaynaklarla cevaplanır.
+- **Niyet hatası:** küçük LLM kimi zaman yanlış sınıflandırabilir; `followup` için yeni-içerik kapısı vardır, ama `notes` yerine `sources`/`meta` seçimi yalnızca kurallar ve prompt ile korunur.
 - **Kaynak cevabı yalnızca bir önceki cevabı kapsar;** atıf yoksa getirilen tüm kaynaklar listelenir.
 
 - **Metadata filtresi yok:** "toplanti_proje_nova.md dosyasında ne yazıyor?" gibi dosya adı verilen sorular yine tüm notlarda aranır, kaynaklar karışabilir.

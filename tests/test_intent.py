@@ -90,3 +90,42 @@ def test_exception_falls_back_never_raises(monkeypatch):
     monkeypatch.setattr(rewriter.ollama, "chat", _chat(None, exc=TimeoutError("x")))
     r = rewriter.analyze("peki gemini?", HIST)
     assert r == {"intent": "notes", "query": "peki gemini?"}
+
+
+# --- followup güvenlik kapısı (yeni içerik sözcüğü) ---
+from src.router import has_new_content  # noqa: E402
+
+ANS = "Atlas'ın teslim tarihi 15 Mart, bütçesi 80 bin TL; ana risk veritabanı geçişi."
+
+
+@pytest.mark.parametrize("q", ["peki kira?", "ya ekip büyüklüğü?", "onun bütçesi ne?", "ya teslim tarihi?",
+                               "çarşamba günü ne kadardı", "network için ne yazmıştım", "Kimler katıldı?",
+                               "peki veritabanı?",  # önceki cevapta geçse de takip işareti yok
+                               "özetle ama Docker'ı da ekle"])
+def test_new_content_detected(q):
+    assert has_new_content(q, ANS)
+
+
+@pytest.mark.parametrize("q", ["doğru mu?", "kısaca anlat", "bunu madde madde yaz", "ilkini açıkla", "özetini çıkar",
+                               "bunu neden böyle sıraladın", "yazdığın şey doğru mu", "Üçüncüsünü anlat.",
+                               "bu geçişi kısalt", "neden veritabanı?"])
+def test_no_new_content(q):
+    assert not has_new_content(q, ANS)
+
+
+def test_guard_flips_llm_followup_to_notes(monkeypatch):
+    monkeypatch.setattr(rewriter.ollama, "chat",
+                        _chat('{"intent":"followup","query":"Re-ranking maliyeti nedir?"}'))
+    assert rewriter.analyze("ya maliyeti?", HIST) == {"intent": "notes", "query": "Re-ranking maliyeti nedir?"}
+
+
+def test_followup_rule_skips_llm(monkeypatch):
+    calls = []
+    monkeypatch.setattr(rewriter.ollama, "chat", _chat('{"intent":"notes","query":"x y z?"}', calls))
+    assert rewriter.analyze("özetini çıkar", HIST) == {"intent": "followup", "query": "özetini çıkar"}
+    assert not calls
+
+
+@pytest.mark.parametrize("q", ["sayfa kaçta", "bunları hangi notta tutmuşum", "kaçıncı sayfada"])
+def test_new_sources_rules(q):
+    assert is_sources(q)

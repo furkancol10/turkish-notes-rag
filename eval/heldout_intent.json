@@ -1,0 +1,17 @@
+[
+ {"history": [["Proje Atlas'ın durumu nedir?", "Atlas'ın teslim tarihi 15 Mart, bütçesi 80 bin TL; ana risk veritabanı geçişi."]],
+  "turns": [
+   {"question": "ya ekip büyüklüğü?", "expected_intent": "notes"},
+   {"question": "kısaca özetler misin", "expected_intent": "followup"},
+   {"question": "bu bilgiyi hangi belgeden aldın", "expected_intent": "sources"}]},
+ {"history": [["Haftalık koşu planım nedir?", "Haftada 3 gün: pazartesi 20 dakika, çarşamba 25 dakika, cumartesi 30 dakika tempolu koşu."]],
+  "turns": [
+   {"question": "peki beslenme?", "expected_intent": "notes"},
+   {"question": "çarşamba günü ne kadardı", "expected_intent": "notes"},
+   {"question": "bunu bir tabloya çevirsene", "expected_intent": "followup"},
+   {"question": "hangi yapay zeka sensin", "expected_intent": "meta"}]},
+ {"history": [["Docker volume nedir?", "Volume, konteyner silinse bile verinin kalıcı olmasını sağlayan depolama alanıdır."]],
+  "turns": [
+   {"question": "network için ne yazmıştım", "expected_intent": "notes"},
+   {"question": "neden kalıcı oluyor?", "expected_intent": "followup"}]}
+]

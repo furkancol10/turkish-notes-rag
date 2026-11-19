@@ -5,7 +5,7 @@ import re
 import ollama
 
 from . import config
-from .router import is_sources, normalize, route
+from .router import has_new_content, is_sources, normalize, route
 
 SYSTEM = (
     "Sohbet geçmişine bakarak son kullanıcı mesajını, geçmişe ihtiyaç duymadan anlaşılan "
@@ -93,17 +93,25 @@ INTENT_SYSTEM = (
     "Sohbet geçmişine bakarak kullanıcının SON mesajının niyetini sınıflandır ve bağımsız bir "
     "Türkçe arama sorusu yaz. Sadece JSON çıkar: {\"intent\": \"...\", \"query\": \"...\"}\n"
     "intent değerleri:\n"
-    "- followup: önceki asistan cevabının kendisi hakkında (doğru mu, kısalt, ilkini açıkla, neden, tabloya dök).\n"
-    "- sources: önceki cevabın HANGİ dosya/sayfa/kaynaktan geldiğini soruyor.\n"
-    "- notes: notlarda yeni arama gerektiriyor; eksiltili devam soruları dahil (peki teslim tarihi?). "
-    "Konu başka bir dosyada/raporda aranıyorsa da notes.\n"
+    "- followup: SADECE önceki asistan cevabının kendisi hakkında ve yeni bilgi gerektirmeden o cevaptan "
+    "yanıtlanır (doğru mu, emin misin, kısalt, özetle, madde madde yaz, ilkini açıkla, neden böyle).\n"
+    "- sources: önceki cevabın HANGİ dosya/sayfa/nottan geldiğini soruyor.\n"
+    "- notes: notlarda YENİ bilgi aramak gerekiyor. Yeni bir konu/ayrıntı/kişi/sayı soran her mesaj notes'tur; "
+    "kısa ve eksiltili olsa da (peki kira?, ya teslim tarihi?, onun bütçesi ne?, kimler katıldı?). "
+    "Mesajda önceki cevapta olmayan bir konu sözcüğü varsa notes. \"Başka hangi raporda/notta geçiyor?\" da notes.\n"
     "- meta: asistanın kendisi hakkında (kimsin, hangi modelsin, teşekkür).\n"
-    "query: geçmişe ihtiyaç duymayan tek soru; zamirleri aç ve kullanıcının NİYETİNİ KORU "
-    "(\"hangi dosyada\" soruyorsa soruda kalsın). Cevaplama. followup/meta için query = son mesaj.\n"
+    "Şüphede notes seç.\n"
+    "query: geçmişe ihtiyaç duymayan tek soru. Zamirleri ve eksik özneyi geçmişten aç; kullanıcının kendi "
+    "anahtar sözcüklerini ve soru kalıbını (\"hangi dosyada\", \"başka hangi notta\") AYNEN koru, konuyu değiştirme. "
+    "Cevaplama. followup/meta için query = son mesaj.\n"
     "Örnekler (geçmiş: Re-ranking anlatıldı):\n"
     "\"hangi dosyada bundan bahsetmiş\" -> {\"intent\":\"sources\",\"query\":\"Re-ranking hangi dosyada geçiyor?\"}\n"
-    "\"başka hangi raporda geçiyor?\" -> {\"intent\":\"notes\",\"query\":\"Re-ranking hangi raporlarda geçiyor?\"}\n"
+    "\"başka hangi notta chunk geçiyor\" -> {\"intent\":\"notes\",\"query\":\"Re-ranking ve chunk başka hangi notta geçiyor?\"}\n"
     "\"peki gemini?\" -> {\"intent\":\"notes\",\"query\":\"Gemini raporu Re-ranking için ne önermiş?\"}\n"
+    "\"ya maliyeti?\" -> {\"intent\":\"notes\",\"query\":\"Re-ranking maliyeti nedir?\"}\n"
+    "\"hangi araçlarla yapılıyor\" -> {\"intent\":\"notes\",\"query\":\"Re-ranking hangi araçlarla yapılıyor?\"}\n"
+    "\"kısaca anlat\" -> {\"intent\":\"followup\",\"query\":\"kısaca anlat\"}\n"
+    "\"özetini çıkar\" -> {\"intent\":\"followup\",\"query\":\"özetini çıkar\"}\n"
     "\"doğru mu?\" -> {\"intent\":\"followup\",\"query\":\"doğru mu?\"}\n"
     "\"kimsin sen\" -> {\"intent\":\"meta\",\"query\":\"kimsin sen\"}"
 )
@@ -129,6 +137,10 @@ def _parse(text: str) -> dict | None:
     return {"intent": intent, "query": query}
 
 
+def _last_answer(history: list[dict]) -> str:
+    return next((m["content"] for m in reversed(history) if m.get("role") == "assistant"), "")
+
+
 def _fallback(question: str, history: list[dict]) -> dict:
     return {"intent": route(question, True), "query": condense(question, history)}
 
@@ -143,6 +155,8 @@ def analyze(question: str, history: list[dict]) -> dict:
             return {"intent": "meta", "query": question}
         if is_sources(question):
             return {"intent": "sources", "query": question}
+        if route(question, True) == "followup":  # kesin kural kalıpları LLM'den önce
+            return {"intent": "followup", "query": question}
         convo = "\n".join(
             f"{'Kullanıcı' if m['role'] == 'user' else 'Asistan'}: {m['content']}" for m in history)
         resp = ollama.chat(
@@ -155,9 +169,11 @@ def analyze(question: str, history: list[dict]) -> dict:
         out = _parse(resp["message"]["content"])
         if out is None:
             return _fallback(question, history)
-        if out["intent"] in ("followup", "meta"):
+        if out["intent"] == "followup" and has_new_content(question, _last_answer(history)):
+            out["intent"] = "notes"  # yeni içerik sözcüğü var: önceki cevaptan yanıtlanamaz
+        if not _valid(out["query"], question):
             out["query"] = question
-        elif not _valid(out["query"], question):
+        if out["intent"] in ("followup", "meta"):
             out["query"] = question
         return out
     except Exception:

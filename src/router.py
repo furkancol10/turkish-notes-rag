@@ -64,13 +64,14 @@ def normalize(text: str) -> str:
 _ORD = r"(\d+|ilk|ikinci|ucuncu|dorduncu|besinci|son|birinci)"
 _FOLLOWUP = [
     # doğruluk / güven
-    r"(bu |bunlar |bundan |cevabindan |cevabin )?(dogru mu|dogru musun|emin misin|emin misiniz|kesin mi|kesin misin|gercekten mi|dogru degil mi|yanlis degil mi|yanlis mi|hatali mi|yanlis olmasin)( bu| sen)?",
+    r"(bu |bunlar |bundan |cevabindan |cevabin )?(dogru mu|dogru musun|emin misin|emin misiniz|kesin mi|kesin misin|gercekten mi|dogru degil mi|yanlis degil mi|yanlis mi|hatali mi|yanlis olmasin)( bu| sen| bundan| bunu)?",
     r"(bundan|bunun|cevabindan) (emin misin|dogru mu)",
     # biçim değiştirme
     r"(daha )?(kisa|kisaca|ozet|basit|sade|net|detayli|uzun)( (anlat|yaz|olur mu|olsun|ifade et|soyle|cevapla|anlatir misin|yazar misin))?",
     r"(bunu |cevabi |onu )?(kisalt|ozetle|ozetler misin|ozetle bakalim|sadelestir|basitlestir|tekrar yaz|yeniden yaz|tekrar anlat|baska turlu anlat)( misin)?",
     r"(bunu |onu |cevabi )?(madde madde|maddeler halinde|liste halinde|tablo halinde|tablo seklinde|liste yap|tablo yap|tabloya dok|listele)( (yaz|anlat|yap|goster|ver|yazar misin))?( misin)?",
     r"(bunu |onu |cevabi )?(kisa bir |kisa |kisaca )?(liste|tablo|madde) (yap|yaz|haline getir)( misin)?",
+    r"(bunun |onun |cevabin |cevabi )?(ozet|ozeti|ozetini|ozetini) (cikar|cikar misin|cikarir misin|yap|yaz|ver)",
     r"(bunu |onu )?(basitce|sade bir dille|kisaca|ozetle) (anlat|acikla|yaz)( misin)?",
     r"(bunu )?(turkceye|ingilizceye) (cevir|cevirir misin)",
     # bir kısmı açma
@@ -94,13 +95,14 @@ _FOLLOWUP_RE = [re.compile(p) for p in _FOLLOWUP]
 # ("toplantı notları hangi dosyada var") sorular LLM sınıflandırıcısına bırakılır.
 _SRC_NOUN = r"(dosya|dosyada|dosyda|dosyadan|dosyadaydi|not|notta|nottan|notlarda|notlardan|belge|belgede|belgeden|rapor|raporda|raporlarda|rapordan|sayfa|sayfada|sayfadan|pdf|pdfte|pdfde|kaynak|kaynakta|kaynaktan|yerde|yerden)"
 _SRC_THIS = r"(bu|bunu|bunlari|bundan|bunun|onu|ondan|bu konu|bu konuyu|bu konudan|bu bilgi|bu bilgiyi|bu bilgiden|bu cevap|bu cevabi)"
-_SRC_VERB = r"(bahsetmis|bahsediyor|bahseder|bahsedilmis|geciyor|gecer|gecmis|yaziyor|yazmis|yaziyordu|var|vardi|anlatiyor|anlatmis|anlatilmis|belirtmis|belirtiliyor|yer aliyor|ifade ediliyor|soyluyor|soylenmis|mevcut|aciklanmis|aciklaniyor)"
+_SRC_VERB = r"(bahsetmis|bahsediyor|bahseder|bahsedilmis|geciyor|gecer|gecmis|yaziyor|yazmis|yaziyordu|var|vardi|anlatiyor|anlatmis|anlatilmis|belirtmis|belirtiliyor|yer aliyor|ifade ediliyor|soyluyor|soylenmis|mevcut|aciklanmis|aciklaniyor|tutmus|tutmusum|tuttum|yazmisim|yazdim|kaydetmis|kaydetmisim|saklamisim|almisim|notlamisim|tutuyorum|kaydetmistim|yazmistim)"
 _SOURCES = [
     rf"(peki |ya |bu |bunlar |bunu )?(hangi|ne) {_SRC_NOUN}( {_SRC_THIS})?( {_SRC_VERB})?( {_SRC_THIS})?( mu| mi)?",
     rf"(peki |ya )?{_SRC_THIS} (hangi|ne) {_SRC_NOUN}( {_SRC_VERB})?( mu| mi)?",
     rf"(peki |ya )?(hangi|ne) {_SRC_NOUN} (icinde|icerisinde|icin)( {_SRC_THIS})?( {_SRC_VERB})?",
     # kaynağın ne / kaynaklar neler
     r"(peki |ya )?(bunun |bunlarin |cevabin |cevabinin )?(kaynagin|kaynak|kaynaklarin|kaynaklar|kaynagini|kaynaklari|kaynagi)( ne| neydi| nedir| neler| nerede| nelerdi| neresi| hangisi| hangileri| goster| ver)( misin)?",
+    r"(peki |ya )?(bu |bunun )?(sayfa|sayfasi) (kacta|kac|numarasi kac|kacinci)|(peki |ya )?kacinci sayfa(da)?",
     r"(kaynak|kaynaklar|dosya|dosyalar|dosya adi) (goster|ver|goster bana|listele|neler)",
     # nereden buldun
     r"(bunu |bu bilgiyi |bu cevabi |onu )?(nereden|nerden|neresinden|nereden aldin) ?(buldun|aldin|cikardin|biliyorsun|ogrendin|geldi|geliyor|aldin bunu|buldun bunu)?",
@@ -132,3 +134,48 @@ def route(question: str, has_history: bool = False) -> str:
     if has_history and is_sources(question):
         return "sources"
     return "notes"
+
+
+# --- Takip güvenlik kapısı: LLM "followup" derse de soruda YENİ içerik sözcüğü varsa notlara git ---
+# Yanlışlıkla followup = arama yok = en pahalı hata; bu yüzden kapalı bir sözcük kümesi dışındaki her
+# sözcük "yeni bilgi ihtiyacı" sayılır. İstisna: soruda açık bir takip işareti (doğru mu, kısalt, açıkla,
+# neden, madde madde...) varsa ve kalan sözcükler önceki cevapta geçiyorsa (>=5 harflik önek) followup kalır.
+_FU_FUNC = {
+    "bu", "bunu", "bunun", "bunlar", "bunlari", "bundan", "buna", "su", "sunu", "sunun", "o", "onu", "onun",
+    "onlar", "onlari", "ondan", "ona", "peki", "yani", "tamam", "ne", "mi", "mu", "misin", "musun", "misiniz",
+    "midir", "mudur", "ve", "ile", "de", "da", "ki", "bir", "biraz", "daha", "cok", "biraz", "bana", "bize",
+    "sen", "siz", "ben", "bi", "boyle", "oyle", "sey", "seyi", "olarak", "halinde", "seklinde", "sekilde",
+    "olur", "olsun", "olabilir", "oluyor", "oldu", "olmus", "edilir", "eder", "ediyor", "yapar", "yap",
+    "ver", "goster", "soyle", "cevap", "cevabi", "cevabin", "cevabini", "yazdigin", "soyledigin", "dedigin",
+    "verdigin", "siraladin", "yaptin", "buldun", "yazar", "yaz", "ac", "acar", "sana", "benim", "bence",
+    "icin", "gore", "kismi", "kismini", "kisim", "maddeyi", "maddesi", "maddeleri", "hakkinda", "tekrar",
+    "cikar", "cikarir", "yeniden", "sonra", "once", "gibi", "mesela", "lutfen", "misin", "sunlari", "bunlari", "hepsini",
+}
+_FU_CUE = re.compile(
+    r"^(dogru|kesin|gercek|yanlis|hatali|neden|niye|nicin|kisalt|kisa|ozet|acikla|anlat|madde|liste|tablo|"
+    r"detay|ayrinti|sirala|cevir|sade|basit|genislet|devam|ilk|ikinci|ucuncu|dorduncu|besinci|birinci|sonuncu|"
+    r"turkce|ingilizce|tekrar|uzun)")
+_FU_CUE_EXACT = {"emin", "ac", "acar", "yaz", "yazar", "son"}
+_FU_FUNC_RE = re.compile(r"^(\d+|ilk|ikinci|ucuncu|dorduncu|besinci|birinci|sonuncu)\w*$")
+
+
+def _words(text: str) -> list[str]:
+    return [w for w in normalize(text).split() if w]
+
+
+def has_new_content(question: str, previous_answer: str = "") -> bool:
+    """Soruda 'followup'ı geçersiz kılacak yeni içerik sözcüğü var mı? (True -> notlarda ara)"""
+    words = _words(question)
+    cue = any(_FU_CUE.match(w) or w in _FU_CUE_EXACT for w in words)
+    ans = _words(previous_answer)
+    new = []
+    for w in words:
+        if w in _FU_FUNC or _FU_FUNC_RE.match(w) or _FU_CUE.match(w) or len(w) < 3:
+            continue
+        new.append(w)
+    if not new:
+        return False
+    if not cue:
+        return True
+    # Takip işareti var: kalan sözcüklerin hepsi önceki cevapta geçiyorsa yeni bilgi değildir.
+    return not all(len(w) >= 5 and any(a[:5] == w[:5] for a in ans if len(a) >= 5) for w in new)

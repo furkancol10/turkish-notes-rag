@@ -19,7 +19,7 @@ try:
 except Exception:
     condense = None
 try:
-    from src.router import route
+    from src.router import normalize, route
     route("test", True)
 except Exception as e:
     route = None
@@ -81,7 +81,7 @@ for conv in convs:
             if exp == "notes":
                 if t.get("query_keyword"):
                     kw_n += 1
-                    kw_ok += t["query_keyword"].lower() in aq.lower()
+                    kw_ok += normalize(t["query_keyword"]) in normalize(aq)  # Python lower() "İ"yi bozar
                 if t["expected_source"]:
                     raw_ranks.append(rank_of(q, t["expected_source"]))
                     rew_ranks.append(rank_of(aq, t["expected_source"]))
