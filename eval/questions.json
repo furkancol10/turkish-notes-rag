@@ -1,0 +1,14 @@
+[
+ {"q": "Mercimek çorbası kaç dakika kaynatılır?", "source": "tarif_mercimek_corbasi.md"},
+ {"q": "İkili arama ağacında arama ortalama kaç sürede yapılır?", "source": "ders_veri_yapilari.md"},
+ {"q": "Alışkanlık döngüsünün dört aşaması nedir?", "source": "kitap_atomic_habits.md"},
+ {"q": "Docker konteynerinin portunu dışarı açmak için hangi bayrak kullanılır?", "source": "teknik_docker.md"},
+ {"q": "Kapadokya balon turu saat kaçta ve ne kadar?", "source": "seyahat_kapadokya.md"},
+ {"q": "Son commit mesajını nasıl değiştiririm?", "source": "teknik_git.md"},
+ {"q": "Fotosentez hücrenin hangi organelinde gerçekleşir?", "source": "ders_biyoloji_fotosentez.md"},
+ {"q": "Proje Atlas'ın teslim tarihi ne zaman?", "source": "toplanti_proje_atlas.md"},
+ {"q": "Kürk Mantolu Madonna'da ana karakterin adı ne?", "source": "kitap_kurk_mantolu_madonna.md"},
+ {"q": "Aylık tasarruf hedefim ne kadar?", "source": "kisisel_butce.md"},
+ {"q": "Eyfel Kulesi kaç metre yüksekliğinde?", "source": null},
+ {"q": "Bitcoin'in tarihteki en yüksek fiyatı neydi?", "source": null}
+]
