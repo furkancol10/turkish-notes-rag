@@ -1,0 +1,240 @@
+[
+ {
+  "id": "a11",
+  "q": "Geniş gezinme algoritması hangi veri yapısıyla yapılır?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "ders_veri_yapilari.md"
+ },
+ {
+  "id": "a04",
+  "q": "Karbon vergisi hangi kavrama örnek gösterilmişti?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "ders_ekonomi_arz_talep.md"
+ },
+ {
+  "id": "a33",
+  "q": "Kırmızı mercimek çorbasının üzerine ne gezdiriyorum?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "tarif_mercimek_corbasi.md"
+ },
+ {
+  "id": "a05",
+  "q": "Yabancı kelimeleri hangi aralıklarla tekrar ediyorum?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "ders_ingilizce_kelimeler.md"
+ },
+ {
+  "id": "a25",
+  "q": "Yetişkinler kaç saat uyumalı ve kafeini kaçtan sonra kesmeli?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "saglik_uyku.md"
+ },
+ {
+  "id": "a29",
+  "q": "Kapadokya'da yeraltı şehri hangisiydi?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "seyahat_kapadokya.md"
+ },
+ {
+  "id": "a10",
+  "q": "Veri yapıları vizesi hangi tarihte?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "ders_veri_yapilari.md"
+ },
+ {
+  "id": "a40",
+  "q": "Proje Atlas'ın haftalık durum toplantısı hangi gün ve saatte?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "toplanti_proje_atlas.md"
+ },
+ {
+  "id": "a38",
+  "q": "LEFT JOIN eşleşme bulamazsa sağ taraf ne olur?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "teknik_sql_join.md"
+ },
+ {
+  "id": "a16",
+  "q": "Aylık kira ödemem ne kadar?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "kisisel_butce.md"
+ },
+ {
+  "id": "a26",
+  "q": "Yatak odası sıcaklığı kaç derece olmalı?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "saglik_uyku.md"
+ },
+ {
+  "id": "a08",
+  "q": "İki matrisin çarpımının boyutu nasıl çıkar?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "ders_lineer_cebir.md"
+ },
+ {
+  "id": "a41",
+  "q": "Proje Nova'da tasarım tarafındaki ana risk neydi?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "toplanti_proje_nova.md"
+ },
+ {
+  "id": "a15",
+  "q": "Nolan'ın rüya filminde final sahnesinde ne belirsiz kalıyor?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "film_inception.md"
+ },
+ {
+  "id": "a02",
+  "q": "Calvin döngüsü hücrenin neresinde işliyor?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "ders_biyoloji_fotosentez.md"
+ },
+ {
+  "id": "a31",
+  "q": "Baklava şerbeti için hangi malzemeler ve ne kadar kaynatma süresi?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "tarif_baklava.md"
+ },
+ {
+  "id": "off10",
+  "q": "Ay'a ilk insan ne zaman indi?",
+  "answerable": false,
+  "category": "off-topic",
+  "expected_source": null
+ },
+ {
+  "id": "off13",
+  "q": "Euro bugün kaç lira?",
+  "answerable": false,
+  "category": "off-topic",
+  "expected_source": null
+ },
+ {
+  "id": "off06",
+  "q": "Yarın İstanbul'da hava nasıl olacak?",
+  "answerable": false,
+  "category": "off-topic",
+  "expected_source": null
+ },
+ {
+  "id": "off08",
+  "q": "Japonya'nın nüfusu kaç?",
+  "answerable": false,
+  "category": "off-topic",
+  "expected_source": null
+ },
+ {
+  "id": "off07",
+  "q": "Mona Lisa'yı kim yaptı?",
+  "answerable": false,
+  "category": "off-topic",
+  "expected_source": null
+ },
+ {
+  "id": "off05",
+  "q": "Işığın boşluktaki hızı saniyede kaç kilometredir?",
+  "answerable": false,
+  "category": "off-topic",
+  "expected_source": null
+ },
+ {
+  "id": "nea09",
+  "q": "İstanbul gezisinde hangi otelde kalmıştım?",
+  "answerable": false,
+  "category": "near-miss",
+  "expected_source": null
+ },
+ {
+  "id": "nea07",
+  "q": "Git'te rebase ile merge farkını nasıl not almıştım?",
+  "answerable": false,
+  "category": "near-miss",
+  "expected_source": null
+ },
+ {
+  "id": "nea13",
+  "q": "Makine öğrenmesinde sinir ağı katman sayısını nasıl seçiyorum?",
+  "answerable": false,
+  "category": "near-miss",
+  "expected_source": null
+ },
+ {
+  "id": "nea11",
+  "q": "Atomic Habits'te alışkanlık takibi için hangi uygulamayı önermiş?",
+  "answerable": false,
+  "category": "near-miss",
+  "expected_source": null
+ },
+ {
+  "id": "nea05",
+  "q": "Pilav tarifim var mı, kaç ölçü su koyuyorum?",
+  "answerable": false,
+  "category": "near-miss",
+  "expected_source": null
+ },
+ {
+  "id": "nea01",
+  "q": "Proje Nova'nın aylık kirası ne kadar?",
+  "answerable": false,
+  "category": "near-miss",
+  "expected_source": null
+ },
+ {
+  "id": "ent14",
+  "q": "İstanbul gezisinde balon turu kaç euro?",
+  "answerable": false,
+  "category": "entity-swap",
+  "expected_source": null
+ },
+ {
+  "id": "ent10",
+  "q": "Sapiens'te günlük meditasyondan bahsediliyor mu, kaç saat?",
+  "answerable": false,
+  "category": "entity-swap",
+  "expected_source": null
+ },
+ {
+  "id": "ent09",
+  "q": "Homo Deus'ta hangi dört beceri öğretilmeli deniyor?",
+  "answerable": false,
+  "category": "entity-swap",
+  "expected_source": null
+ },
+ {
+  "id": "ent03",
+  "q": "Proje Atlas'ın ana riski nedir?",
+  "answerable": false,
+  "category": "entity-swap",
+  "expected_source": null
+ },
+ {
+  "id": "ent06",
+  "q": "Kapadokya'a hızlı trenle ne kadar sürede gidilir?",
+  "answerable": false,
+  "category": "entity-swap",
+  "expected_source": null
+ },
+ {
+  "id": "ent12",
+  "q": "Mercimek çorbası kaç derece fırında pişer?",
+  "answerable": false,
+  "category": "entity-swap",
+  "expected_source": null
+ }
+]
