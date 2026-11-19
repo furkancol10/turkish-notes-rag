@@ -35,7 +35,7 @@ class MainWindow(QMainWindow):
                           + style.build_sidebar_stylesheet(app.palette()))
         self._build_ui()
         self.refresh_side()
-        self._restore_last()
+        self._start_fresh()
         # Embedding modelini arka planda, bir kez yükle
         self.run(services.load_embed_model, self._on_model_loaded, self._on_model_failed,
                  "Embedding modeli yükleniyor...")
@@ -216,12 +216,9 @@ class MainWindow(QMainWindow):
             return
         self._refresh_chats()
 
-    def _restore_last(self):
-        cid = settings.get_last_chat_id()
-        c = history.load_chat(cid) if cid else None
-        if c and c["messages"]:
-            self.cur = c
-            self.chat.load_messages(c["messages"])
+    def _start_fresh(self):
+        # Açılışta her zaman boş yeni sohbet; ilk mesaj gelene kadar kaydedilmez.
+        # Eski sohbetler soldaki listeden açılır.
         self._refresh_chats()
 
     # ---------- iş parçacığı yönetimi ----------

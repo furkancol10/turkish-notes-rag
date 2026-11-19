@@ -42,7 +42,7 @@ def ask(w, wait, q):
     wait(w)
 
 
-def test_ask_saved_restart_restores(env):
+def test_ask_saved_restart_starts_fresh(env):
     make, wait, _ = env
     from src import history, settings
     w = make()
@@ -56,10 +56,18 @@ def test_ask_saved_restart_restores(env):
     assert c["messages"][1]["text"] == "cevap:Merhaba nedir:7:chroma"
     assert c["messages"][1]["sources"][0]["page"] == 3
     assert settings.get_last_chat_id() == c["id"]
+    # Yeniden açılış: boş yeni sohbetle başlar, eski sohbet listede durur ve açılabilir
     w2 = make()
     wait(w2)
+    assert w2.cur["id"] != c["id"] and not w2.cur["messages"]
+    assert [x["id"] for x in history.list_chats()] == [c["id"]]
+    w2.open_chat(c["id"])
     assert w2.cur["id"] == c["id"]
     assert w2.chat._lay.count() > 2
+    # Hiç mesaj yazılmadan kapatılan yeni sohbet kaydedilmez
+    w3 = make()
+    wait(w3)
+    assert len(history.list_chats()) == 1
 
 
 def test_empty_chat_not_saved_and_new_chat(env):
