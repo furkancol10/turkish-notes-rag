@@ -20,6 +20,14 @@ uv run streamlit run app.py                     # sohbet arayüzü (not yükleme
 uv run python -m eval.run_eval                  # chunk boyutu ve model karşılaştırması -> eval/results.md
 ```
 
+## Masaüstü uygulaması (PySide6)
+```bash
+uv run python -m desktop.main            # yerel pencere (Streamlit'e alternatif)
+bash scripts/install_desktop_entry.sh    # uygulama menüsüne kısayol ekler (yol kurulum anında hesaplanır)
+```
+Sohbet, kaynakları açılır liste olarak gösterme, not ekleme, yeniden indeksleme, top_k ve backend ayarı.
+Ağır işler (model yükleme, indeksleme, LLM) arka planda çalışır; arayüz donmaz. Ollama çalışmalıdır.
+
 ## Kendi notlarını ekleme
 `.md` veya `.txt` (UTF-8) dosyalarını `data/notes/` içine koy (örnekleri silebilirsin), sonra yeniden `index` çalıştır.
 Başlıklar (`# `, `## `) kaynak gösterirken kullanılır, bu yüzden notları başlıkla yapılandırmak yardımcı olur.
