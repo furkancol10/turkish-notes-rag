@@ -150,3 +150,46 @@ def test_dedupe_word_order_matters():
     assert len(dedupe(r)) == 2
     r = [(Chunk("1", "a.md", "", base), 1), (Chunk("2", "b.md", "", base), 1)]
     assert len(dedupe(r)) == 1
+
+
+# --- common nouns never filter on their own; only specific references do ---
+FULL = ["kisisel_butce.md", "film_inception.md", "ders_veri_yapilari.md", "spor_kosu_programi.md",
+        "kitap_homo_deus.md", "kitap_sapiens.md", "kitap_21_ders.md", "toplanti_proje_nova.md",
+        "toplanti_proje_atlas.md", "gptRag.pdf", "geminiRapor.pdf", "tarif_menemen.md", "saglik_uyku.md",
+        "seyahat_istanbul.md", "teknik_docker.md"]
+FTITLES = {"kisisel_butce.md": "Kişisel Bütçe", "film_inception.md": "Film Notu: Inception",
+           "ders_veri_yapilari.md": "Veri Yapıları Ders Notları", "spor_kosu_programi.md": "Koşu Programı",
+           "kitap_homo_deus.md": "Kitap Özeti: Homo Deus", "kitap_sapiens.md": "Kitap Özeti: Sapiens",
+           "kitap_21_ders.md": "Kitap Özeti: 21. Yüzyıl İçin 21 Ders", "toplanti_proje_nova.md": "Toplantı: Proje Nova",
+           "toplanti_proje_atlas.md": "Toplantı Notu: Proje Atlas", "saglik_uyku.md": "Uyku Düzeni"}
+FCAT = build_catalog(FULL, FTITLES)
+
+
+@pytest.mark.parametrize("q", [
+    "Aylık gider planı nasıl yapılır, bütçe için ipucu?",
+    "Akşam film izlerken ne atıştırılır?",
+    "Veri bilimi için hangi araçlar lazım?",
+    "Sabah mı akşam mı spor yapmalı?",
+    "Uyku kaç saat olmalı?",
+    "İyi bir program nasıl hazırlanır?",
+])
+def test_common_noun_questions_not_filtered(q):
+    assert detect(q, FCAT) is None
+
+
+@pytest.mark.parametrize("q,exp", [
+    ("Inception filminin konusu ne?", ["film_inception.md"]),
+    ("Homo Deus'ta ne anlatılıyor", ["kitap_homo_deus.md"]),
+    ("Sapiens'te tarım devrimi nedir", ["kitap_sapiens.md"]),
+    ("kisisel_butce.md dosyasında kira", ["kisisel_butce.md"]),
+    ("Proje Nova bütçesi", ["toplanti_proje_nova.md"]),
+    ("chatgpt hangi projeleri önermiş", ["gptRag.pdf"]),
+    ("Sapiens ile Homo Deus'u karşılaştır", ["kitap_homo_deus.md", "kitap_sapiens.md"]),
+])
+def test_specific_references_still_filter(q, exp):
+    assert detect(q, FCAT) == exp
+
+
+def test_numbered_title_phrase_filters():
+    assert detect("21 Ders'te meditasyon nasıl anlatılıyor", FCAT) == ["kitap_21_ders.md"]
+    assert detect("Ders notlarım nerede", FCAT) is None
