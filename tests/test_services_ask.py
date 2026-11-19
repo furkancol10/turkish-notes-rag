@@ -4,6 +4,7 @@ from types import SimpleNamespace
 import pytest
 
 from desktop import services
+from src import qa
 from src import conversation
 
 CH = SimpleNamespace(id="a.md#0", source="a.md", heading="H", page=0, text="Bütçe 450 bin TL")
@@ -19,32 +20,32 @@ def route_(q, h):
 
 
 def set_an(monkeypatch, intent, query=None):
-    monkeypatch.setattr(services, "analyze", lambda q, h: {"intent": intent, "query": query or q})
+    monkeypatch.setattr(qa, "analyze", lambda q, h: {"intent": intent, "query": query or q})
 
 
 @pytest.fixture
 def calls(monkeypatch):
     c = {}
     monkeypatch.setattr(services.config, "ENTITY_GUARD_ENABLED", False)   # koruma tests/test_entities.py'de
-    monkeypatch.setattr(services, "load_embed_model", lambda: None)
-    monkeypatch.setattr(services, "index_status", lambda: object())
-    monkeypatch.setattr(services, "answer_meta", lambda q: "meta")
+    monkeypatch.setattr(qa, "load_embed_model", lambda: None)
+    monkeypatch.setattr(qa, "index_status", lambda: object())
+    monkeypatch.setattr(qa, "answer_meta", lambda q: "meta")
 
     def fu(q, h, s):
         c["fu"] = (q, h, s)
         return "takip"
-    monkeypatch.setattr(services, "answer_followup", fu)
-    monkeypatch.setattr(services, "analyze", lambda q, h: c.setdefault("an", {"intent": route_(q, h), "query": q}))
+    monkeypatch.setattr(qa, "answer_followup", fu)
+    monkeypatch.setattr(qa, "analyze", lambda q, h: c.setdefault("an", {"intent": route_(q, h), "query": q}))
 
     def ret(q, k, backend):
         c["ret"] = q
         return [(CH, 0.8)]
-    monkeypatch.setattr(services, "retrieve", ret)
+    monkeypatch.setattr(qa, "retrieve", ret)
 
     def ans(q, results, history=None):
         c["ans"] = (q, results, history)
         return "cevap"
-    monkeypatch.setattr(services, "answer", ans)
+    monkeypatch.setattr(qa, "answer", ans)
     return c
 
 
@@ -89,7 +90,7 @@ def test_budget_respected(calls, monkeypatch):
 def test_ask_error_kinds(calls, monkeypatch):
     def boom(*a, **k):
         raise ConnectionError("connect")
-    monkeypatch.setattr(services, "answer", boom)
+    monkeypatch.setattr(qa, "answer", boom)
     with pytest.raises(services.AskError) as e:
         services.ask("soru", 5, "numpy", [])
     assert e.value.kind == "ollama"
@@ -202,7 +203,7 @@ def test_notes_prompt_has_entity_rule():
 
 # ---- skor eşiği ----
 def low(calls, monkeypatch, score):
-    monkeypatch.setattr(services, "retrieve", lambda q, k, backend: [(CH, score)])
+    monkeypatch.setattr(qa, "retrieve", lambda q, k, backend: [(CH, score)])
 
 
 def test_below_threshold_skips_llm(calls, monkeypatch):

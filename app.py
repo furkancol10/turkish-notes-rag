@@ -4,8 +4,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from src import config, history, settings
-from desktop import services
+from src import config, qa, settings
 from src.embedder import get_model
 from src.formats import LABEL_TEXT, NO_NOTES_MSG, UPLOAD_TYPES
 from src.index import index_name
@@ -141,8 +140,9 @@ if q := st.chat_input("Notlarına bir soru sor"):
     with st.chat_message("assistant"):
         try:
             with st.spinner("Notlarda aranıyor ve cevap üretiliyor..."):
-                ans, results, info = services.ask(q, top_k, backend, prior, th, th_on)
-        except services.AskError as e:
+                ans, results, info = qa.ask(q, top_k=top_k, backend=backend, prior_messages=prior,
+                                      threshold=th, threshold_enabled=th_on)
+        except qa.AskError as e:
             if e.kind == "index":
                 st.error("İndeks bulunamadı. Soldan 'Yeniden indeksle'ye bas.")
             elif e.kind == "ollama":
@@ -151,13 +151,6 @@ if q := st.chat_input("Notlarına bir soru sor"):
             else:
                 st.error(str(e))
             st.stop()
-        query = info.get("query")
-        msg = {"role": "assistant", "text": ans, "sources": history.sources_from_results(results),
-               "intent": info.get("intent", "notes")}
-        for k in ("below_threshold", "top_score", "threshold", "note"):
-            if k in info:
-                msg[k] = info[k]
-        if query and query != q:
-            msg["query"] = query
+        msg = qa.assistant_message(q, ans, results, info)
         show_msg(msg)
     st.session_state.msgs.append(msg)

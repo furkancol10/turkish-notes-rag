@@ -3,6 +3,7 @@ from types import SimpleNamespace
 import pytest
 
 from desktop import services
+from src import qa
 from src import config, entities
 from src.entities import extract, missing, present
 
@@ -59,23 +60,23 @@ CH = SimpleNamespace(id="a#0", source="a.md", heading="H", page=0, text="Proje N
 @pytest.fixture
 def env(monkeypatch):
     c = {"llm": 0}
-    monkeypatch.setattr(services, "load_embed_model", lambda: None)
-    monkeypatch.setattr(services, "index_status", lambda: object())
-    monkeypatch.setattr(services, "analyze", lambda q, h: {"intent": "notes", "query": q})
-    monkeypatch.setattr(services, "retrieve", lambda q, k, backend: [(CH, 0.8)])
-    monkeypatch.setattr(services, "_doc_catalog", lambda b: None)
+    monkeypatch.setattr(qa, "load_embed_model", lambda: None)
+    monkeypatch.setattr(qa, "index_status", lambda: object())
+    monkeypatch.setattr(qa, "analyze", lambda q, h: {"intent": "notes", "query": q})
+    monkeypatch.setattr(qa, "retrieve", lambda q, k, backend: [(CH, 0.8)])
+    monkeypatch.setattr(qa, "_doc_catalog", lambda b: None)
 
     def ans(q, r, h=None):
         c["llm"] += 1
         return "cevap"
-    monkeypatch.setattr(services, "answer", ans)
+    monkeypatch.setattr(qa, "answer", ans)
     return c
 
 
 def test_guard_blocks_llm(env, monkeypatch):
     monkeypatch.setattr(config, "ENTITY_GUARD_ENABLED", True)
     a, res, info = services.ask("Proje Atlas'ın bütçesi ne?", 10, "numpy", [], 0.4, True)
-    assert a == services.NOT_IN_NOTES and env["llm"] == 0
+    assert a == qa.NOT_IN_NOTES and env["llm"] == 0
     assert info["entity_missing"] == ["Atlas"] and "Atlas" in info["note"] and res
 
 
