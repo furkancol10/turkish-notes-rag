@@ -2,11 +2,9 @@
 import argparse
 
 from . import config, settings
-from .chunker import chunk_docs
-from .embedder import embed_passages
+from .chunker import chunk_label
 from .generator import answer, answer_meta
-from .index import get_index, index_name
-from .loader import load_notes
+from .pipeline import build_index
 from .retriever import retrieve
 from .router import route
 
@@ -30,15 +28,11 @@ def cmd_set_notes_dir(args):
 
 def cmd_index(args):
     _apply_dir(args)
-    docs = load_notes()                                   # 1. yükle
-    if not docs:
-        raise SystemExit(f"Bu klasörde .md/.txt not bulunamadı: {settings.notes_dir()}")
-    chunks = chunk_docs(docs)                             # 2. parçala
-    vecs = embed_passages([c.text for c in chunks])       # 3. embed
-    name = index_name(config.EMBED_MODEL, config.CHUNK_STRATEGY, config.CHUNK_SIZE)
-    for backend in ("numpy", "chroma"):                   # 4. indeksle (iki yöntem de)
-        get_index(backend, name).build(chunks, vecs)
-    print(f"{len(docs)} not -> {len(chunks)} parça indekslendi ({config.EMBED_MODEL}).")
+    try:
+        res = build_index()       # 1. yükle 2. parçala 3. embed 4. indeksle (iki yöntem de)
+    except ValueError as e:
+        raise SystemExit(str(e))
+    print(f"{res.summary()} ({config.EMBED_MODEL}).")
 
 
 def cmd_ask(args):
@@ -49,7 +43,7 @@ def cmd_ask(args):
     results = retrieve(args.question, backend=args.backend)           # 5. geri getir
     print("Kaynak parçalar:")
     for c, s in results:
-        print(f"  - {c.id} ({c.heading}) skor={s:.3f}")
+        print(f"  - {c.id} ({chunk_label(c)}) skor={s:.3f}")
     print("\nCevap:\n" + answer(args.question, results))               # 6. üret
 
 

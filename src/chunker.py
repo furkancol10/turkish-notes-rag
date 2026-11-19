@@ -15,6 +15,7 @@ class Chunk:
     source: str   # hangi nottan geldi
     heading: str  # en yakın üst başlık (metadata)
     text: str
+    page: int = 0  # PDF sayfa no (0 = sayfa yok)
 
 
 def _heading_at(text: str, pos: int) -> str:
@@ -54,9 +55,27 @@ def chunk_by_heading(doc: Doc) -> list[Chunk]:
     return chunks
 
 
+def chunk_pages(doc: Doc, size: int, overlap: int) -> list[Chunk]:
+    """PDF: her sayfa kendi içinde parçalanır, böylece parça sayfa numarasını kaybetmez."""
+    chunks = []
+    for page, text in doc.pages:
+        for c in chunk_fixed(Doc(doc.source, text), size, overlap):
+            chunks.append(Chunk(f"{doc.source}#{len(chunks)}", doc.source, "", c.text, page))
+    return chunks
+
+
+def chunk_label(c: Chunk) -> str:
+    """Kaynak gösterimi: 'dosya.pdf, s. 3 / Başlık' (sayfa/başlık yoksa o kısım düşer)."""
+    loc = f"{c.source}, s. {c.page}" if c.page else c.source
+    return f"{loc} / {c.heading}" if c.heading or not c.page else loc
+
+
 def chunk_docs(docs: list[Doc], strategy: str = config.CHUNK_STRATEGY,
                size: int = config.CHUNK_SIZE, overlap: int = config.CHUNK_OVERLAP) -> list[Chunk]:
     out = []
     for d in docs:
-        out += chunk_by_heading(d) if strategy == "heading" else chunk_fixed(d, size, overlap)
+        if d.pages:
+            out += chunk_pages(d, size, overlap)
+        else:
+            out += chunk_by_heading(d) if strategy == "heading" else chunk_fixed(d, size, overlap)
     return out

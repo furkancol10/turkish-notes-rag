@@ -5,11 +5,13 @@ from pathlib import Path
 import streamlit as st
 
 from src import config, settings
-from src.chunker import chunk_docs
-from src.embedder import _model, embed_passages
+from src.chunker import chunk_label
+from src.embedder import _model
+from src.formats import LABEL_TEXT, NO_NOTES_MSG, UPLOAD_TYPES
 from src.generator import answer, answer_meta
-from src.index import get_index, index_name
-from src.loader import list_note_files, load_notes, newest_mtime, rel_source
+from src.index import index_name
+from src.loader import list_note_files, newest_mtime, rel_source
+from src.pipeline import build_index
 from src.notes_io import save_note
 from src.retriever import retrieve
 from src.router import route
@@ -31,15 +33,7 @@ def index_status():
 
 
 def reindex():
-    docs = load_notes()
-    if not docs:
-        raise ValueError("Bu klasörde .md/.txt not bulunamadı.")
-    chunks = chunk_docs(docs)
-    vecs = embed_passages([c.text for c in chunks])
-    name = index_name(config.EMBED_MODEL, config.CHUNK_STRATEGY, config.CHUNK_SIZE)
-    for backend in ("numpy", "chroma"):
-        get_index(backend, name).build(chunks, vecs)
-    return len(docs), len(chunks)
+    return build_index()
 
 
 save_upload = save_note
@@ -72,11 +66,11 @@ with st.sidebar:
     _dir = settings.notes_dir()
     notes = [rel_source(p, _dir) for p in list_note_files(_dir)]
     if not notes:
-        st.info("Bu klasörde .md/.txt not yok.")
+        st.info(NO_NOTES_MSG)
     with st.expander(f"{len(notes)} not"):
         for p in notes:
             st.text(p)
-    uploads = st.file_uploader("Not yükle (.md / .txt)", type=["md", "txt"],
+    uploads = st.file_uploader(f"Not yükle ({LABEL_TEXT})", type=UPLOAD_TYPES,
                                accept_multiple_files=True)
     if uploads and st.button("Yüklenenleri kaydet"):
         saved = [save_upload(u.name, u.getvalue()) for u in uploads]
@@ -90,8 +84,8 @@ with st.sidebar:
     if st.button("Yeniden indeksle"):
         try:
             with st.spinner("İndeksleniyor (not okuma, parçalama, embed)..."):
-                n_docs, n_chunks = reindex()
-            st.success(f"{n_docs} not → {n_chunks} parça")
+                res = reindex()
+            st.success(res.summary())
         except ValueError as e:
             st.warning(str(e))
     ts = index_status()
@@ -118,7 +112,7 @@ st.caption("Notlarına soru sor; cevap sadece notlarındaki bilgiye dayanır.")
 def show_sources(results):
     with st.expander("Kaynaklar"):
         for i, (c, s) in enumerate(results, 1):
-            with st.expander(f"[{i}] {c.source} / {c.heading}  (skor {s:.2f})"):
+            with st.expander(f"[{i}] {chunk_label(c)}  (skor {s:.2f})"):
                 st.text(c.text)
 
 

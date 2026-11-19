@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (QApplication, QFileDialog, QFrame, QHBoxLayout, Q
                                QPushButton, QRadioButton, QSpinBox, QStyle, QVBoxLayout, QWidget)
 
 from src import config, settings
+from src.formats import DIALOG_FILTER, LABEL_TEXT, NO_NOTES_MSG
 
 from . import services
 from .chat_view import ChatView
@@ -181,6 +182,7 @@ class MainWindow(QMainWindow):
         self.folder_label.setToolTip(full)
         self.btn_sample.setEnabled(not settings.is_default() and not self._busy)
         notes = services.list_notes()
+        self.chat.set_examples(services.example_questions())
         self._notes_count = len(notes)
         self._apply_notes_open()
         self.notes_list.clear()
@@ -190,7 +192,7 @@ class MainWindow(QMainWindow):
         if problem:
             tail = problem
         elif not notes:
-            tail = "Bu klasörde .md/.txt not yok."
+            tail = NO_NOTES_MSG
         elif not ts:
             tail = "Henüz indeks yok. 'Yeniden indeksle'ye bas."
         else:
@@ -289,7 +291,7 @@ class MainWindow(QMainWindow):
     def _on_reindexed(self, res):
         self.progress.setVisible(False)
         self.refresh_side()
-        msg = f"{res[0]} not → {res[1]} parça indekslendi"
+        msg = res.summary()
         self.statusBar().showMessage(msg, 8000)
         QMessageBox.information(self, "İndeksleme bitti", msg)
 
@@ -299,13 +301,13 @@ class MainWindow(QMainWindow):
         QMessageBox.critical(self, "İndeksleme başarısız", str(e))
 
     def add_note(self):
-        paths, _ = QFileDialog.getOpenFileNames(self, "Not seç", "", "Notlar (*.md *.txt)")
+        paths, _ = QFileDialog.getOpenFileNames(self, "Not seç", "", DIALOG_FILTER)
         saved = [services.import_note(p) for p in paths]
         ok = sum(1 for s in saved if s)
         if paths:
             self.statusBar().showMessage(f"{ok} dosya eklendi. Şimdi yeniden indeksle.", 8000)
         if ok < len(saved):
-            QMessageBox.warning(self, "Uyarı", "Geçersiz dosya atlandı (yalnızca .md/.txt).")
+            QMessageBox.warning(self, "Uyarı", f"Geçersiz dosya atlandı (desteklenen: {LABEL_TEXT}).")
         self.refresh_side()
 
     def open_folder(self):
@@ -334,7 +336,7 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(f"Not klasörü değişti: {n} not", 8000)
         if n == 0:
             QMessageBox.information(self, "Not bulunamadı",
-                                    "Bu klasörde (alt klasörler dahil) .md/.txt not yok.")
+                                    NO_NOTES_MSG)
             return
         msg = f"{n} not bulundu. Şimdi indekslensin mi?"
         if n > 2000:

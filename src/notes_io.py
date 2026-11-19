@@ -2,8 +2,9 @@
 from pathlib import Path
 
 from src import settings
+from src.formats import SUFFIXES
 
-ALLOWED_SUFFIXES = (".md", ".txt")
+ALLOWED_SUFFIXES = SUFFIXES
 
 
 def safe_note_name(name: str):

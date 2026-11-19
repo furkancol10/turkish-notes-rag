@@ -60,14 +60,14 @@ class ChromaIndex:
         col = self.client.create_collection(self.name, metadata={"hnsw:space": "cosine"})
         col.add(ids=[c.id for c in chunks], embeddings=vecs.tolist(),
                 documents=[c.text for c in chunks],
-                metadatas=[{"source": c.source, "heading": c.heading} for c in chunks])
+                metadatas=[{"source": c.source, "heading": c.heading, "page": c.page} for c in chunks])
 
     def search(self, qvec: np.ndarray, k: int):
         col = self.client.get_collection(self.name)
         r = col.query(query_embeddings=[qvec.tolist()], n_results=k)
         out = []
         for id_, doc, meta, dist in zip(r["ids"][0], r["documents"][0], r["metadatas"][0], r["distances"][0]):
-            out.append((Chunk(id_, meta["source"], meta["heading"], doc), 1 - dist))  # mesafe -> benzerlik
+            out.append((Chunk(id_, meta["source"], meta["heading"], doc, meta.get("page", 0)), 1 - dist))  # mesafe -> benzerlik
         return out
 
 

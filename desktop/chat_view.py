@@ -7,11 +7,11 @@ from PySide6.QtGui import QColor, QPainter
 from PySide6.QtWidgets import (QFrame, QHBoxLayout, QLabel, QPlainTextEdit, QPushButton,
                                QScrollArea, QToolButton, QVBoxLayout, QWidget)
 
+from src.chunker import chunk_label
+
 from . import style
 
 MAX_W = 620
-EXAMPLES = ["Fotosentez nedir?", "Arz ve talep yasası nasıl işler?",
-            "Inception filminin konusu nedir?"]
 
 
 class SourceItem(QWidget):
@@ -21,7 +21,7 @@ class SourceItem(QWidget):
         lay = QVBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(4)
-        self.btn = QToolButton(text=f"▸ [{i}] {chunk.source} / {chunk.heading}  ·  {score:.2f}")
+        self.btn = QToolButton(text=f"▸ [{i}] {chunk_label(chunk)}  ·  {score:.2f}")
         self.btn.setObjectName("chip")
         self.btn.setCheckable(True)
         self.btn.setCursor(Qt.PointingHandCursor)
@@ -168,14 +168,29 @@ class EmptyState(QWidget):
         lay.addWidget(t)
         lay.addWidget(s)
         lay.addSpacing(10)
-        for q in EXAMPLES:
+        self._sub = s
+        self._btns = []
+        self._lay = lay
+        lay.addStretch()
+
+    def set_examples(self, qs):
+        for b in self._btns:
+            self._lay.removeWidget(b)
+            b.deleteLater()
+        self._btns = []
+        if qs:
+            self._sub.setText("Notlarında arama yapar, cevabı kaynaklarıyla birlikte verir.\n"
+                              "Bir örnekle başla ya da kendi sorunu yaz.")
+        else:
+            self._sub.setText("Henüz not yok. Soldan bir klasör seç veya 'Not ekle' ile not ekle.")
+        for q in qs:
             b = QPushButton(q)
             b.setObjectName("example")
             b.setCursor(Qt.PointingHandCursor)
             b.setMaximumWidth(380)
             b.clicked.connect(lambda _=False, q=q: self.picked.emit(q))
-            lay.addWidget(b, 0, Qt.AlignCenter)
-        lay.addStretch()
+            self._lay.insertWidget(self._lay.count() - 1, b, 0, Qt.AlignCenter)
+            self._btns.append(b)
 
 
 class ChatView(QScrollArea):
@@ -198,6 +213,9 @@ class ChatView(QScrollArea):
         self._empty = EmptyState()
         self._empty.picked.connect(self.suggestion)
         self._lay.insertWidget(0, self._empty, 1)
+
+    def set_examples(self, qs):
+        self._empty.set_examples(qs)
 
     def _insert(self, w):
         self._empty.hide()

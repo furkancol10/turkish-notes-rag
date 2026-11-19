@@ -2,6 +2,8 @@
 import ollama
 
 from . import config, settings
+from .chunker import chunk_label
+from .formats import LABEL_TEXT
 from .loader import list_note_files
 
 SYSTEM = (
@@ -13,7 +15,7 @@ SYSTEM = (
 
 def build_prompt(question: str, results) -> str:
     # Her parçaya numara ve kaynak ver ki model atıf yapabilsin
-    ctx = "\n\n".join(f"[{i}] ({c.source} / {c.heading})\n{c.text}"
+    ctx = "\n\n".join(f"[{i}] ({chunk_label(c)})\n{c.text}"
                       for i, (c, _) in enumerate(results, 1))
     return f"Bağlam:\n{ctx}\n\nSoru: {question}"
 
@@ -36,6 +38,7 @@ def meta_system() -> str:
         f"{n} not) soruları cevaplarsın. Notlar {config.EMBED_MODEL} embedding modeliyle "
         f"aranır, cevabı {config.LLM_MODEL} dil modeli yazar. Her şey yerel çalışır, "
         "veri dışarı gitmez. Selamlaşmalara ve sana dair sorulara Türkçe, çok kısa cevap ver. "
+        f"Desteklenen not biçimleri: {LABEL_TEXT}. "
         "Kullanıcı yeni notu uygulamadaki 'Not ekle' ile ekleyip 'Yeniden indeksle'ye basar; "
         "sen sohbetten not ekleyemez/silemezsin. İnternet araması ve genel bilgi sorusu cevaplama yok; "
         "bunlar dışında yetenek uydurma, kullanıcıya notlarıyla ilgili soru sormasını öner."

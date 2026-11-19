@@ -30,11 +30,11 @@ Sohbet, kaynakları açılır liste olarak gösterme, not ekleme, yeniden indeks
 Ağır işler (model yükleme, indeksleme, LLM) arka planda çalışır; arayüz donmaz. Ollama çalışmalıdır.
 
 ## Kendi notlarını ekleme
-`.md` veya `.txt` (UTF-8) dosyalarını `data/notes/` içine koy (örnekleri silebilirsin), sonra yeniden `index` çalıştır.
+`.md`, `.txt`, `.pdf`, `.docx`, `.html` dosyalarını `data/notes/` içine koy (örnekleri silebilirsin), sonra yeniden `index` çalıştır.
 Başlıklar (`# `, `## `) kaynak gösterirken kullanılır, bu yüzden notları başlıkla yapılandırmak yardımcı olur.
 
 ### Not klasörü seçme
-Notlar herhangi bir klasörden okunur (alt klasörler dahil, `.md`/`.txt`, UTF-8; UTF-8 olmayanlar uyarıyla atlanır). Masaüstünde "Klasör seç" / "Örnek notlara dön", Streamlit'te kenar çubuğundaki "Not klasörü", CLI'da:
+Notlar herhangi bir klasörden okunur (alt klasörler dahil, `.md`/`.txt` (UTF-8), `.pdf` (sayfa no ile kaynak gösterilir; taranmış PDF için OCR yok, atlanır), `.docx` (başlıklar + tablolar), `.html`; okunamayanlar uyarıyla atlanır). Masaüstünde "Klasör seç" / "Örnek notlara dön", Streamlit'te kenar çubuğundaki "Not klasörü", CLI'da:
 `uv run python -m src.cli set-notes-dir /yol/notlarim` (kalıcı) veya `index|ask --notes-dir /yol` (tek seferlik).
 Ayar `~/.config/kisisel-not-arama/settings.json` dosyasında tutulur; her klasörün kendi indeksi vardır.
 
