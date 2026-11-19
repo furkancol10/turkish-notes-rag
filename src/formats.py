@@ -174,3 +174,11 @@ def parse(path: Path) -> Parsed:
     if path.stat().st_size > MAX_FILE_BYTES:
         raise SkipFile("dosya çok büyük (>100 MB)")
     return FORMATS[path.suffix.lower()][1](path)
+
+
+NOT_IN_NOTES = "Bu bilgi notlarda yok."
+
+
+def below_threshold_note(results, top_score: float, threshold: float) -> str:
+    near = results[0][0].source if results else "-"
+    return f"En yakın eşleşme: {near} (skor {top_score:.2f}) — eşik {threshold:.2f}"

@@ -90,3 +90,11 @@ def test_settings_corrupt():
     p = settings.settings_path(); p.parent.mkdir(parents=True)
     p.write_text("zzz")
     assert settings.get_top_k() == config.TOP_K
+
+
+def test_threshold_settings_clamp(tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    assert settings.get_score_threshold() == 0.40 and settings.get_threshold_enabled() is True
+    assert settings.set_score_threshold(7) == 1.0 and settings.set_score_threshold(-1) == 0.0
+    settings.set_score_threshold(0.5); assert settings.get_score_threshold() == 0.5
+    settings.set_threshold_enabled(False); assert settings.get_threshold_enabled() is False

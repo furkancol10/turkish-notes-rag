@@ -24,6 +24,8 @@ CHUNK_OVERLAP = 64         # karakter
 
 # --- Arama ---
 INDEX_BACKEND = "chroma"   # "chroma" (varsayılan, vektör DB) veya "numpy" (elle kosinüs, öğrenme amaçlı)
+SCORE_THRESHOLD = 0.40     # en iyi parçanın kosinüs skoru bunun altındaysa LLM çağrılmaz ("notlarda yok"); kalibre edildi
+SCORE_THRESHOLD_ENABLED = True
 TOP_K = 10                # 10 parça ≈ 2000 token; num_ctx 4096 içinde rahat sığar
 
 # --- LLM (Ollama, GPU) ---

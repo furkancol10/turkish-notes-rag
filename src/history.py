@@ -138,6 +138,8 @@ def last_notes_message(messages) -> dict | None:
     for m in reversed(messages or []):
         if m.get("role") != "assistant" or m.get("intent", "notes") not in ("notes", "followup"):
             continue
+        if m.get("below_threshold"):
+            continue
         if any(isinstance(s, dict) for s in (m.get("sources") or [])):
             return m
     return None

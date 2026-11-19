@@ -97,6 +97,9 @@ with st.sidebar:
     top_k = st.slider("Kaç parça getirilsin (top_k)", 1, 15, config.TOP_K)
     backend = st.radio("İndeks yöntemi", ["numpy", "chroma"],
                        index=["numpy", "chroma"].index(config.INDEX_BACKEND), horizontal=True)
+    th_on = st.checkbox("Düşük benzerlikte 'notlarda yok' de", settings.get_threshold_enabled())
+    th = st.slider("Cevap eşiği", 0.20, 0.90, float(min(0.90, max(0.20, settings.get_score_threshold()))), 0.01,
+                   help="Yüksek: daha çok 'notlarda yok', düşük: daha çok cevap denemesi")
     if st.button("Sohbeti temizle"):
         st.session_state.msgs = []
         st.rerun()
@@ -119,6 +122,8 @@ def show_msg(m):
     st.write(m["text"])
     if m.get("query"):
         st.caption(f"Aranan: {m['query']}")
+    if m.get("note"):
+        st.caption(m["note"])
     if m.get("sources"):
         show_sources(m["sources"])
 
@@ -136,7 +141,7 @@ if q := st.chat_input("Notlarına bir soru sor"):
     with st.chat_message("assistant"):
         try:
             with st.spinner("Notlarda aranıyor ve cevap üretiliyor..."):
-                ans, results, info = services.ask(q, top_k, backend, prior)
+                ans, results, info = services.ask(q, top_k, backend, prior, th, th_on)
         except services.AskError as e:
             if e.kind == "index":
                 st.error("İndeks bulunamadı. Soldan 'Yeniden indeksle'ye bas.")
@@ -149,6 +154,9 @@ if q := st.chat_input("Notlarına bir soru sor"):
         query = info.get("query")
         msg = {"role": "assistant", "text": ans, "sources": history.sources_from_results(results),
                "intent": info.get("intent", "notes")}
+        for k in ("below_threshold", "top_score", "threshold", "note"):
+            if k in info:
+                msg[k] = info[k]
         if query and query != q:
             msg["query"] = query
         show_msg(msg)

@@ -4,6 +4,7 @@ import argparse
 from . import config, settings
 from .chunker import chunk_label
 from .generator import answer, answer_meta
+from .formats import NOT_IN_NOTES, below_threshold_note
 from .pipeline import build_index
 from .retriever import retrieve
 from .router import route
@@ -35,6 +36,15 @@ def cmd_index(args):
     print(f"{res.summary()} ({config.EMBED_MODEL}).")
 
 
+def _threshold(args):
+    """Etkin eşik (None = kapalı): --no-threshold > --threshold > kayıtlı ayar."""
+    if getattr(args, "no_threshold", False):
+        return None
+    if getattr(args, "threshold", None) is not None:
+        return args.threshold
+    return settings.get_score_threshold() if settings.get_threshold_enabled() else None
+
+
 def cmd_ask(args):
     _apply_dir(args)
     if route(args.question) == "meta":                     # 0. yönlendir: aramaya gerek yok
@@ -44,6 +54,11 @@ def cmd_ask(args):
     print("Kaynak parçalar:")
     for c, s in results:
         print(f"  - {c.id} ({chunk_label(c)}) skor={s:.3f}")
+    th = _threshold(args)
+    if th is not None and results and max(s for _, s in results) < th:
+        top = max(s for _, s in results)
+        print("\nCevap:\n" + NOT_IN_NOTES + "\n" + below_threshold_note(results, top, th))
+        return
     print("\nCevap:\n" + answer(args.question, results))               # 6. üret
 
 
@@ -91,10 +106,20 @@ def cmd_chat(args):
             continue
         else:
             results = retrieve(query, backend=args.backend)
-            h, results = fit_budget(h, results, q)
-            ans = answer(q, results, h)
+            th = _threshold(args)
+            top = max((s for _, s in results), default=1.0)
             for c, s in results:
                 print(f"  - {c.id} ({chunk_label(c)}) skor={s:.3f}")
+            if th is not None and results and top < th:
+                note = below_threshold_note(results, top, th)
+                print("Cevap:\n" + NOT_IN_NOTES + "\n" + note)
+                msgs += [{"role": "user", "text": q, "sources": []},
+                         {"role": "assistant", "text": NOT_IN_NOTES, "intent": "notes", "note": note,
+                          "below_threshold": True, "top_score": top,
+                          "sources": hist.sources_from_results(results)}]
+                continue
+            h, results = fit_budget(h, results, q)
+            ans = answer(q, results, h)
         print("Cevap:\n" + ans)
         m = {"role": "assistant", "text": ans, "sources": hist.sources_from_results(results),
              "intent": intent}
@@ -116,10 +141,14 @@ def main():
     a.add_argument("question")
     a.add_argument("--notes-dir", help="bu çalıştırma için not klasörü (ayarı değiştirmez)")
     a.add_argument("--backend", default=config.INDEX_BACKEND, choices=["numpy", "chroma"])
+    a.add_argument("--threshold", type=float, help="skor eşiği (ayarı değiştirmez)")
+    a.add_argument("--no-threshold", action="store_true", help="eşiği kapat")
     a.set_defaults(fn=cmd_ask)
     c = sub.add_parser("chat", help="çok turlu sohbet (geçmiş bellekte)")
     c.add_argument("--notes-dir", help="bu çalıştırma için not klasörü (ayarı değiştirmez)")
     c.add_argument("--backend", default=config.INDEX_BACKEND, choices=["numpy", "chroma"])
+    c.add_argument("--threshold", type=float, help="skor eşiği (ayarı değiştirmez)")
+    c.add_argument("--no-threshold", action="store_true", help="eşiği kapat")
     c.set_defaults(fn=cmd_chat)
     args = p.parse_args()
     args.fn(args)

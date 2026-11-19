@@ -9,6 +9,7 @@ from src.conversation import fit_budget, window
 from src.generator import answer, answer_followup, answer_meta
 from src.rewriter import analyze
 from src.sources import answer_sources, cited_indices
+from src.formats import NOT_IN_NOTES, below_threshold_note
 from src.index import index_name
 from src.loader import list_note_files, newest_mtime, rel_source
 from src.pipeline import build_index
@@ -114,9 +115,12 @@ def cited_sources(text: str, sources: list[dict]) -> list[dict]:
     return [sources[i - 1] for i in idxs] if idxs else list(sources)
 
 
-def ask(question: str, top_k: int, backend: str, prior_messages=None):
+def ask(question: str, top_k: int, backend: str, prior_messages=None,
+        threshold=None, threshold_enabled=None):
     """Tüm hat: pencere -> analiz (niyet + sorgu) -> meta | kaynaklar | takip | (getir -> bütçele -> üret).
-    (cevap, sonuçlar, info) döner; info = {"intent", "query"}. Hata olursa AskError fırlatır."""
+    (cevap, sonuçlar, info) döner; info = {"intent", "query"}. Hata olursa AskError fırlatır.
+    threshold/threshold_enabled None ise kayıtlı ayardan okunur. En iyi skor eşiğin altındaysa LLM çağrılmaz;
+    info'ya below_threshold/top_score/threshold/note eklenir."""
     history = window(prior_messages or [])
     a = analyze(question, history)
     intent, query = a["intent"], a.get("query") or question
@@ -144,6 +148,16 @@ def ask(question: str, top_k: int, backend: str, prior_messages=None):
         results = retrieve(query, k=top_k, backend=backend)
     except Exception as e:
         raise AskError("index" if is_index_missing(e) else "other", f"Arama başarısız: {e}")
+    if threshold is None:
+        threshold = settings.get_score_threshold()
+    if threshold_enabled is None:
+        threshold_enabled = settings.get_threshold_enabled()
+    if threshold_enabled and results:
+        top = float(max(s for _, s in results))
+        if top < threshold:
+            info.update({"intent": "notes", "query": query, "below_threshold": True, "top_score": top,
+                         "threshold": threshold, "note": below_threshold_note(results, top, threshold)})
+            return NOT_IN_NOTES, results, info
     history, results = fit_budget(history, results, question)
     try:
         return answer(question, results, history), results, info

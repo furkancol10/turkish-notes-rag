@@ -15,7 +15,7 @@ def env(tmp_path, monkeypatch):
     app = QApplication.instance() or QApplication([])
     from desktop import main as m, services
     chunk = SimpleNamespace(source="a.pdf", heading="", page=3, text="parça metni")
-    monkeypatch.setattr(services, "ask", lambda q, k, b, prior=None: (f"cevap:{q}:{k}:{b}", [(chunk, 0.9)], {"intent": "notes", "query": None}))
+    monkeypatch.setattr(services, "ask", lambda q, k, b, prior=None, *th: (f"cevap:{q}:{k}:{b}", [(chunk, 0.9)], {"intent": "notes", "query": None}))
     monkeypatch.setattr(services, "load_embed_model", lambda: None)
     monkeypatch.setattr(QMessageBox, "question", lambda *a, **k: QMessageBox.Yes)
     wins = []
@@ -144,7 +144,7 @@ def test_inflight_block_and_reenable_after_error(env, monkeypatch):
     from src import history
     from desktop import services
 
-    def boom(q, k, b, prior=None):
+    def boom(q, k, b, prior=None, *th):
         raise RuntimeError("x")
     w = make()
     wait(w)
@@ -183,7 +183,7 @@ def test_chat_from_other_folder_opens(env):
 def test_query_saved_and_restored(env, monkeypatch):
     make, wait, _ = env
     from desktop import services
-    monkeypatch.setattr(services, "ask", lambda q, k, b, prior=None: (
+    monkeypatch.setattr(services, "ask", lambda q, k, b, prior=None, *th: (
         "c", [], {"intent": "notes", "query": "yeniden yazılmış"}))
     w = make()
     wait(w)
@@ -192,3 +192,30 @@ def test_query_saved_and_restored(env, monkeypatch):
     w.chat.load_messages(w.cur["messages"])
     from PySide6.QtWidgets import QLabel
     assert any(l.text() == "Aranan: yeniden yazılmış" for l in w.chat.findChildren(QLabel))
+
+
+def test_below_threshold_saved_restored_and_passed(env, monkeypatch):
+    make, wait, _ = env
+    from desktop import services
+    from src import settings
+    seen = {}
+    chunk = SimpleNamespace(source="a.md", heading="", page=None, text="t")
+
+    def fake(q, k, b, prior=None, th=None, on=None):
+        seen["a"] = (th, on)
+        return ("Bu bilgi notlarda yok.", [(chunk, 0.38)],
+                {"intent": "notes", "query": q, "below_threshold": True, "top_score": 0.38,
+                 "threshold": 0.45, "note": "En yakın eşleşme: a.md (skor 0.38) — eşik 0.45"})
+    monkeypatch.setattr(services, "ask", fake)
+    settings.set_score_threshold(0.5)
+    settings.set_threshold_enabled(False)
+    w = make()
+    wait(w)
+    assert (w.threshold, w.threshold_enabled) == (0.5, False)
+    ask(w, wait, "Eyfel?")
+    assert seen["a"] == (0.5, False)
+    m = w.cur["messages"][-1]
+    assert m["below_threshold"] and m["top_score"] == 0.38 and m["sources"][0]["score"] == 0.38
+    from PySide6.QtWidgets import QLabel
+    w.chat.load_messages(w.cur["messages"])
+    assert any(l.text().startswith("En yakın eşleşme: a.md") for l in w.chat.findChildren(QLabel))
