@@ -10,7 +10,7 @@ from src.generator import answer, answer_followup, answer_meta
 from src.rewriter import analyze
 from src.sources import answer_sources, cited_indices
 from src.formats import NOT_IN_NOTES, below_threshold_note
-from src.index import index_name
+from src.index import NumpyIndex, index_name
 from src.loader import list_note_files, newest_mtime, rel_source
 from src.pipeline import build_index
 from src.notes_io import save_note
@@ -45,7 +45,15 @@ def folder_problem():
 def notes_changed() -> bool:
     """Notlardan en yenisi indeksten sonra değiştiyse True."""
     ts, newest = index_status(), newest_mtime()
-    return bool(ts and newest and newest > ts.timestamp())
+    if bool(ts and newest and newest > ts.timestamp()):
+        return True
+    if ts:  # silinen/eklenen not: indeksteki kaynaklar klasörle uyuşmuyor
+        try:
+            name = index_name(config.EMBED_MODEL, config.CHUNK_STRATEGY, config.CHUNK_SIZE)
+            return set(NumpyIndex(name).doc_titles()) != set(list_notes())
+        except Exception:
+            return False
+    return False
 
 
 def set_folder(path) -> str:

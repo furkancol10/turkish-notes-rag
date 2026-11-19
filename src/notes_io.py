@@ -22,5 +22,10 @@ def save_note(name: str, data: bytes):
         return None
     folder = settings.notes_dir()
     folder.mkdir(parents=True, exist_ok=True)
-    (folder / safe).write_bytes(data)
-    return safe
+    # Aynı adlı not varsa üzerine yazma: "ad (2).md"
+    target, n = folder / safe, 2
+    while target.exists():
+        target = folder / f"{Path(safe).stem} ({n}){Path(safe).suffix}"
+        n += 1
+    target.write_bytes(data)
+    return target.name
