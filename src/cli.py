@@ -1,7 +1,7 @@
 """Komutlar:  uv run python -m src.cli index   |   uv run python -m src.cli ask "soru"   |   ... chat """
 import argparse
 
-from . import config, settings
+from . import config, entities, settings
 from .chunker import chunk_label
 from .generator import answer, answer_meta
 from .formats import NOT_IN_NOTES, below_threshold_note
@@ -45,6 +45,24 @@ def _threshold(args):
     return settings.get_score_threshold() if settings.get_threshold_enabled() else None
 
 
+def _catalog(backend):
+    """Belge adı/başlık takma adları (doc_filter'ın işi); alınamazsa None."""
+    try:
+        from .doc_filter import build_catalog
+        from .index import get_index, index_name
+        idx = get_index(backend, index_name(config.EMBED_MODEL, config.CHUNK_STRATEGY, config.CHUNK_SIZE))
+        titles = idx.doc_titles()
+        return build_catalog(list(titles), titles)
+    except Exception:
+        return None
+
+
+def _guard(query, results, backend):
+    if config.ENTITY_GUARD_ENABLED and results:
+        return entities.guard_note(query, [c for c, _ in results], _catalog(backend))
+    return None
+
+
 def cmd_ask(args):
     _apply_dir(args)
     if route(args.question) == "meta":                     # 0. yönlendir: aramaya gerek yok
@@ -58,6 +76,10 @@ def cmd_ask(args):
     if th is not None and results and max(s for _, s in results) < th:
         top = max(s for _, s in results)
         print("\nCevap:\n" + NOT_IN_NOTES + "\n" + below_threshold_note(results, top, th))
+        return
+    note = _guard(args.question, results, args.backend)
+    if note:
+        print("\nCevap:\n" + NOT_IN_NOTES + "\n" + note)
         return
     print("\nCevap:\n" + answer(args.question, results))               # 6. üret
 
@@ -117,6 +139,13 @@ def cmd_chat(args):
                          {"role": "assistant", "text": NOT_IN_NOTES, "intent": "notes", "note": note,
                           "below_threshold": True, "top_score": top,
                           "sources": hist.sources_from_results(results)}]
+                continue
+            note = _guard(q, results, args.backend)
+            if note:
+                print("Cevap:\n" + NOT_IN_NOTES + "\n" + note)
+                msgs += [{"role": "user", "text": q, "sources": []},
+                         {"role": "assistant", "text": NOT_IN_NOTES, "intent": "notes", "note": note,
+                          "entity_missing": True, "sources": hist.sources_from_results(results)}]
                 continue
             h, results = fit_budget(h, results, q)
             ans = answer(q, results, h)

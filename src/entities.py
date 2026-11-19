@@ -19,11 +19,18 @@ STOP = {
     "ocak", "subat", "mart", "nisan", "mayis", "haziran", "temmuz", "agustos", "eylul", "ekim", "kasim", "aralik",
     "pazartesi", "sali", "carsamba", "persembe", "cuma", "cumartesi", "pazar", "turkiye", "turkce", "ingilizce",
     "notlarimda", "notlarda", "notlarima", "notum", "notlarim",
+    "bey", "hanim", "hoca", "hocam", "abi", "abla", "dr", "prof", "doc",
+    "hafta", "haftasi", "gecen", "bugun", "dun", "yarin", "sabah", "aksam", "gece",
+    "ay", "yil", "sene", "toplanti", "toplantida", "toplantisi",
+    "i", "me", "my", "you", "we", "it", "the", "what", "who", "when", "where", "why", "how", "did", "do",
 } | set(GENERIC) | {"projesi", "proje", "dersi", "ders", "kitabi", "kitap", "yazar", "yazari", "plani", "tarifi"}
 
 
+_DIGIT_SPLIT = re.compile(r"(?<=\d)(?=[a-z])|(?<=[a-z])(?=\d)")
+
+
 def _fold_words(s: str) -> list[str]:
-    return [t for t in normalize(s).split() if t]
+    return [t for t in _DIGIT_SPLIT.sub(" ", normalize(s)).split() if t]
 
 
 def _is_stop(w: str) -> bool:
@@ -83,6 +90,8 @@ def extract(query: str, catalog: dict | None = None) -> list[str]:
     flush()
     res = []
     for e in _dedupe(out):
+        if len(e.strip()) < 2:
+            continue
         if catalog and _in_catalog(e, catalog):
             continue
         res.append(e)
@@ -124,3 +133,11 @@ def missing(query: str, chunk_texts, catalog: dict | None = None) -> list[str]:
     if ents and not any(present(e, texts) for e in ents):
         return ents
     return []
+
+
+def guard_note(query: str, chunks, catalog: dict | None = None) -> str | None:
+    """Paylaşılan koruma (cli için): eksik varlık varsa kullanıcıya gösterilecek not, yoksa None."""
+    miss = missing(query, [c.text for c in chunks], catalog)
+    if not miss:
+        return None
+    return "Notlarda " + ", ".join(f"“{m}”" for m in miss) + " geçen bir bölüm bulunamadı."

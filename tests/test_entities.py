@@ -89,3 +89,27 @@ def test_guard_passes_when_present(env, monkeypatch):
     monkeypatch.setattr(config, "ENTITY_GUARD_ENABLED", True)
     a, _, _ = services.ask("Proje Nova'nın bütçesi ne?", 10, "numpy", [], 0.4, True)
     assert a == "cevap" and env["llm"] == 1
+
+
+@pytest.mark.parametrize("q,text", [
+    ("Bu hafta 5km koştum mu?", "bu hafta 5 km'yi koştum"),
+    ("Ali Bey ne dedi?", "Ali toplantıda dedi ki"),
+    ("What did I eat?", "pasta yedim"),
+    ("Geçen Hafta Toplantıda ne konuştuk?", "toplantıda bütçe konuşuldu"),
+    ("Dr. Ayşe ne dedi?", "Ayşe bugün geldi"),
+    ("Proje Nova'nın bütçesi ne?", "Nova bütçesi 5 bin"),
+    ("2025 bütçesi ne kadar?", "2025 bütçesi 10 bin"),
+    ("When did We meet?", "toplantı yaptık"),
+])
+def test_not_false_missing(q, text):
+    assert missing(q, [text]) == []
+
+
+def test_real_missing_still_detected():
+    assert missing("Zeynep'in doğum günü ne zaman?", ["Ali'nin doğum günü mayısta"]) == ["Zeynep"]
+
+
+def test_extract_strips_stop_and_short():
+    assert extract("Ali Bey ne dedi?") == []
+    assert extract("What did I eat?") == []
+    assert extract("Geçen Hafta Toplantıda ne konuştuk?") == []
