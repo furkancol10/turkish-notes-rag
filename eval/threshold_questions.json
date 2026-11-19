@@ -1,0 +1,345 @@
+[
+ {
+  "id": "a06",
+  "q": "Haftalık kelime hedefim kaç?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "ders_ingilizce_kelimeler.md"
+ },
+ {
+  "id": "a34",
+  "q": "Container silinince veri kaybolmasın diye hangi yöntemi kullanıyorum?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "teknik_docker.md"
+ },
+ {
+  "id": "a12",
+  "q": "Etiketsiz veriyle çalışan öğrenme türüne hangi örnekler verilmişti?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "ders_makine_ogrenmesi.md"
+ },
+ {
+  "id": "a39",
+  "q": "Haftalık toplantıda en çok istenen özellik neydi?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "toplanti_haftalik.md"
+ },
+ {
+  "id": "a13",
+  "q": "Overfitting olunca eğitim ve doğrulama hatası nasıl görünür?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "ders_makine_ogrenmesi.md"
+ },
+ {
+  "id": "a23",
+  "q": "Çoban Santiago'nun hazinesi aslında nerede saklıymış?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "kitap_simyaci.md"
+ },
+ {
+  "id": "a01",
+  "q": "Fotosentezin ışığa bağımlı evresinde ne açığa çıkar?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "ders_biyoloji_fotosentez.md"
+ },
+ {
+  "id": "a36",
+  "q": "Çalışan işlemleri sayan boru zinciri örneği neydi?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "teknik_linux_komutlari.md"
+ },
+ {
+  "id": "a21",
+  "q": "Berlin'deki sergide portresi görülen ressamın adı neydi?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "kitap_kurk_mantolu_madonna.md"
+ },
+ {
+  "id": "a17",
+  "q": "Dışarıda yemek için ayırdığım aylık sınır nedir?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "kisisel_butce.md"
+ },
+ {
+  "id": "a27",
+  "q": "Porsuk'ta yapılan kısa tekne gezisi hakkında ne yazmışım?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "seyahat_eskisehir.md"
+ },
+ {
+  "id": "a35",
+  "q": "Yayınlanmamış son commit mesajını nasıl düzeltirim?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "teknik_git.md"
+ },
+ {
+  "id": "a30",
+  "q": "Koşu programında ilk hafta koş-yürü oranı nasıl?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "spor_kosu_programi.md"
+ },
+ {
+  "id": "a32",
+  "q": "Ev ekmeğini kaç derecede ve ne kadar pişiriyorum?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "tarif_ekmek.md"
+ },
+ {
+  "id": "a18",
+  "q": "Maaş yatınca tasarruf nasıl ayrılıyor?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "kisisel_butce.md"
+ },
+ {
+  "id": "a24",
+  "q": "Tarımsal dönüşüm için Harari hangi ifadeyi kullanıyor?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "kitap_sapiens.md"
+ },
+ {
+  "id": "a22",
+  "q": "Sabahattin Ali'nin romanı hangi yıl yayımlandı?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "kitap_kurk_mantolu_madonna.md"
+ },
+ {
+  "id": "a03",
+  "q": "Talebi esnek olmayan mallara örnek olarak ne vermiştim?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "ders_ekonomi_arz_talep.md"
+ },
+ {
+  "id": "a28",
+  "q": "Kapadokya'da balon turu kaçta başlıyor ve ne kadar tutuyor?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "seyahat_kapadokya.md"
+ },
+ {
+  "id": "a07",
+  "q": "Özdeğerleri hangi denklemle buluyoruz?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "ders_lineer_cebir.md"
+ },
+ {
+  "id": "a37",
+  "q": "Liste üreteciyle çift sayıların karesini nasıl yazıyordum?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "teknik_python_listeler.md"
+ },
+ {
+  "id": "a20",
+  "q": "Kimlik temelli alışkanlık için hangi cümle örneğini yazmışım?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "kitap_atomic_habits.md"
+ },
+ {
+  "id": "a19",
+  "q": "Alışkanlık döngüsünün dört aşaması nelerdi?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "kitap_atomic_habits.md"
+ },
+ {
+  "id": "a09",
+  "q": "Dengesiz ağaçta arama en kötü kaç sürede olur?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "ders_veri_yapilari.md"
+ },
+ {
+  "id": "a14",
+  "q": "Blog yazılarının uzunluk sınırı ne?",
+  "answerable": true,
+  "category": "answerable",
+  "expected_source": "fikir_blog_yazilari.md"
+ },
+ {
+  "id": "off02",
+  "q": "Türkiye'nin başkenti neresidir?",
+  "answerable": false,
+  "category": "off-topic",
+  "expected_source": null
+ },
+ {
+  "id": "off04",
+  "q": "Ethereum'un bugünkü fiyatı ne?",
+  "answerable": false,
+  "category": "off-topic",
+  "expected_source": null
+ },
+ {
+  "id": "off11",
+  "q": "Nobel Edebiyat Ödülü'nü Orhan Pamuk hangi yıl aldı?",
+  "answerable": false,
+  "category": "off-topic",
+  "expected_source": null
+ },
+ {
+  "id": "off14",
+  "q": "Fenerbahçe'nin stadyumu nerede?",
+  "answerable": false,
+  "category": "off-topic",
+  "expected_source": null
+ },
+ {
+  "id": "off12",
+  "q": "En iyi telefon markası hangisi?",
+  "answerable": false,
+  "category": "off-topic",
+  "expected_source": null
+ },
+ {
+  "id": "off09",
+  "q": "Bir yetişkinin günlük kalori ihtiyacı kaç?",
+  "answerable": false,
+  "category": "off-topic",
+  "expected_source": null
+ },
+ {
+  "id": "off03",
+  "q": "Dünya Kupası 2018'i hangi ülke kazandı?",
+  "answerable": false,
+  "category": "off-topic",
+  "expected_source": null
+ },
+ {
+  "id": "off01",
+  "q": "Everest Dağı'nın yüksekliği nedir?",
+  "answerable": false,
+  "category": "off-topic",
+  "expected_source": null
+ },
+ {
+  "id": "nea10",
+  "q": "Koşu programında kalp atış hızı hedefim kaç?",
+  "answerable": false,
+  "category": "near-miss",
+  "expected_source": null
+ },
+ {
+  "id": "nea12",
+  "q": "SQL'de indeks türleri hakkında ne yazmışım?",
+  "answerable": false,
+  "category": "near-miss",
+  "expected_source": null
+ },
+ {
+  "id": "nea14",
+  "q": "Su banyosunda yumurta nasıl haşlanır, tarifim var mı?",
+  "answerable": false,
+  "category": "near-miss",
+  "expected_source": null
+ },
+ {
+  "id": "nea06",
+  "q": "Docker Swarm ile küme nasıl kurulur?",
+  "answerable": false,
+  "category": "near-miss",
+  "expected_source": null
+ },
+ {
+  "id": "nea03",
+  "q": "Python'da asenkron programlama (asyncio) nasıl çalışır?",
+  "answerable": false,
+  "category": "near-miss",
+  "expected_source": null
+ },
+ {
+  "id": "nea02",
+  "q": "Mercimek köftesi nasıl yapılır?",
+  "answerable": false,
+  "category": "near-miss",
+  "expected_source": null
+ },
+ {
+  "id": "nea04",
+  "q": "Kapadokya'da otel fiyatları gecelik ne kadar?",
+  "answerable": false,
+  "category": "near-miss",
+  "expected_source": null
+ },
+ {
+  "id": "nea08",
+  "q": "Lineer cebirde determinant nasıl hesaplanır, notlarımda ne yazıyor?",
+  "answerable": false,
+  "category": "near-miss",
+  "expected_source": null
+ },
+ {
+  "id": "ent13",
+  "q": "Python demetlerde üyelik testi kaç sürede yapılır?",
+  "answerable": false,
+  "category": "entity-swap",
+  "expected_source": null
+ },
+ {
+  "id": "ent11",
+  "q": "Simyacı'nın yazarı hangi yıl kitabı yayımladı?",
+  "answerable": false,
+  "category": "entity-swap",
+  "expected_source": null
+ },
+ {
+  "id": "ent01",
+  "q": "Proje Nova'nın test aşaması ne zaman başlıyor?",
+  "answerable": false,
+  "category": "entity-swap",
+  "expected_source": null
+ },
+ {
+  "id": "ent04",
+  "q": "Proje Nova'da veritabanı geçişinden kim sorumlu?",
+  "answerable": false,
+  "category": "entity-swap",
+  "expected_source": null
+ },
+ {
+  "id": "ent05",
+  "q": "Eskişehir'de balon turu kaça?",
+  "answerable": false,
+  "category": "entity-swap",
+  "expected_source": null
+ },
+ {
+  "id": "ent02",
+  "q": "Proje Atlas'ın katılımcıları kimlerdi?",
+  "answerable": false,
+  "category": "entity-swap",
+  "expected_source": null
+ },
+ {
+  "id": "ent07",
+  "q": "Karnıyarığı kaç dakika kaynatıyorum?",
+  "answerable": false,
+  "category": "entity-swap",
+  "expected_source": null
+ },
+ {
+  "id": "ent08",
+  "q": "Menemende kıyma miktarı ne kadardı?",
+  "answerable": false,
+  "category": "entity-swap",
+  "expected_source": null
+ }
+]

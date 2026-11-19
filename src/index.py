@@ -34,12 +34,26 @@ class NumpyIndex:
         (self.dir / "chunks.json").write_text(
             json.dumps([c.__dict__ for c in chunks], ensure_ascii=False), encoding="utf-8")
 
-    def search(self, qvec: np.ndarray, k: int):
+    def _chunks(self) -> list[Chunk]:
+        return [Chunk(**c) for c in json.loads((self.dir / "chunks.json").read_text("utf-8"))]
+
+    def doc_titles(self) -> dict[str, str]:
+        """source -> ilk başlık (belge filtresi için)."""
+        out: dict[str, str] = {}
+        for c in self._chunks():
+            if not out.get(c.source):
+                out[c.source] = c.heading
+        return out
+
+    def search(self, qvec: np.ndarray, k: int, sources: list[str] | None = None):
         vecs = np.load(self.dir / "vecs.npy")
-        chunks = [Chunk(**c) for c in json.loads((self.dir / "chunks.json").read_text("utf-8"))]
+        chunks = self._chunks()
         # Vektörler normalize olduğu için nokta çarpımı = kosinüs benzerliği
         scores = vecs @ qvec
-        top = np.argsort(-scores)[:k]
+        if sources:
+            allowed = set(sources)
+            scores = np.where([c.source in allowed for c in chunks], scores, -np.inf)
+        top = [i for i in np.argsort(-scores)[:k] if np.isfinite(scores[i])]
         return [(chunks[i], float(scores[i])) for i in top]
 
 
@@ -62,9 +76,18 @@ class ChromaIndex:
                 documents=[c.text for c in chunks],
                 metadatas=[{"source": c.source, "heading": c.heading, "page": c.page} for c in chunks])
 
-    def search(self, qvec: np.ndarray, k: int):
+    def doc_titles(self) -> dict[str, str]:
         col = self.client.get_collection(self.name)
-        r = col.query(query_embeddings=[qvec.tolist()], n_results=k)
+        out: dict[str, str] = {}
+        for m in col.get(include=["metadatas"])["metadatas"]:
+            if not out.get(m["source"]):
+                out[m["source"]] = m.get("heading", "")
+        return out
+
+    def search(self, qvec: np.ndarray, k: int, sources: list[str] | None = None):
+        col = self.client.get_collection(self.name)
+        where = {"source": {"$in": list(sources)}} if sources else None
+        r = col.query(query_embeddings=[qvec.tolist()], n_results=min(k, col.count()) or 1, where=where)
         out = []
         for id_, doc, meta, dist in zip(r["ids"][0], r["documents"][0], r["metadatas"][0], r["distances"][0]):
             out.append((Chunk(id_, meta["source"], meta["heading"], doc, meta.get("page", 0)), 1 - dist))  # mesafe -> benzerlik

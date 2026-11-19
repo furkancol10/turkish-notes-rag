@@ -9,13 +9,18 @@ from .loader import list_note_files
 SYSTEM = (
     "Sen kişisel not asistanısın. Soruyu SADECE aşağıdaki bağlama dayanarak Türkçe, kısa cevapla. "
     "Cevap bağlamda yoksa sadece 'Bu bilgi notlarda yok' de, tahmin etme. "
-    "Sadece bağlam sorulan konu/varlıkla (kişi, proje, şey) AYNI şey hakkındaysa cevapla; bağlam ilişkili "
-    "ama farklı bir şey hakkındaysa (ör. başka projenin veya kişisel kira) onu cevap olarak verme, "
-    "'Bu bilgi notlarda yok' de ve istersen 'notlarda X için değil, Y için kira bilgisi var [n]' diye ekle. "
-    "Cevabın sonunda kullandığın kaynakları [1], [2] gibi numaralarla belirt. "
+    "Bağlam '### Belge: dosya' başlıklı gruplara ayrılmıştır; parçaların [n] numaraları genel numaradır. "
+    "Her bilgi yalnızca göründüğü belgeden alınmalı ve o belgenin [n] numarasıyla atıflanmalı. "
+    "Soru karşılaştırma istemedikçe farklı belgelerdeki maddeleri tek listede birleştirme. "
+    "Soru belirli bir belgeyi/kişiyi/projeyi/aracı anıyorsa SADECE o belgenin bölümlerini kullan; "
+    "orada yoksa 'Bu bilgi notlarda yok' de (başka belgede olsa bile onu cevap diye verme; "
+    "istersen 'başka belgede X var [n]' diye ekle). "
+    "Liste isteniyorsa (ör. 'hangi projeleri önermiş') o belgenin bağlamındaki tüm maddeleri say. "
+    "Sadece bağlam sorulan konu/varlıkla AYNI şey hakkındaysa cevapla; ilişkili ama farklı bir şey "
+    "hakkındaysa onu cevap olarak verme. "
+    "Atıfı cümlenin/maddenin sonuna koy, ör. '... önerdi [3].'; cevabın sonuna [1][2]...[10] yığını ekleme. "
     "Önceki konuşma sadece soruyu anlamak içindir; bilgiler yine bağlamdan gelmeli. "
-    "Bağlamdaki her parçanın başlığında kaynak dosya adı (ve PDF ise sayfa) yazar: "
-    "'hangi dosyada/kaynakta/sayfada' diye sorulursa bu başlıklardaki dosya adını ve sayfayı söyle."
+    "'hangi dosyada/sayfada' diye sorulursa belge başlığındaki dosya adını ve parça başlığındaki sayfayı söyle."
 )
 
 FOLLOWUP_SYSTEM = (
@@ -28,17 +33,39 @@ FOLLOWUP_SYSTEM = (
 )
 
 
+def _loc(c) -> str:
+    parts = [f"s. {c.page}"] if c.page else []
+    if c.heading:
+        parts.append(c.heading)
+    return " / ".join(parts)
+
+
+def _group_ctx(results) -> str:
+    """Parçaları belgeye göre grupla (belgeler en iyi skora göre); [n] genel numarası korunur."""
+    groups: dict[str, list] = {}
+    best: dict[str, float] = {}
+    for i, (c, sc) in enumerate(results, 1):
+        groups.setdefault(c.source, []).append((i, c))
+        best[c.source] = max(best.get(c.source, float("-inf")), sc)
+    order = sorted(groups, key=lambda d: -best[d])  # sorted kararlı: eşitlikte ilk görülen önce
+    blocks = []
+    for d in order:
+        items = "\n\n".join(f"[{i}] ({_loc(c)})\n{c.text}" if _loc(c) else f"[{i}]\n{c.text}"
+                             for i, c in groups[d])
+        blocks.append(f"### Belge: {d}\n{items}")
+    return "\n\n".join(blocks)
+
+
 def build_prompt(question: str, results) -> str:
-    # Her parçaya numara ve kaynak ver ki model atıf yapabilsin
-    ctx = "\n\n".join(f"[{i}] ({chunk_label(c)})\n{c.text}"
-                      for i, (c, _) in enumerate(results, 1))
-    return f"Bağlam:\n{ctx}\n\nSoru: {question}"
+    return f"Bağlam:\n{_group_ctx(results)}\n\nSoru: {question}"
 
 
 def answer(question: str, results, history: list[dict] | None = None) -> str:
     history = list(history or [])
     if history:
-        history, results = conversation.fit_budget(history, results, question, system=SYSTEM)
+        history, results = conversation.fit_budget(
+            history, results, question, system=SYSTEM,
+            limit=3000 - 12 * len({c.source for c, _ in results}))
     resp = ollama.chat(
         model=config.LLM_MODEL,
         messages=[{"role": "system", "content": SYSTEM}, *history,

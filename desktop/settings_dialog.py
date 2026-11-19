@@ -2,7 +2,8 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPalette
 from PySide6.QtWidgets import (QApplication, QDialog, QFrame, QGridLayout, QHBoxLayout, QLabel,
-                               QPushButton, QSpinBox, QVBoxLayout)
+                               QPushButton, QSpinBox, QVBoxLayout, QCheckBox,
+                               QDoubleSpinBox)
 
 try:
     from . import style
@@ -11,6 +12,9 @@ except ImportError:  # doğrudan çalıştırma
 
 DEFAULT_TOP_K = 10
 DEFAULT_BACKEND = "chroma"
+DEFAULT_THRESHOLD = 0.40
+DEFAULT_THRESHOLD_ENABLED = True
+TH_MIN, TH_MAX = 0.20, 0.90
 TOP_K_MIN, TOP_K_MAX = 1, 15
 _INFO_ROWS = (("embed_model", "Gömme modeli"), ("llm_model", "Dil modeli"),
               ("chunk_size", "Parça boyutu"), ("num_ctx", "Bağlam (num_ctx)"),
@@ -26,9 +30,10 @@ SettingsDialog QLabel#section {{ color: {c['muted']}; font-size: 8pt; font-weigh
 SettingsDialog QLabel#hint {{ color: {c['muted']}; font-size: 9pt; }}
 SettingsDialog QLabel#infoKey {{ color: {c['muted']}; }}
 SettingsDialog QFrame#sep {{ background: {c['border']}; max-height: 1px; border: none; }}
-SettingsDialog QSpinBox {{ color: {c['fg']}; background: {c['surface']};
+SettingsDialog QSpinBox, SettingsDialog QDoubleSpinBox {{ color: {c['fg']}; background: {c['surface']};
     border: 1px solid {c['border']}; border-radius: 8px; padding: 4px 8px; min-height: 20px; }}
-SettingsDialog QSpinBox::up-button, SettingsDialog QSpinBox::down-button {{ width: 0; border: none; }}
+SettingsDialog QSpinBox::up-button, SettingsDialog QSpinBox::down-button,
+SettingsDialog QDoubleSpinBox::up-button, SettingsDialog QDoubleSpinBox::down-button {{ width: 0; border: none; }}
 SettingsDialog QPushButton {{ color: {c['fg']}; background: {c['surface']};
     border: 1px solid {c['border']}; border-radius: 8px; padding: 6px 14px; }}
 SettingsDialog QPushButton:hover {{ background: {c['surface2']}; border-color: {c['accent']}; }}
@@ -44,7 +49,9 @@ SettingsDialog QPushButton#save:hover {{ background: {c['accent_hover']}; }}
 
 
 class SettingsDialog(QDialog):
-    def __init__(self, parent=None, *, top_k: int, backend: str, info: dict):
+    def __init__(self, parent=None, *, top_k: int, backend: str, info: dict,
+                 score_threshold: float = DEFAULT_THRESHOLD,
+                 threshold_enabled: bool = DEFAULT_THRESHOLD_ENABLED):
         super().__init__(parent)
         self.setWindowTitle("Ayarlar")
         self.setModal(True)
@@ -94,6 +101,19 @@ class SettingsDialog(QDialog):
         self._set_backend(backend)
         self.btn_chroma.clicked.connect(lambda: self._set_backend("chroma"))
         self.btn_numpy.clicked.connect(lambda: self._set_backend("numpy"))
+
+        root.addSpacing(6)
+        root.addWidget(self._label("CEVAP EŞİĞİ", "section"))
+        self.th_enabled = QCheckBox("Düşük benzerlikte 'notlarda yok' de")
+        self.th_enabled.setChecked(bool(threshold_enabled))
+        root.addWidget(self.th_enabled)
+        self.th = QDoubleSpinBox(minimum=TH_MIN, maximum=TH_MAX, singleStep=0.01, decimals=2)
+        self.th.setAlignment(Qt.AlignCenter)
+        self.th.setValue(max(TH_MIN, min(TH_MAX, float(score_threshold))))
+        self.th.setEnabled(self.th_enabled.isChecked())
+        self.th_enabled.toggled.connect(self.th.setEnabled)
+        root.addWidget(self.th)
+        root.addWidget(self._hint("Yüksek: daha çok 'notlarda yok', düşük: daha çok cevap denemesi"))
 
         root.addSpacing(6)
         root.addWidget(self._label("MODELLER", "section"))
@@ -160,6 +180,10 @@ class SettingsDialog(QDialog):
     def reset(self):
         self.top_k.setValue(DEFAULT_TOP_K)
         self._set_backend(DEFAULT_BACKEND)
+        self.th.setValue(DEFAULT_THRESHOLD)
+        self.th_enabled.setChecked(DEFAULT_THRESHOLD_ENABLED)
 
     def values(self) -> dict:
-        return {"top_k": self.top_k.value(), "backend": self._backend}
+        return {"top_k": self.top_k.value(), "backend": self._backend,
+                "score_threshold": round(self.th.value(), 2),
+                "threshold_enabled": self.th_enabled.isChecked()}

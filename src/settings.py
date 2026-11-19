@@ -128,3 +128,26 @@ def get_folder_section_open() -> bool:
 
 def set_folder_section_open(flag: bool) -> None:
     set("folder_section_open", bool(flag))
+
+
+def get_score_threshold() -> float:
+    v = get("score_threshold")
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        v = _cfg().SCORE_THRESHOLD
+    return max(0.0, min(1.0, float(v)))
+
+
+def set_score_threshold(x) -> float:
+    x = max(0.0, min(1.0, float(x)))
+    set("score_threshold", x)
+    return x
+
+
+def get_threshold_enabled() -> bool:
+    v = get("threshold_enabled")
+    return v if isinstance(v, bool) else bool(_cfg().SCORE_THRESHOLD_ENABLED)
+
+
+def set_threshold_enabled(on) -> bool:
+    set("threshold_enabled", bool(on))
+    return bool(on)

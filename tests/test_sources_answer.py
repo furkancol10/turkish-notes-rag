@@ -49,5 +49,5 @@ def test_no_sources():
 def test_prompt_header_has_page_and_system_allows_files():
     c = SimpleNamespace(source="dosya.pdf", heading="Bölüm", page=3, text="t")
     p = generator.build_prompt("q", [(c, 1.0)])
-    assert "[1] (dosya.pdf, s. 3 / Bölüm)" in p
+    assert "### Belge: dosya.pdf" in p and "[1] (s. 3 / Bölüm)" in p
     assert "hangi dosyada" in generator.SYSTEM
