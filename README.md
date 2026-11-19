@@ -16,7 +16,7 @@ Embedding modelleri ilk çalıştırmada `~/.cache/huggingface` altına iner.
 uv run python -m src.cli index                  # notları oku, parçala, embed et, indeksle
 uv run python -m src.cli ask "Soru?"            # cevap + kaynak parçalar
 uv run python -m src.cli ask "Soru?" --backend chroma
-uv run streamlit run app.py                     # sohbet arayüzü
+uv run streamlit run app.py                     # sohbet arayüzü (not yükleme, yeniden indeksleme, top_k/backend ayarı)
 uv run python -m eval.run_eval                  # chunk boyutu ve model karşılaştırması -> eval/results.md
 ```
 
