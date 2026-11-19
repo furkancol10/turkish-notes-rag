@@ -7,6 +7,33 @@ from src import config, entities
 from src.entities import extract, missing, present
 
 
+V = {"bugün", "toplantıda", "kitap", "python", "bütçe", "ne"}
+
+
+@pytest.mark.parametrize("q,exp", [
+    ("Zeynep ne dedi?", ["Zeynep"]), ("Mehmet Bey ne dedi?", ["Mehmet"]), ("Ayşe'nin doğum günü ne zaman?", ["Ayşe"]),
+    ("Bugün ne yaptım?", []), ("Toplantıda ne konuştuk?", []), ("Kitap önerin var mı?", []),
+    ("Python demetleri nedir?", []), ("What did you say?", []), ("Who is Ali?", ["Ali"]),
+])
+def test_sentence_initial_names(q, exp):
+    assert extract(q, vocab=V) == exp
+
+
+@pytest.mark.parametrize("q", ["Bugün ne yaptım?", "Toplantıda ne konuştuk?", "Kitap önerin var mı?"])
+def test_builtin_common_without_corpus(q):
+    assert extract(q, vocab=set()) == []
+
+
+def test_initial_suffixed_stop():
+    assert extract("Yazarın meditasyon türü neydi?", vocab=V) == []
+
+
+def test_initial_name_missing():
+    assert missing("Zeynep ne dedi?", ["ali evet dedi"], vocab=V) == ["Zeynep"]
+    assert missing("Mehmet Bey ne dedi?", ["ali evet dedi"], vocab=V) == ["Mehmet"]
+    assert extract("Mehmet Bey ne dedi?", vocab=V) == ["Mehmet"]
+
+
 def test_sentence_initial_ignored():
     assert extract("Bütçe ne kadar?") == []
     assert extract("Hangi gün Python öğrendim?") == ["Python"]
@@ -110,6 +137,7 @@ def test_real_missing_still_detected():
 
 
 def test_extract_strips_stop_and_short():
-    assert extract("Ali Bey ne dedi?") == []
+    assert extract("Ali Bey ne dedi?", vocab=V) == ["Ali"]
+    assert extract("Dün Ali Bey ne dedi?", vocab=V) == ["Ali"]
     assert extract("What did I eat?") == []
     assert extract("Geçen Hafta Toplantıda ne konuştuk?") == []
