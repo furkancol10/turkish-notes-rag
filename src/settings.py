@@ -77,3 +77,51 @@ def set_notes_dir(path) -> Path:
 
 def reset_notes_dir() -> None:
     set("notes_dir", None)
+
+
+# ---- Tipli ayarlar ----
+def _cfg():
+    from src import config
+    return config
+
+
+def get_top_k() -> int:
+    v = get("top_k")
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        v = _cfg().TOP_K
+    return max(1, min(15, int(v)))
+
+
+def set_top_k(n) -> int:
+    n = max(1, min(15, int(n)))
+    set("top_k", n)
+    return n
+
+
+def get_backend() -> str:
+    v = get("backend")
+    return v if v in ("chroma", "numpy") else _cfg().INDEX_BACKEND
+
+
+def set_backend(name: str) -> None:
+    if name not in ("chroma", "numpy"):
+        raise ValueError(f"Geçersiz backend: {name}")
+    set("backend", name)
+
+
+def get_last_chat_id() -> str | None:
+    v = get("last_chat_id")
+    return v if isinstance(v, str) and v else None
+
+
+def set_last_chat_id(chat_id: str | None) -> None:
+    set("last_chat_id", chat_id or None)
+
+
+def get_folder_section_open() -> bool:
+    v = get("folder_section_open")
+    return v if isinstance(v, bool) else False
+
+
+def set_folder_section_open(flag: bool) -> None:
+    set("folder_section_open", bool(flag))
