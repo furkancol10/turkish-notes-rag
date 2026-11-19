@@ -1,5 +1,6 @@
 """Sohbet arayüzü:  uv run streamlit run app.py"""
 from datetime import datetime
+from pathlib import Path
 
 import streamlit as st
 
@@ -37,6 +38,20 @@ def reindex():
     return len(docs), len(chunks)
 
 
+def save_upload(name: str, data: bytes):
+    """Yüklenen notu NOTES_DIR'e kaydet; dosya adını temizler (path traversal yok).
+    Kaydedilen adı döner, geçersizse None."""
+    safe = Path(name.replace("\\", "/")).name.strip()
+    if not safe or safe.startswith(".") or Path(safe).suffix.lower() not in (".md", ".txt"):
+        return None
+    (config.NOTES_DIR / safe).write_bytes(data)
+    return safe
+
+
+def is_index_missing(e: Exception) -> bool:
+    return isinstance(e, FileNotFoundError) or "does not exist" in str(e).lower()
+
+
 def is_connection_error(e: Exception) -> bool:
     return isinstance(e, ConnectionError) or "connect" in str(e).lower()
 
@@ -52,9 +67,12 @@ with st.sidebar:
     uploads = st.file_uploader("Not yükle (.md / .txt)", type=["md", "txt"],
                                accept_multiple_files=True)
     if uploads and st.button("Yüklenenleri kaydet"):
-        for u in uploads:
-            (config.NOTES_DIR / u.name).write_bytes(u.getvalue())
-        st.success(f"{len(uploads)} dosya kaydedildi. Şimdi yeniden indeksle.")
+        saved = [save_upload(u.name, u.getvalue()) for u in uploads]
+        n_ok = sum(1 for x in saved if x)
+        if n_ok:
+            st.success(f"{n_ok} dosya kaydedildi. Şimdi yeniden indeksle.")
+        if n_ok < len(saved):
+            st.warning("Geçersiz dosya adı atlandı.")
 
     st.header("İndeks")
     if st.button("Yeniden indeksle"):
@@ -105,8 +123,11 @@ if q := st.chat_input("Notlarına bir soru sor"):
             with st.spinner("Notlarda aranıyor..."):
                 load_embed_model()
                 results = retrieve(q, k=top_k, backend=backend)
-        except Exception:
-            st.error("İndeks bulunamadı. Soldan 'Yeniden indeksle'ye bas.")
+        except Exception as e:
+            if is_index_missing(e):
+                st.error("İndeks bulunamadı. Soldan 'Yeniden indeksle'ye bas.")
+            else:
+                st.error(f"Arama başarısız: {e}")
             st.stop()
         try:
             with st.spinner("Cevap üretiliyor..."):
