@@ -1,0 +1,135 @@
+{
+ "frozen": true,
+ "note": "DONDURULMUŞ genel soru seti: beklenen filtre None. Kurallar (COMMON, ek listeleri, ekler) bu sete bakılarak AYARLANMAZ; yalnızca ölçüm içindir.",
+ "expected_filter": null,
+ "questions": [
+  {
+   "id": "g01",
+   "q": "Verimli çalışmak için ne yapmalıyım?"
+  },
+  {
+   "id": "g02",
+   "q": "Günlük program nasıl hazırlanır?"
+  },
+  {
+   "id": "g03",
+   "q": "İyi bir plan nasıl yapılır?"
+  },
+  {
+   "id": "g04",
+   "q": "Veri nedir?"
+  },
+  {
+   "id": "g05",
+   "q": "Veri analizi nereden başlanır?"
+  },
+  {
+   "id": "g06",
+   "q": "Hangi kitap okumaya değer?"
+  },
+  {
+   "id": "g07",
+   "q": "Kitap okuma alışkanlığı nasıl kazanılır?"
+  },
+  {
+   "id": "g08",
+   "q": "Kolay bir tarif önerir misin?"
+  },
+  {
+   "id": "g09",
+   "q": "Tarif defterine ne yazılır?"
+  },
+  {
+   "id": "g10",
+   "q": "Toplantı nasıl verimli yönetilir?"
+  },
+  {
+   "id": "g11",
+   "q": "Toplantı notu nasıl tutulur?"
+  },
+  {
+   "id": "g12",
+   "q": "Bütçe nasıl hazırlanır?"
+  },
+  {
+   "id": "g13",
+   "q": "Aylık bütçeyi aşmamak için ne yapmalı?"
+  },
+  {
+   "id": "g14",
+   "q": "Ders çalışırken nasıl odaklanırım?"
+  },
+  {
+   "id": "g15",
+   "q": "Ders programı nasıl düzenlenir?"
+  },
+  {
+   "id": "g16",
+   "q": "Seyahat için valiz nasıl hazırlanır?"
+  },
+  {
+   "id": "g17",
+   "q": "Seyahat planı yaparken nelere dikkat edilir?"
+  },
+  {
+   "id": "g18",
+   "q": "İyi bir film nasıl seçilir?"
+  },
+  {
+   "id": "g19",
+   "q": "Film izlerken ne yenir?"
+  },
+  {
+   "id": "g20",
+   "q": "Proje yönetimi nedir?"
+  },
+  {
+   "id": "g21",
+   "q": "Proje planı nasıl yazılır?"
+  },
+  {
+   "id": "g22",
+   "q": "Spor yapmak için en iyi saat hangisi?"
+  },
+  {
+   "id": "g23",
+   "q": "Teknik borç nedir?"
+  },
+  {
+   "id": "g24",
+   "q": "Kitaplar hakkında genel olarak ne düşünüyorsun?"
+  },
+  {
+   "id": "g25",
+   "q": "Derslerde not almanın yolları nelerdir?"
+  },
+  {
+   "id": "g26",
+   "q": "Seyahatlerde para nasıl biriktirilir?"
+  },
+  {
+   "id": "g27",
+   "q": "Tariflerde tuz miktarı nasıl ayarlanır?"
+  },
+  {
+   "id": "g28",
+   "q": "Toplantılarda ne zaman söz alınır?"
+  },
+  {
+   "id": "g29",
+   "q": "Filmlerde müzik neden önemlidir?"
+  },
+  {
+   "id": "g30",
+   "q": "Bütçeleme için hangi uygulamalar var?"
+  },
+  {
+   "id": "g31",
+   "q": "Planlar neden bozulur?"
+  },
+  {
+   "id": "g32",
+   "q": "Verimlilik için sabah rutini nasıl olmalı?"
+  }
+ ]
+}
