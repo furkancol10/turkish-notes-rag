@@ -197,3 +197,45 @@ def test_intent_saved_and_restored(tmp_path, monkeypatch):
 def test_notes_prompt_has_entity_rule():
     from src.generator import SYSTEM
     assert "AYNI" in SYSTEM and "farklı" in SYSTEM and "notlarda yok" in SYSTEM
+
+
+# ---- skor eşiği ----
+def low(calls, monkeypatch, score):
+    monkeypatch.setattr(services, "retrieve", lambda q, k, backend: [(CH, score)])
+
+
+def test_below_threshold_skips_llm(calls, monkeypatch):
+    low(calls, monkeypatch, 0.38)
+    ans, res, info = services.ask("soru", 5, "numpy", [], 0.45, True)
+    assert ans == "Bu bilgi notlarda yok." and "ans" not in calls and res == [(CH, 0.38)]
+    assert info["below_threshold"] is True and info["top_score"] == 0.38 and info["intent"] == "notes"
+    assert info["note"] == "En yakın eşleşme: a.md (skor 0.38) — eşik 0.45"
+
+
+def test_above_threshold_and_disabled(calls, monkeypatch):
+    ans, res, info = services.ask("soru", 5, "numpy", [], 0.45, True)
+    assert ans == "cevap" and "below_threshold" not in info
+    low(calls, monkeypatch, 0.1)
+    calls.pop("ans", None)
+    ans, _, info = services.ask("soru", 5, "numpy", [], 0.45, False)
+    assert ans == "cevap" and "ans" in calls and "below_threshold" not in info
+
+
+def test_threshold_from_settings(calls, monkeypatch, tmp_path):
+    from src import settings
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    settings.set_score_threshold(0.9)
+    assert services.ask("soru", 5, "numpy", [])[2].get("below_threshold")
+    settings.set_threshold_enabled(False)
+    assert services.ask("soru", 5, "numpy", [])[0] == "cevap"
+
+
+def test_meta_unaffected(calls, monkeypatch):
+    low(calls, monkeypatch, 0.0)
+    assert services.ask("merhaba", 5, "numpy", [], 0.9, True)[0] == "meta"
+
+
+def test_below_threshold_message_not_followup_base():
+    from src import history
+    m = {"role": "assistant", "text": "x", "intent": "notes", "below_threshold": True, "sources": SRC}
+    assert history.last_notes_message([m]) is None

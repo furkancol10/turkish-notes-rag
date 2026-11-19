@@ -121,7 +121,7 @@ class TypingDots(QWidget):
 
 class Bubble(QWidget):
     """Tek mesaj satırı: kullanıcı sağda, asistan solda avatarlı."""
-    def __init__(self, role, text="", results=None, typing=False, query=None):
+    def __init__(self, role, text="", results=None, typing=False, query=None, note=None):
         super().__init__()
         self.typing = typing
         self._user = user = role == "user"
@@ -152,6 +152,12 @@ class Bubble(QWidget):
             ql.setWordWrap(True)
             ql.setTextInteractionFlags(Qt.TextSelectableByMouse)
             lay.addWidget(ql)
+        if note and not user:
+            nl = QLabel(note)
+            nl.setObjectName("who")
+            nl.setWordWrap(True)
+            nl.setTextInteractionFlags(Qt.TextSelectableByMouse)
+            lay.addWidget(nl)
         if results:
             # Kaynaklar varsayılan olarak gizli; tek düğmeyle açılır/kapanır
             n = len(results)
@@ -362,8 +368,8 @@ class ChatView(QScrollArea):
         sb = self.verticalScrollBar()
         QTimer.singleShot(50, lambda: sb.setValue(sb.maximum()))
 
-    def add(self, role, text, results=None, query=None):
-        b = Bubble(role, text, results, query=query)
+    def add(self, role, text, results=None, query=None, note=None):
+        b = Bubble(role, text, results, query=query, note=note)
         self._insert(b)
         return b
 
@@ -400,4 +406,5 @@ class ChatView(QScrollArea):
                     score = 0.0
                 res.append((SimpleNamespace(source=s.get("source", ""), heading=s.get("heading", ""),
                                             page=s.get("page"), text=s.get("text", "")), score))
-            self.add(m.get("role", "assistant"), str(m.get("text", "")), res, m.get("query") or None)
+            self.add(m.get("role", "assistant"), str(m.get("text", "")), res, m.get("query") or None,
+                     m.get("note") or None)

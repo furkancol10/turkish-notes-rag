@@ -111,6 +111,7 @@ Her asistan mesajı niyetiyle (`intent`) birlikte kaydedilir. `followup` ve `sou
 | Niyet analizi | `src/rewriter.py`, `src/router.py` | Her soru aramaya gitmez: `analyze` niyeti ve bağımsız arama sorgusunu üretir |
 | Kaynak cevabı | `src/sources.py` | "Hangi dosyada?" LLM'siz, atıf numaralarından cevaplanır |
 | Geri getirme | `src/retriever.py` | Sorguyu embed et, en benzer top-k parça |
+| Skor eşiği | `desktop/services.py` | En iyi parçanın kosinüs skoru eşiğin altındaysa LLM çağrılmaz: "Bu bilgi notlarda yok." + "En yakın eşleşme: ... (skor 0.38) — eşik 0.45" (kaynaklar yine listelenir) |
 | Bütçe | `src/conversation.py` | `num_ctx` sınırı: geçmiş ve parçalar sığacak şekilde kırpılır |
 | Üretim | `src/generator.py` | Sadece bağlama dayalı prompt, kaynak atfı, "bilmiyorum" |
 | Değerlendirme | `eval/` | hit@k ve MRR ile ayarı ölçerek yapmak |
@@ -138,6 +139,7 @@ Soru:  doğru mu?                   -> followup (yeni arama yok, önceki kaynakl
 | `CHUNK_SIZE` / `CHUNK_OVERLAP` | 512 / 64 | karakter |
 | `INDEX_BACKEND` | `chroma` | `chroma` veya `numpy` |
 | `TOP_K` | 10 | getirilen parça sayısı |
+| `SCORE_THRESHOLD` / `SCORE_THRESHOLD_ENABLED` | 0.40 / `True` | en iyi skor bunun altındaysa "notlarda yok" denir; CLI: `--threshold X`, `--no-threshold` |
 | `LLM_MODEL` | `qwen3.5:4b` | Ollama modeli |
 | `LLM_OPTIONS` | `num_ctx 4096`, `temperature 0.2` | üretim ayarları |
 | `LLM_KEEP_ALIVE` | `2m` | model bellekte kalma süresi |
@@ -146,7 +148,7 @@ Soru:  doğru mu?                   -> followup (yeni arama yok, önceki kaynakl
 
 | Ne | Nerede |
 |---|---|
-| Not klasörü, top_k, indeks yöntemi, son sohbet | `~/.config/kisisel-not-arama/settings.json` |
+| Not klasörü, top_k, indeks yöntemi, cevap eşiği (açık/kapalı + değer), son sohbet | `~/.config/kisisel-not-arama/settings.json` |
 | Sohbet geçmişi (JSON, sohbet başına bir dosya) | `~/.local/share/kisisel-not-arama/chats/` |
 | İndeksler (klasör başına) | `data/index/` (git'e girmez) |
 

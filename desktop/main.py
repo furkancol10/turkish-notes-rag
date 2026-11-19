@@ -27,6 +27,8 @@ class MainWindow(QMainWindow):
         self._model_ready = False
         self._asking = False
         self.top_k = settings.get_top_k()
+        self.threshold = settings.get_score_threshold()
+        self.threshold_enabled = settings.get_threshold_enabled()
         self.backend = settings.get_backend()
         self.cur = history.new_chat("")
         app = QApplication.instance()
@@ -141,12 +143,16 @@ class MainWindow(QMainWindow):
                 "chunk_size": f"{config.CHUNK_SIZE} karakter",
                 "num_ctx": config.LLM_OPTIONS.get("num_ctx"),
                 "notes_dir": str(services.notes_dir())}
-        dlg = SettingsDialog(self, top_k=self.top_k, backend=self.backend, info=info)
+        dlg = SettingsDialog(self, top_k=self.top_k, backend=self.backend, info=info,
+                             score_threshold=self.threshold, threshold_enabled=self.threshold_enabled)
         if dlg.exec():
             v = dlg.values()
             self.top_k, self.backend = v["top_k"], v["backend"]
             self._persist(settings.set_top_k, self.top_k)
             self._persist(settings.set_backend, self.backend)
+            self.threshold, self.threshold_enabled = v["score_threshold"], v["threshold_enabled"]
+            self._persist(settings.set_score_threshold, self.threshold)
+            self._persist(settings.set_threshold_enabled, self.threshold_enabled)
 
     # ---------- sohbet geçmişi ----------
     def _refresh_chats(self):
@@ -207,12 +213,14 @@ class MainWindow(QMainWindow):
                 self.cur["title"] = c.get("title", "")
         self._refresh_chats()
 
-    def _record(self, role, text, sources=None, query=None, intent=None):
+    def _record(self, role, text, sources=None, query=None, intent=None, extra=None):
         msg = {"role": role, "text": text, "sources": sources or []}
         if intent:
             msg["intent"] = intent
         if query:
             msg["query"] = query
+        if extra:
+            msg.update(extra)
         self.cur["messages"].append(msg)
         try:
             history.save_chat(self.cur)
@@ -271,7 +279,8 @@ class MainWindow(QMainWindow):
         self.chat.show_typing()
         self._asking = True
         self.run(services.ask, self._on_answer, self._on_ask_failed,
-                 "Notlarda aranıyor ve cevap üretiliyor...", q, self.top_k, self.backend, prior)
+                 "Notlarda aranıyor ve cevap üretiliyor...", q, self.top_k, self.backend, prior,
+                 self.threshold, self.threshold_enabled)
 
     def _on_answer(self, res):
         ans, results, info = res
@@ -280,9 +289,11 @@ class MainWindow(QMainWindow):
         q = q if q and q != asked else None
         self._asking = False
         self.chat.hide_typing()
-        self.chat.add("assistant", ans, results, q)
+        self.chat.add("assistant", ans, results, q, info.get("note"))
         self._record("assistant", ans, history.sources_from_results(results), q,
-                     info.get("intent"))
+                     info.get("intent"),
+                     {k: info[k] for k in ("below_threshold", "top_score", "threshold", "note")
+                      if k in info})
         self.statusBar().showMessage("Cevap hazır", 5000)
 
     def _on_ask_failed(self, e):
