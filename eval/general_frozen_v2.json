@@ -1,0 +1,127 @@
+{
+ "frozen": true,
+ "date": "2026-11-20",
+ "note": "do not tune rules on this set",
+ "questions": [
+  {
+   "q": "Bütçe hazırlarken nelere dikkat etmeliyim?"
+  },
+  {
+   "q": "Aylık bütçemi nasıl daha iyi yönetebilirim?"
+  },
+  {
+   "q": "Bu hafta izlediğim filmler arasında en iyisi hangisi?"
+  },
+  {
+   "q": "Film izlerken not almak için ne yapıyorum?"
+  },
+  {
+   "q": "Okuduğum kitaplar arasında hangisi en çok etkiledi?"
+  },
+  {
+   "q": "Kitapların genel temaları neler?"
+  },
+  {
+   "q": "Derslerde en çok hangi konular zorlayıcı?"
+  },
+  {
+   "q": "Ders çalışma programım nasıl olmalı?"
+  },
+  {
+   "q": "Veri ile ilgili hangi notlarım var?"
+  },
+  {
+   "q": "Verilerin analizi için hangi yöntemleri not almışım?"
+  },
+  {
+   "q": "Program yaparken nelere dikkat ediyorum?"
+  },
+  {
+   "q": "Hangi tarifler kolay ve hızlı?"
+  },
+  {
+   "q": "Tariflerde sık kullandığım malzemeler neler?"
+  },
+  {
+   "q": "Seyahat planı yaparken neleri unutmamalıyım?"
+  },
+  {
+   "q": "Seyahatlerde bütçe nasıl ayarlanır?"
+  },
+  {
+   "q": "Spor yapmak için en iyi saat ne zaman?"
+  },
+  {
+   "q": "Sporun faydaları hakkında ne yazmışım?"
+  },
+  {
+   "q": "Toplantılarda hangi kararlar alındı?"
+  },
+  {
+   "q": "Toplantı notlarını nasıl düzenliyorum?"
+  },
+  {
+   "q": "Sağlık için neler yapmalıyım?"
+  },
+  {
+   "q": "Uykumu düzene sokmak için ne önerilmiş?"
+  },
+  {
+   "q": "Uyku kalitesi neden önemli?"
+  },
+  {
+   "q": "Git hakkında genel olarak neler öğrendim?"
+  },
+  {
+   "q": "Docker nedir ve ne işe yarar?"
+  },
+  {
+   "q": "Python ile ilgili notlarım neler?"
+  },
+  {
+   "q": "Python'da döngü nasıl yazılır?"
+  },
+  {
+   "q": "Plan yaparken hangi adımları izliyorum?"
+  },
+  {
+   "q": "Haftalık plan nasıl hazırlanır?"
+  },
+  {
+   "q": "Teknik notlarımda hangi komutlar geçiyor?"
+  },
+  {
+   "q": "Alışkanlık edinmek için ne yapmalıyım?"
+  },
+  {
+   "q": "Ekonomi hakkında ne biliyorum?"
+  },
+  {
+   "q": "Fikirlerimi nasıl geliştirebilirim?"
+  },
+  {
+   "q": "Yemek yaparken hangi yöntemler faydalı?"
+  },
+  {
+   "q": "İngilizce öğrenmek için hangi yöntemler iyi?"
+  },
+  {
+   "q": "Makine öğrenmesi nedir kısaca?"
+  },
+  {
+   "q": "Koşu yapmaya yeni başlayanlara ne önerilir?"
+  },
+  {
+   "q": "Konteyner kavramı nedir?"
+  },
+  {
+   "q": "Bir proje yönetimi için ne gerekir?"
+  },
+  {
+   "q": "Hafta sonu gezisi için ne önerirsin?"
+  },
+  {
+   "q": "Verileri listelerde nasıl saklarım?"
+  }
+ ]
+}

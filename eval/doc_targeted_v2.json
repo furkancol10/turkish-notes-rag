@@ -1,0 +1,165 @@
+{
+ "frozen": true,
+ "date": "2026-11-20",
+ "note": "do not tune rules on this set",
+ "questions": [
+  {
+   "q": "Proje Atlas toplantısında neler konuşuldu?",
+   "docs": [
+    "toplanti_proje_atlas"
+   ]
+  },
+  {
+   "q": "Proje Nova'nın toplantı notlarında ne var?",
+   "docs": [
+    "toplanti_proje_nova"
+   ]
+  },
+  {
+   "q": "Inception filminin konusu nedir?",
+   "docs": [
+    "film_inception"
+   ]
+  },
+  {
+   "q": "Inception'daki rüya katmanları nasıl anlatılmış?",
+   "docs": [
+    "film_inception"
+   ]
+  },
+  {
+   "q": "Sapiens kitabında tarım devrimi hakkında ne yazıyor?",
+   "docs": [
+    "kitap_sapiens"
+   ]
+  },
+  {
+   "q": "Homo Deus'un ana fikri nedir?",
+   "docs": [
+    "kitap_homo_deus"
+   ]
+  },
+  {
+   "q": "Atomic Habits özetinde alışkanlık döngüsü nedir?",
+   "docs": [
+    "kitap_atomic_habits"
+   ]
+  },
+  {
+   "q": "Simyacı kitabındaki Santiago kimdir?",
+   "docs": [
+    "kitap_simyaci"
+   ]
+  },
+  {
+   "q": "Kürk Mantolu Madonna'da Raif Efendi'yi anlat.",
+   "docs": [
+    "kitap_kurk_mantolu_madonna"
+   ]
+  },
+  {
+   "q": "21. Yüzyıl İçin 21 Ders kitabının özeti nedir?",
+   "docs": [
+    "kitap_21_ders"
+   ]
+  },
+  {
+   "q": "baklava tarifinde kaç kat yufka kullanılıyor?",
+   "docs": [
+    "tarif_baklava"
+   ]
+  },
+  {
+   "q": "İmam bayıldı nasıl yapılır?",
+   "docs": [
+    "tarif_imam_bayildi"
+   ]
+  },
+  {
+   "q": "Karnıyarık için hangi malzemeler lazım?",
+   "docs": [
+    "tarif_karniyarik"
+   ]
+  },
+  {
+   "q": "Mercimek çorbası tarifini ver.",
+   "docs": [
+    "tarif_mercimek_corbasi"
+   ]
+  },
+  {
+   "q": "Sucuklu yumurta kaç dakikada pişer?",
+   "docs": [
+    "tarif_sucuklu_yumurta"
+   ]
+  },
+  {
+   "q": "Menemen tarifinde soğan kullanılıyor mu?",
+   "docs": [
+    "tarif_menemen"
+   ]
+  },
+  {
+   "q": "Kapadokya seyahat planında hangi günler balon turu var?",
+   "docs": [
+    "seyahat_kapadokya"
+   ]
+  },
+  {
+   "q": "Eskişehir hafta sonu gezisinde nereleri gezeceğim?",
+   "docs": [
+    "seyahat_eskisehir"
+   ]
+  },
+  {
+   "q": "teknik_docker_compose.md dosyasında hangi ağ ayarları var?",
+   "docs": [
+    "teknik_docker_compose"
+   ]
+  },
+  {
+   "q": "SQL JOIN türleri arasındaki fark nedir?",
+   "docs": [
+    "teknik_sql_join"
+   ]
+  },
+  {
+   "q": "Lineer cebir notlarında özdeğer nasıl tanımlanmış?",
+   "docs": [
+    "ders_lineer_cebir"
+   ]
+  },
+  {
+   "q": "Fotosentez notunda ışık reaksiyonları nelerdir?",
+   "docs": [
+    "ders_biyoloji_fotosentez"
+   ]
+  },
+  {
+   "q": "Proje Atlas ile Proje Nova toplantılarını karşılaştır.",
+   "docs": [
+    "toplanti_proje_atlas",
+    "toplanti_proje_nova"
+   ]
+  },
+  {
+   "q": "Sapiens ile Homo Deus kitaplarının farkı nedir?",
+   "docs": [
+    "kitap_sapiens",
+    "kitap_homo_deus"
+   ]
+  },
+  {
+   "q": "İstanbul hafta sonu gezisi notunda nereye gidiyorum?",
+   "docs": [
+    "seyahat_istanbul"
+   ]
+  },
+  {
+   "q": "kisisel_butce.md içinde aylık gider kalemleri neler?",
+   "docs": [
+    "kisisel_butce"
+   ]
+  }
+ ]
+}
