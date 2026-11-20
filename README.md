@@ -265,6 +265,10 @@ uv run pytest
 
 LLM ve arama testlerde taklit edilir (Ollama gerekmez). Kendi ayarlarını/sohbetlerini korumak için geçici `XDG_CONFIG_HOME` / `XDG_DATA_HOME` ile çalıştırabilirsin.
 
+## Teslim raporu
+
+Mimari, teknolojiler, değerlendirme sonuçları, kalite değerlendirmesi, sınırlamalar ve yol haritası: [`rapor/Kisisel-Not-Arama-Teslim-Raporu.pdf`](rapor/Kisisel-Not-Arama-Teslim-Raporu.pdf) (28 sayfa).
+
 ## Lisans
 
 MIT (bkz. `LICENSE`).
