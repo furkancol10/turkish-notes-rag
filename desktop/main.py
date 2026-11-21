@@ -29,6 +29,7 @@ class MainWindow(QMainWindow):
         self.top_k = settings.get_top_k()
         self.threshold = settings.get_score_threshold()
         self.threshold_enabled = settings.get_threshold_enabled()
+        self.show_citations = settings.get_show_citations()
         self.backend = settings.get_backend()
         self.cur = history.new_chat("")
         app = QApplication.instance()
@@ -144,7 +145,8 @@ class MainWindow(QMainWindow):
                 "num_ctx": config.LLM_OPTIONS.get("num_ctx"),
                 "notes_dir": str(services.notes_dir())}
         dlg = SettingsDialog(self, top_k=self.top_k, backend=self.backend, info=info,
-                             score_threshold=self.threshold, threshold_enabled=self.threshold_enabled)
+                             score_threshold=self.threshold, threshold_enabled=self.threshold_enabled,
+                             show_citations=self.show_citations)
         if dlg.exec():
             v = dlg.values()
             self.top_k, self.backend = v["top_k"], v["backend"]
@@ -153,6 +155,11 @@ class MainWindow(QMainWindow):
             self.threshold, self.threshold_enabled = v["score_threshold"], v["threshold_enabled"]
             self._persist(settings.set_score_threshold, self.threshold)
             self._persist(settings.set_threshold_enabled, self.threshold_enabled)
+            old_cite = self.show_citations
+            self.show_citations = v["show_citations"]
+            self._persist(settings.set_show_citations, self.show_citations)
+            if self.show_citations != old_cite:
+                self.chat.refresh_display()
 
     # ---------- sohbet geçmişi ----------
     def _refresh_chats(self):

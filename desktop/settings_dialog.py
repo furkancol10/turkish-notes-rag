@@ -14,6 +14,7 @@ DEFAULT_TOP_K = 10
 DEFAULT_BACKEND = "chroma"
 DEFAULT_THRESHOLD = 0.40
 DEFAULT_THRESHOLD_ENABLED = True
+DEFAULT_SHOW_CITATIONS = True
 TH_MIN, TH_MAX = 0.20, 0.90
 TOP_K_MIN, TOP_K_MAX = 1, 15
 _INFO_ROWS = (("embed_model", "Gömme modeli"), ("llm_model", "Dil modeli"),
@@ -51,7 +52,8 @@ SettingsDialog QPushButton#save:hover {{ background: {c['accent_hover']}; }}
 class SettingsDialog(QDialog):
     def __init__(self, parent=None, *, top_k: int, backend: str, info: dict,
                  score_threshold: float = DEFAULT_THRESHOLD,
-                 threshold_enabled: bool = DEFAULT_THRESHOLD_ENABLED):
+                 threshold_enabled: bool = DEFAULT_THRESHOLD_ENABLED,
+                 show_citations: bool = DEFAULT_SHOW_CITATIONS):
         super().__init__(parent)
         self.setWindowTitle("Ayarlar")
         self.setModal(True)
@@ -114,6 +116,14 @@ class SettingsDialog(QDialog):
         self.th_enabled.toggled.connect(self.th.setEnabled)
         root.addWidget(self.th)
         root.addWidget(self._hint("Yüksek: daha çok 'notlarda yok', düşük: daha çok cevap denemesi"))
+
+        root.addSpacing(6)
+        root.addWidget(self._label("GÖRÜNÜM", "section"))
+        self.show_citations = QCheckBox("Atıf numaralarını göster")
+        self.show_citations.setChecked(bool(show_citations))
+        root.addWidget(self.show_citations)
+        root.addWidget(self._hint("Kapalıyken [1], [2] işaretleri cevap metninde gizlenir; "
+                                  "kaynaklar listesi yine açılabilir."))
 
         root.addSpacing(6)
         root.addWidget(self._label("MODELLER", "section"))
@@ -182,8 +192,10 @@ class SettingsDialog(QDialog):
         self._set_backend(DEFAULT_BACKEND)
         self.th.setValue(DEFAULT_THRESHOLD)
         self.th_enabled.setChecked(DEFAULT_THRESHOLD_ENABLED)
+        self.show_citations.setChecked(DEFAULT_SHOW_CITATIONS)
 
     def values(self) -> dict:
         return {"top_k": self.top_k.value(), "backend": self._backend,
                 "score_threshold": round(self.th.value(), 2),
-                "threshold_enabled": self.th_enabled.isChecked()}
+                "threshold_enabled": self.th_enabled.isChecked(),
+                "show_citations": self.show_citations.isChecked()}

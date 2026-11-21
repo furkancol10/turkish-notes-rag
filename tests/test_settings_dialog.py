@@ -13,7 +13,7 @@ from desktop.settings_dialog import SettingsDialog
 INFO = {"embed_model": "bge-m3", "llm_model": "qwen", "chunk_size": 800, "num_ctx": 4096,
         "notes_dir": "/tmp/notlar"}
 
-TH = {"score_threshold": 0.40, "threshold_enabled": True}
+TH = {"score_threshold": 0.40, "threshold_enabled": True, "show_citations": True}
 
 
 @pytest.fixture(scope="module")
@@ -82,3 +82,14 @@ def test_threshold_values_reset_and_disable(app):
     assert d.values()["score_threshold"] == 0.9
     d.btn_reset.click()
     assert (d.values()["score_threshold"], d.values()["threshold_enabled"]) == (0.40, True)
+
+
+def test_show_citations_toggle_and_reset(app):
+    d = SettingsDialog(None, top_k=7, backend="numpy", info=INFO, show_citations=False)
+    assert d.show_citations.text() == "Atıf numaralarını göster"
+    assert d.values()["show_citations"] is False
+    d.show_citations.setChecked(True)
+    assert d.values()["show_citations"] is True
+    d.show_citations.setChecked(False)
+    d.btn_reset.click()
+    assert d.values()["show_citations"] is True

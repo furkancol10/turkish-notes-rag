@@ -151,3 +151,12 @@ def get_threshold_enabled() -> bool:
 def set_threshold_enabled(on) -> bool:
     set("threshold_enabled", bool(on))
     return bool(on)
+
+
+def get_show_citations() -> bool:
+    v = get("show_citations")
+    return v if isinstance(v, bool) else True
+
+
+def set_show_citations(value: bool) -> None:
+    set("show_citations", bool(value))
