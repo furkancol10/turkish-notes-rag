@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (QFrame, QSizePolicy, QHBoxLayout, QLabel, QPlainT
                                QScrollArea, QTextBrowser, QToolButton, QVBoxLayout, QWidget)
 
 from src.chunker import chunk_label
+from src.sources import display_text
 
 from . import style
 
@@ -142,7 +143,8 @@ class Bubble(QWidget):
             lay.addWidget(TypingDots())
         else:
             # Asistan cevabı Markdown (kalın, liste) olarak gösterilir; kullanıcı metni düz kalır
-            msg = MsgView(text, markdown=not user)
+            shown = text if user else display_text(text)
+            msg = MsgView(shown, markdown=not user)
             msg.setObjectName("msg")
             self._msg = msg
             lay.addWidget(msg)
@@ -237,6 +239,19 @@ class Bubble(QWidget):
 
     def _open_sources(self):
         return self._toggle_btn is not None and self._toggle_btn.isChecked()
+
+    def refresh_display(self):
+        """Atıf ayarı değiştiğinde asistan balonunun görünen metnini ham metinden yeniler."""
+        if self._msg is None or self._user:
+            return
+        self._msg.setMarkdown(display_text(self._text))
+        self.set_column_width(self._colw)
+        vw = self._msg.viewport().width()
+        if vw > 0:
+            h = self._msg.heightForWidth(vw)
+            self._msg.setMinimumHeight(h)
+            self._msg.setMaximumHeight(h)
+            self._msg.updateGeometry()
 
 
 class ExampleButton(QPushButton):
@@ -372,6 +387,12 @@ class ChatView(QScrollArea):
         b = Bubble(role, text, results, query=query, note=note)
         self._insert(b)
         return b
+
+    def refresh_display(self):
+        for i in range(self._lay.count()):
+            w = self._lay.itemAt(i).widget()
+            if isinstance(w, Bubble):
+                w.refresh_display()
 
     def show_typing(self):
         if self._typing is None:
