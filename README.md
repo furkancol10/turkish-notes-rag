@@ -50,6 +50,18 @@ OLLAMA_MAX_LOADED_MODELS=1
 
 Servis çalışmıyorsa: `ollama serve`.
 
+## Colab ile çalıştırma (ekip için)
+
+1. `colab/colab_run.ipynb` dosyasını Colab'da aç (VS Code Colab eklentisiyle de aynı not defteri ve çekirdek çalışır).
+2. **Çalışma zamanı > Çalışma zamanı türünü değiştir > T4 GPU** seç.
+3. Soldaki **Secrets** (anahtar simgesi) bölümüne, notebook erişimi açık olacak şekilde, gerekenleri ekle:
+   - `GITHUB_TOKEN`: yalnız özel repo için (okuma yetkili token).
+   - `GEMINI_API_KEY` veya `GROQ_API_KEY`: GPU yoksa bulut LLM yedeği için.
+4. 2. hücrenin başındaki `REPO_URL` ve `BRANCH` parametrelerini gerekirse değiştir (varsayılan: herkese açık repo, `colab` dalı). Token ekrana yazılmaz ve klondan sonra git remote adresinden silinir.
+5. Hücreleri sırayla çalıştır; sonunda `trycloudflare.com` adresi çıkar. Drive önbelleği (4. hücre) sonraki oturumları hızlandırır.
+
+Backend: GPU varsa Colab VM'inde Ollama; GPU yok ve API anahtarı varsa OpenAI uyumlu API (`LLM_BACKEND=api`; ayrıca `LLM_API_KEY`, `LLM_API_BASE`, `LLM_API_MODEL`, `LLM_PROVIDER=gemini|groq` ile elle ayarlanabilir).
+
 ## Kullanım
 
 ```bash
