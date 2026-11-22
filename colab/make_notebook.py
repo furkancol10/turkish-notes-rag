@@ -78,9 +78,9 @@ subprocess.run([sys.executable, "-m", "pip", "install", "-q", *deps], check=True
 print("kuruldu:", len(deps), "paket")
 """)
 
-md("## 4. (İsteğe bağlı) Google Drive önbelleği\nModeller ve indeks yerel diskte çalışır; Drive'a yalnız yedeklenir (model çekildikten ve indekslendikten sonra), sonraki oturumda başta geri kopyalanır. İstemiyorsan `USE_DRIVE = False`.")
+md("## 4. (İsteğe bağlı) Google Drive önbelleği\nModeller ve indeks yerel diskte çalışır; Drive'a yalnız yedeklenir (model çekildikten ve indekslendikten sonra), sonraki oturumda başta geri kopyalanır. Varsayılan kapalı: VS Code Colab eklentisinde Drive bağlanmaz. Tarayıcıdaki Colab'da açmak için `USE_DRIVE = True`.")
 code("""
-USE_DRIVE = True
+USE_DRIVE = False  # VS Code Colab eklentisinde drive.mount çalışmaz; yalnız tarayıcıdaki Colab'da True yap
 # Chroma/SQLite ve Ollama modelleri Drive (FUSE) üzerinde ÇALIŞMAZ: yerel diske çalışır, Drive yalnız yedek.
 LOCAL = "/content/cache"
 for _d in ("hf", "ollama"):
@@ -108,10 +108,15 @@ def sync_to_drive():
     print("Drive'a yedeklendi:", CACHE)
 
 if USE_DRIVE:
-    from google.colab import drive
-    drive.mount("/content/drive")
-    sync_from_drive()
-    print("Drive önbelleği yerel diske kopyalandı")
+    try:
+        if not os.path.ismount("/content/drive"):
+            from google.colab import drive
+            drive.mount("/content/drive")
+        sync_from_drive()
+        print("Drive önbelleği yerel diske kopyalandı")
+    except Exception as e:
+        USE_DRIVE = False
+        print("Drive bağlanamadı, önbelleksiz devam:", e)
 """)
 
 md("## 5. Backend seçimi\nGPU varsa **ollama**; GPU yok + `GEMINI_API_KEY`/`GROQ_API_KEY` varsa **api**; yoksa CPU'da ollama (çok yavaş).")
