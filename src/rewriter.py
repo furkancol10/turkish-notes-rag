@@ -2,9 +2,8 @@
 import json
 import re
 
-import ollama
 
-from . import config
+from . import config, llm
 from .router import has_new_content, is_sources, normalize, route
 
 SYSTEM = (
@@ -74,8 +73,7 @@ def condense(question: str, history: list[dict]) -> str:
     try:
         convo = "\n".join(
             f"{'Kullanıcı' if m['role'] == 'user' else 'Asistan'}: {m['content']}" for m in history)
-        resp = ollama.chat(
-            model=config.LLM_MODEL,
+        resp = llm.chat(
             messages=[{"role": "system", "content": SYSTEM},
                       {"role": "user", "content": f"Geçmiş:\n{convo}\n\nSon mesaj: {question}\n\nBağımsız soru:"}],
             options={**config.LLM_OPTIONS, "temperature": 0, "num_predict": 64},
@@ -159,8 +157,7 @@ def analyze(question: str, history: list[dict]) -> dict:
             return {"intent": "followup", "query": question}
         convo = "\n".join(
             f"{'Kullanıcı' if m['role'] == 'user' else 'Asistan'}: {m['content']}" for m in history)
-        resp = ollama.chat(
-            model=config.LLM_MODEL,
+        resp = llm.chat(
             messages=[{"role": "system", "content": INTENT_SYSTEM},
                       {"role": "user", "content": f"Geçmiş:\n{convo}\n\nSon mesaj: {question}\n\nJSON:"}],
             options={**config.LLM_OPTIONS, "temperature": 0, "num_predict": 96},

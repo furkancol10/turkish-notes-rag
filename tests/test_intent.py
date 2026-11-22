@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from src import rewriter
+from src import llm, rewriter
 from src.router import is_sources, route
 
 HIST = [{"role": "user", "content": "Re-ranking nasıl çalışır?"},
@@ -22,7 +22,7 @@ def test_is_sources(q):
 
 @pytest.mark.parametrize("q", SOURCES[:8])
 def test_analyze_fast_path_no_llm(q, monkeypatch):
-    monkeypatch.setattr(rewriter.ollama, "chat", lambda **k: pytest.fail("LLM çağrıldı"))
+    monkeypatch.setattr(llm.ollama, "chat", lambda **k: pytest.fail("LLM çağrıldı"))
     assert rewriter.analyze(q, HIST)["intent"] == "sources"
 
 
@@ -38,13 +38,13 @@ def test_route_sources_only_with_history():
 
 
 def test_no_history_rule_path(monkeypatch):
-    monkeypatch.setattr(rewriter.ollama, "chat", lambda **k: pytest.fail("LLM çağrıldı"))
+    monkeypatch.setattr(llm.ollama, "chat", lambda **k: pytest.fail("LLM çağrıldı"))
     assert rewriter.analyze("nasılsın", []) == {"intent": "meta", "query": "nasılsın"}
     assert rewriter.analyze("rag nedir", []) == {"intent": "notes", "query": "rag nedir"}
 
 
 def test_meta_fast_path_with_history(monkeypatch):
-    monkeypatch.setattr(rewriter.ollama, "chat", lambda **k: pytest.fail("LLM çağrıldı"))
+    monkeypatch.setattr(llm.ollama, "chat", lambda **k: pytest.fail("LLM çağrıldı"))
     assert rewriter.analyze("kimsin sen", HIST)["intent"] == "meta"
 
 
@@ -61,19 +61,19 @@ def _chat(content, calls=None, exc=None):
 def test_llm_intent_preserving_query(monkeypatch):
     calls = []
     out = json.dumps({"intent": "notes", "query": "Re-ranking hangi raporlarda geçiyor?"})
-    monkeypatch.setattr(rewriter.ollama, "chat", _chat(out, calls))
+    monkeypatch.setattr(llm.ollama, "chat", _chat(out, calls))
     r = rewriter.analyze("başka hangi raporda geçiyor?", HIST)
     assert r == {"intent": "notes", "query": "Re-ranking hangi raporlarda geçiyor?"}
     assert len(calls) == 1 and calls[0]["options"]["temperature"] == 0 and calls[0]["think"] is False
 
 
 def test_llm_followup_keeps_question(monkeypatch):
-    monkeypatch.setattr(rewriter.ollama, "chat", _chat('{"intent":"followup","query":"x y z"}'))
+    monkeypatch.setattr(llm.ollama, "chat", _chat('{"intent":"followup","query":"x y z"}'))
     assert rewriter.analyze("doğru mu?", HIST) == {"intent": "followup", "query": "doğru mu?"}
 
 
 def test_json_with_noise(monkeypatch):
-    monkeypatch.setattr(rewriter.ollama, "chat",
+    monkeypatch.setattr(llm.ollama, "chat",
                         _chat('```json\n{"intent": "Sources", "query": "Re-ranking hangi dosyada geçiyor?"}\n```'))
     assert rewriter.analyze("peki bu nerede duruyor", HIST)["intent"] == "sources"
 
@@ -81,13 +81,13 @@ def test_json_with_noise(monkeypatch):
 @pytest.mark.parametrize("bad", ["not json", "", '{"intent":"zzz","query":"a?"}', '{"intent":"notes"}',
                                  '{"intent":"notes","query":""}', "[1,2]"])
 def test_invalid_falls_back(monkeypatch, bad):
-    monkeypatch.setattr(rewriter.ollama, "chat", _chat(bad))
+    monkeypatch.setattr(llm.ollama, "chat", _chat(bad))
     r = rewriter.analyze("doğru mu?", HIST)  # fallback: kural route -> followup
     assert r["intent"] == "followup"
 
 
 def test_exception_falls_back_never_raises(monkeypatch):
-    monkeypatch.setattr(rewriter.ollama, "chat", _chat(None, exc=TimeoutError("x")))
+    monkeypatch.setattr(llm.ollama, "chat", _chat(None, exc=TimeoutError("x")))
     r = rewriter.analyze("peki gemini?", HIST)
     assert r == {"intent": "notes", "query": "peki gemini?"}
 
@@ -114,14 +114,14 @@ def test_no_new_content(q):
 
 
 def test_guard_flips_llm_followup_to_notes(monkeypatch):
-    monkeypatch.setattr(rewriter.ollama, "chat",
+    monkeypatch.setattr(llm.ollama, "chat",
                         _chat('{"intent":"followup","query":"Re-ranking maliyeti nedir?"}'))
     assert rewriter.analyze("ya maliyeti?", HIST) == {"intent": "notes", "query": "Re-ranking maliyeti nedir?"}
 
 
 def test_followup_rule_skips_llm(monkeypatch):
     calls = []
-    monkeypatch.setattr(rewriter.ollama, "chat", _chat('{"intent":"notes","query":"x y z?"}', calls))
+    monkeypatch.setattr(llm.ollama, "chat", _chat('{"intent":"notes","query":"x y z?"}', calls))
     assert rewriter.analyze("özetini çıkar", HIST) == {"intent": "followup", "query": "özetini çıkar"}
     assert not calls
 

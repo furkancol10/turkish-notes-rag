@@ -90,8 +90,8 @@ def release_gpu() -> None:
 def unload_llm() -> None:
     """Ollama'dan LLM'i boşalt (indekslemede tepe VRAM'i düşük tutar); hatalar yok sayılır."""
     try:
-        import ollama
-        ollama.generate(model=config.LLM_MODEL, prompt="", keep_alive=0)
+        from . import llm
+        llm.unload()
     except Exception:
         pass
 

@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from src import generator
+from src import generator, llm
 
 
 def _c(src, text, page=0, heading=""):
@@ -28,7 +28,7 @@ def test_system_rules():
 
 def test_budget_respected(monkeypatch):
     got = {}
-    monkeypatch.setattr(generator.ollama, "chat",
+    monkeypatch.setattr(llm.ollama, "chat",
                         lambda **kw: got.update(kw) or {"message": {"content": "x"}})
     big = [(_c(f"d{i}.md", "a" * 900), 1 - i / 100) for i in range(30)]
     hist = [{"role": "user", "content": "q" * 300}, {"role": "assistant", "content": "w" * 300}]

@@ -1,6 +1,6 @@
 import pytest
 
-from src import rewriter
+from src import llm, rewriter
 
 HIST = [{"role": "user", "content": "chatgpt hangi RAG projelerini önermiş"},
         {"role": "assistant", "content": "ChatGPT raporunda 1. Belge asistanı 2. Kod arama önerilmiş."}]
@@ -34,7 +34,7 @@ def test_needs_rewrite_no_history():
 
 def test_condense_normal(monkeypatch):
     calls = []
-    monkeypatch.setattr(rewriter.ollama, "chat",
+    monkeypatch.setattr(llm.ollama, "chat",
                         fake('"Soru: Gemini raporunda hangi RAG projeleri önerilmiş?"', calls=calls))
     out = rewriter.condense("peki gemini?", HIST)
     assert out == "Gemini raporunda hangi RAG projeleri önerilmiş?"
@@ -43,23 +43,23 @@ def test_condense_normal(monkeypatch):
 
 
 def test_condense_error_fallback(monkeypatch):
-    monkeypatch.setattr(rewriter.ollama, "chat", fake(exc=TimeoutError("x")))
+    monkeypatch.setattr(llm.ollama, "chat", fake(exc=TimeoutError("x")))
     assert rewriter.condense("peki gemini?", HIST) == "peki gemini?"
 
 
 @pytest.mark.parametrize("garbage", ["", "   ", "Gemini raporunda şu projeler önerilmiş: belge asistanı, kod arama, not özetleyici ve çok daha fazlası burada yazıyor.",
                                      "Evet, Gemini belge asistanı önermiş."])
 def test_condense_garbage_fallback(monkeypatch, garbage):
-    monkeypatch.setattr(rewriter.ollama, "chat", fake(garbage))
+    monkeypatch.setattr(llm.ollama, "chat", fake(garbage))
     assert rewriter.condense("peki gemini?", HIST) == "peki gemini?"
 
 
 def test_condense_no_history_passthrough(monkeypatch):
-    monkeypatch.setattr(rewriter.ollama, "chat", fake(exc=AssertionError("çağrılmamalı")))
+    monkeypatch.setattr(llm.ollama, "chat", fake(exc=AssertionError("çağrılmamalı")))
     assert rewriter.condense("peki gemini?", []) == "peki gemini?"
 
 
 def test_condense_skips_llm_when_self_contained(monkeypatch):
-    monkeypatch.setattr(rewriter.ollama, "chat", fake(exc=AssertionError("çağrılmamalı")))
+    monkeypatch.setattr(llm.ollama, "chat", fake(exc=AssertionError("çağrılmamalı")))
     q = "docker kurulumu nasıl yapılır"
     assert rewriter.condense(q, HIST) == q

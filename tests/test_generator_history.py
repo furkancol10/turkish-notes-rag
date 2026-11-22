@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from src import generator
+from src import generator, llm
 
 
 def _cap(monkeypatch):
@@ -9,7 +9,7 @@ def _cap(monkeypatch):
     def chat(**kw):
         got.update(kw)
         return {"message": {"content": " cevap "}}
-    monkeypatch.setattr(generator.ollama, "chat", chat)
+    monkeypatch.setattr(llm.ollama, "chat", chat)
     return got
 
 

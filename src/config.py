@@ -36,6 +36,7 @@ ENTITY_GUARD_ENABLED = True  # soruda özel ad var ve getirilen hiçbir parçada
 TOP_K = 10                # 10 parça ≈ 2000 token; num_ctx 4096 içinde rahat sığar
 
 # --- LLM (Ollama, GPU) ---
+LLM_BACKEND = "ollama"   # "ollama" (yerel/Colab GPU) veya "api" (OpenAI uyumlu bulut); env LLM_BACKEND geçersiz kılar
 LLM_MODEL = "qwen3.5:4b"
 # use_mmap: Ollama bellek sıkışınca modeli RAM'e kopyalıyor (5+ GB); mmap ile ağırlıklar dosyadan okunur, RAM geri alınabilir
 LLM_OPTIONS = {"num_ctx": 4096, "temperature": 0.2, "use_mmap": True}

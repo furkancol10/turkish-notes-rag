@@ -1,7 +1,6 @@
 """ADIM 6 - ÜRET: Bulunan parçaları prompt'a koy, LLM sadece bunlara dayanarak cevaplasın."""
-import ollama
 
-from . import config, conversation, settings
+from . import config, conversation, llm, settings
 from .chunker import chunk_label
 from .formats import LABEL_TEXT
 from .loader import list_note_files
@@ -66,8 +65,7 @@ def answer(question: str, results, history: list[dict] | None = None) -> str:
         history, results = conversation.fit_budget(
             history, results, question, system=SYSTEM,
             limit=3000 - 12 * len({c.source for c, _ in results}))
-    resp = ollama.chat(
-        model=config.LLM_MODEL,
+    resp = llm.chat(
         messages=[{"role": "system", "content": SYSTEM}, *history,
                   {"role": "user", "content": build_prompt(question, results)}],
         options=config.LLM_OPTIONS, keep_alive=config.LLM_KEEP_ALIVE, think=config.LLM_THINK,
@@ -99,8 +97,7 @@ def answer_followup(question: str, history: list[dict], sources: list[dict], lim
         history.pop(0)
     while len(sources) > 1 and total() > limit:
         sources.pop()
-    resp = ollama.chat(
-        model=config.LLM_MODEL,
+    resp = llm.chat(
         messages=[{"role": "system", "content": FOLLOWUP_SYSTEM}, *history,
                   {"role": "user", "content": f"Önceki cevabın kaynakları:\n{_src_ctx(sources)}\n\nSoru: {question}"}],
         options=config.LLM_OPTIONS, keep_alive=config.LLM_KEEP_ALIVE, think=config.LLM_THINK,
@@ -124,8 +121,7 @@ def meta_system() -> str:
 
 
 def answer_meta(question: str) -> str:
-    resp = ollama.chat(
-        model=config.LLM_MODEL,
+    resp = llm.chat(
         messages=[{"role": "system", "content": meta_system()},
                   {"role": "user", "content": question}],
         options=config.LLM_OPTIONS, keep_alive=config.LLM_KEEP_ALIVE, think=config.LLM_THINK,
