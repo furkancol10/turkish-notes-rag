@@ -133,6 +133,9 @@ else:
     BACKEND = "ollama"
     print("UYARI: GPU ve API anahtarı yok, ollama CPU'da çalışacak (çok yavaş). T4 GPU seçmeni öneririm.")
 os.environ["LLM_BACKEND"] = BACKEND
+if HAS_GPU:  # Colab GPU yalnız bu işe ayrılmış: soru embedding'i GPU'da, model GPU'da uzun kalsın
+    os.environ["EMBED_DEVICE_QUERY"] = "auto"
+    os.environ["LLM_KEEP_ALIVE"] = "30m"
 print("Backend:", BACKEND)
 """)
 

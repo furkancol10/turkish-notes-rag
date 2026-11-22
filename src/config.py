@@ -1,3 +1,4 @@
+import os
 """Tüm ayarlar tek yerde. Denemek için sadece bu dosyayı değiştir."""
 from pathlib import Path
 
@@ -19,7 +20,7 @@ PASSAGE_PREFIX = {m: "" for m in EMBED_MODELS}
 
 # --- Embedding cihazı ---
 EMBED_DEVICE_INDEX = "auto"   # toplu embedding (indeksleme, eval): "auto" = CUDA varsa GPU, yoksa CPU; "cpu" / "cuda"
-EMBED_DEVICE_QUERY = "cpu"    # soru embedding'i CPU'da (ölçüm: GPU'da RAM yalnız -0.3 GB, açılış zirvesi 4 GB, +1.2 GB VRAM); "auto" = GPU
+EMBED_DEVICE_QUERY = os.environ.get("EMBED_DEVICE_QUERY", "cpu")    # env ile değişir (Colab GPU: "auto"); soru embedding'i CPU'da (ölçüm: GPU'da RAM yalnız -0.3 GB, açılış zirvesi 4 GB, +1.2 GB VRAM); "auto" = GPU
 EMBED_INDEX_DTYPE = "float16" # GPU'da indeksleme hassasiyeti ("float16" / "float32"); CPU hep float32
 EMBED_BATCH_SIZE = 32
 
@@ -40,5 +41,5 @@ LLM_BACKEND = "ollama"   # "ollama" (yerel/Colab GPU) veya "api" (OpenAI uyumlu 
 LLM_MODEL = "qwen3.5:4b"
 # use_mmap: Ollama bellek sıkışınca modeli RAM'e kopyalıyor (5+ GB); mmap ile ağırlıklar dosyadan okunur, RAM geri alınabilir
 LLM_OPTIONS = {"num_ctx": 4096, "temperature": 0.2, "use_mmap": True}
-LLM_KEEP_ALIVE = "2m"
+LLM_KEEP_ALIVE = os.environ.get("LLM_KEEP_ALIVE", "2m")  # Colab: "30m" (GPU yalnız bu işe ayrılmış)
 LLM_THINK = False
