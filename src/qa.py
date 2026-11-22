@@ -3,7 +3,7 @@ pencere -> analiz (niyet + sorgu) -> meta | kaynaklar | takip | (getir -> eşik 
 from datetime import datetime
 from types import SimpleNamespace
 
-from . import config, entities, history as _hist, settings
+from . import config, entities, llm, history as _hist, settings
 from .conversation import fit_budget, window
 from .embedder import warmup_query_model
 from .formats import NOT_IN_NOTES, below_threshold_note
@@ -42,6 +42,8 @@ class AskError(Exception):
 
 
 def _fail_llm(e):
+    if isinstance(e, llm.LLMAPIError):  # API backend hatası: "ollama serve" önerme
+        return AskError("other", f"Cevap üretilemedi: {e}")
     return AskError("ollama" if is_connection_error(e) else "other", f"Cevap üretilemedi: {e}")
 
 

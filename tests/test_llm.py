@@ -70,7 +70,8 @@ def test_api_chat_http_mocked(monkeypatch):
     calls = {}
 
     class R:
-        def raise_for_status(self): pass
+        status_code = 200
+        text = ""
         def json(self): return {"choices": [{"message": {"content": "cevap"}}]}
 
     def post(url, json, headers, timeout):
@@ -89,3 +90,74 @@ def test_unload_noop_for_api(monkeypatch):
     monkeypatch.setenv("LLM_BACKEND", "api")
     monkeypatch.setattr(llm.ollama, "generate", lambda **k: pytest.fail("çağrılmamalı"))
     llm.unload()
+
+
+class _R:
+    def __init__(self, code=200, body=None, text=""):
+        self.status_code, self._b, self.text = code, body, text
+
+    def json(self):
+        if self._b is None:
+            raise ValueError("bad")
+        return self._b
+
+
+def _api(monkeypatch, provider_env="GROQ_API_KEY"):
+    monkeypatch.setenv("LLM_BACKEND", "api")
+    monkeypatch.setenv(provider_env, " k\n")
+
+
+def test_gemini_think_false_sends_reasoning_none(monkeypatch):
+    _api(monkeypatch, "GEMINI_API_KEY")
+    seen = {}
+    monkeypatch.setattr(llm.httpx, "post", lambda url, json, headers, timeout:
+                        seen.update(j=json, h=headers) or _R(body={"choices": [{"message": {"content": "x"}}]}))
+    llm.chat([], think=False)
+    assert seen["j"]["reasoning_effort"] == "none"
+    assert seen["h"]["Authorization"] == "Bearer k"  # strip edildi
+    llm.chat([], think=True)
+    assert "reasoning_effort" not in seen["j"]
+
+
+def test_groq_never_sends_reasoning(monkeypatch):
+    _api(monkeypatch)
+    seen = {}
+    monkeypatch.setattr(llm.httpx, "post", lambda url, json, headers, timeout:
+                        seen.update(j=json) or _R(body={"choices": [{"message": {"content": "x"}}]}))
+    llm.chat([], think=False)
+    assert "reasoning_effort" not in seen["j"]
+
+
+def test_parse_errors_and_unclosed_think():
+    for bad in ({"choices": []}, {"error": {"message": "no"}}, {}):
+        with pytest.raises(llm.LLMAPIError):
+            llm.parse_response(bad)
+    r = llm.parse_response({"choices": [{"message": {"content": "tamam<think>yarım düşünce"}}]})
+    assert r["message"]["content"] == "tamam"
+
+
+def test_http_error_includes_body_and_network_error_wrapped(monkeypatch):
+    _api(monkeypatch)
+    monkeypatch.setattr(llm.httpx, "post", lambda *a, **k: _R(429, text='{"error":"quota"}'))
+    with pytest.raises(llm.LLMAPIError, match="429.*quota"):
+        llm.chat([])
+
+    def boom(*a, **k):
+        raise llm.httpx.ConnectError("connection refused")
+    monkeypatch.setattr(llm.httpx, "post", boom)
+    with pytest.raises(llm.LLMAPIError):
+        llm.chat([])
+
+
+def test_provider_strip(monkeypatch):
+    monkeypatch.setenv("LLM_PROVIDER", " groq ")
+    monkeypatch.setenv("GEMINI_API_KEY", "g")
+    monkeypatch.setenv("GROQ_API_KEY", "q")
+    assert "groq" in llm.api_settings()["base"]
+
+
+def test_qa_does_not_blame_ollama_for_api_error():
+    from src import qa
+    e = qa._fail_llm(llm.LLMAPIError("API'ye ulaşılamadı: connect failed"))
+    assert e.kind == "other"
+    assert qa._fail_llm(ConnectionError("x")).kind == "ollama"
