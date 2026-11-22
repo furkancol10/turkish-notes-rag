@@ -66,7 +66,7 @@ finally:
     _env.pop("GIT_CONFIG_VALUE_0", None)
     del _env
 os.chdir(DIR)
-print(git("log", "--oneline", "-1"))
+print(subprocess.run(["git", "log", "--oneline", "-1"], capture_output=True, text=True).stdout)
 """)
 
 md("## 3. Bağımlılıklar\npyproject'teki paketler kurulur; `torch` (Colab'da hazır) ve `pyside6` (masaüstü arayüzü) atlanır.")
